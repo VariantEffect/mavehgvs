@@ -10,15 +10,7 @@ or p.[Leu4Gly;Gly7Leu]
 import re
 from enum import Enum
 
-from .dna import single_variant as dna_single_variant
-from .dna import multi_variant as dna_multi_variant
-
-from .rna import single_variant as rna_single_variant
-from .rna import multi_variant as rna_multi_variant
-
-from .protein import single_variant as protein_single_variant
-from .protein import multi_variant as protein_multi_variant
-
+from . import dna, rna, protein
 
 __all__ = [
     'dna', 'rna', 'protein', 'Event', 'Level', 'infer_level',
@@ -60,16 +52,15 @@ class Level(Enum):
 # Remove capture groups used for use in joining regexes in
 # multi-variants since capture groups cannot be defined more than once.
 single_variant = r"({0})|({1})|({2})".format(
-    dna_single_variant,
-    rna_single_variant,
-    protein_single_variant,
+    dna.single_variant,
+    rna.single_variant,
+    protein.single_variant,
 )
 multi_variant = r"({0})|({1})|({2})".format(
-    dna_multi_variant,
-    rna_multi_variant,
-    protein_multi_variant,
+    dna.multi_variant,
+    rna.multi_variant,
+    protein.multi_variant,
 )
-
 
 # ---- Compiled Regex Expressions
 single_variant_re = re.compile(single_variant)
