@@ -1,0 +1,20 @@
+from setuptools import setup
+
+setup(
+    name='hgvsp',
+    version='0.1',
+    packages=['hgvsp', 'hgvsp.tests'],
+    url='https://github.com/FowlerLab/hgvs-patterns.git',
+    license='MIT',
+    author='Daniel',
+    author_email='esposito.d@wehi.edu.au',
+    description=(
+        'A python utility containing HGVS Regex patterns to '
+        'match a subset of the HGVS standard.'
+    ),
+    keywords=['hgvs', 'variants', 'regex', 'bioinformatics', 'biology'],
+    classifiers=[
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 3',
+    ],
+)
