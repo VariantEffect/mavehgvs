@@ -20,6 +20,12 @@ from .protein import single_variant as protein_single_variant
 from .protein import multi_variant as protein_multi_variant
 
 
+__all__ = [
+    'dna', 'rna', 'protein', 'Event', 'Level', 'infer_level',
+    'infer_type', 'single_variant_re', 'multi_variant_re', 'is_multi'
+]
+
+
 class Event(Enum):
     """
     Enum for supported mutation events.

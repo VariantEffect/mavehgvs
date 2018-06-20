@@ -1,5 +1,11 @@
 import re
 
+__all__ = [
+    'deletion_re', 'insertion_re', 'delins_re',
+    'substitution_re', 'multi_variant_re', 'single_variant_re',
+    'any_event_re',
+]
+
 nucleotides = 'ATCGXNH'
 utr_descriptor = r"(?P<utr>[*-])"
 position = r"(?:\d+|\?|(?:[*-]?\d+(?:[\+-]?(?:\d+|\?))?))"

@@ -1,5 +1,11 @@
 import re
 
+__all__ = [
+    'deletion_re', 'insertion_re', 'delins_re',
+    'substitution_re', 'multi_variant_re', 'single_variant_re',
+    'any_event_re', 'frame_shift_re', 'predicted_variant_re'
+]
+
 #: Conversions between single- and three-letter amino acid codes
 AA_CODES = {
         'Ala': 'A', 'A': 'Ala',
@@ -29,10 +35,9 @@ amino_acids = '(?:{})'.format(
     '|'.join(set(AA_CODES.keys())).replace('?', '\?').replace('*', '\*')
 )
 
-
 position = r"(?:(?:{0}\d+)|\?)".format(amino_acids)
 interval = r"(?:{0}_{0})".format(position)
-amino_acid_choice = r"(?:(?:{0}){{1}}(?:\^({0}))+(?!\^))".format(amino_acids)
+amino_acid_choice = r"(?:(?:{0}){{1}}(?:\^(?:{0}))+(?!\^))".format(amino_acids)
 
 
 # Expression with capture groups
@@ -55,7 +60,7 @@ insertion = (
             r"|"
             r"(?P<length>\d+)"
             r"|"
-            r"(?P<unknown>(\(\d+\))|X+)"
+            r"(?P<unknown>(?:\(\d+\))|X+)"
         r")"
     r")".format(interval, amino_acids, amino_acid_choice)
 )
@@ -72,7 +77,7 @@ delins = (
             r"|"
             r"(?P<length>\d+)"
             r"|"
-            r"(?P<unknown>(\(\d+\))|X+)"
+            r"(?P<unknown>(?:\(\d+\))|X+)"
         r")"
     r")".format(interval, position, amino_acids, amino_acid_choice)
 )
@@ -82,8 +87,8 @@ substitution = (
         r"|"
         r"(?:"
             r"(?P<ref>{0})(?P<pos>\d+)"
-            r"("
-                r"(?P<new>(?:(?P<mosaic>\=/)?({0}))|(?P<choice>{1})|(?:\*))"
+            r"(?:"
+                r"(?P<new>(?:(?P<mosaic>\=/)?(?:{0}))|(?P<choice>{1})|(?:\*))"
                 r"|"
                 r"(?P<silent>\=)"
                 r"|"

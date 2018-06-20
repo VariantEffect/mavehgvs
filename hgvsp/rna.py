@@ -1,5 +1,11 @@
 import re
 
+__all__ = [
+    'deletion_re', 'insertion_re', 'delins_re',
+    'substitution_re', 'multi_variant_re', 'single_variant_re',
+    'any_event_re',
+]
+
 nucleotides = 'augcxnh'
 utr_descriptor = r"(?P<utr>[*-])"
 position = r"(?:\d+|\?)"
@@ -12,7 +18,7 @@ intronic_interval = r"(?:{0}_{0})".format(intronic_position)
 edge_cases = r"(?:0|spl|\?)"
 deletion = (
     r"(?P<del>"
-        r"(?:(\=(?:/|//))?(?P<interval>{0})del)"
+        r"(?:(?:\=(?:/|//))?(?P<interval>{0})del)"
         r"|"
         r"(?:(?P<fragment>{1})del)"
         r"|"
@@ -32,7 +38,7 @@ insertion = (
 )
 delins = (
     r"(?P<delins>"
-        r"("
+        r"(?:"
             r"(?:(?P<interval>{0})delins)"
             r"|"
             r"(?:(?P<position>{1})delins)"
@@ -48,7 +54,7 @@ substitution = (
             r"(?:"
                 r"(?P<position>{0})"
                 r"(?:"
-                    r"(?:(?P<mosaic>(\=(?:/|//)))?(?P<ref>[{1}])>(?P<new>[{1}]))"
+                    r"(?:(?P<mosaic>(?:\=(?:/|//)))?(?P<ref>[{1}])>(?P<new>[{1}]))"
                     r"|"
                     r"(?P<silent>\=)"
                 r")"
@@ -65,10 +71,10 @@ any_event = r"(?:{})".format(
 any_event, _ = re.subn(r"P<\w+(_\w+)?>", ':', any_event)
 
 single_variant = r"r\.{0}".format(any_event)
-comma_separated = r"((?:{0})(?:,{0}){{1,}}(?!,))".format(any_event)
+comma_separated = r"(?:(?:{0})(?:,{0}){{1,}}(?!,))".format(any_event)
 semi_colon_separated = r"(?:{0})(?:;{0}){{1,}}(?!;)".format(any_event)
 multi_variant = (
-    r"r\.(?:(\[{0}\])|(\[{1}\]))".format(
+    r"r\.(?:(?:\[{0}\])|(?:\[{1}\]))".format(
         semi_colon_separated, comma_separated))
 
 # ---- Compiled Regexes
