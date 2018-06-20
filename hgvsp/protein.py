@@ -25,23 +25,23 @@ AA_CODES = {
         'Ter': '*', '*': 'Ter',
 }
 
-amino_acids = '({})'.format(
+amino_acids = '(?:{})'.format(
     '|'.join(set(AA_CODES.keys())).replace('?', '\?').replace('*', '\*')
 )
 
 
-position = r"(?:(({0})\d+)|\?)".format(amino_acids)
-interval = r"(?:(({0})_({0})))".format(position)
-amino_acid_choice = r"(?:({0}){{1}}(\^({0}))+(?!\^))".format(amino_acids)
+position = r"(?:(?:{0}\d+)|\?)".format(amino_acids)
+interval = r"(?:{0}_{0})".format(position)
+amino_acid_choice = r"(?:(?:{0}){{1}}(?:\^({0}))+(?!\^))".format(amino_acids)
 
 
 # Expression with capture groups
 deletion = (
     r"(?P<del>"
-        r"("
+        r"(?:"
             r"(?P<interval>{0})"
             r"|"
-            r"((?P<position>{1})(?P<mosaic>\=/)?)"
+            r"(?:(?P<position>{1})(?P<mosaic>\=/)?)"
         r")"
         r"del"
     r")".format(interval, position)
@@ -50,7 +50,7 @@ insertion = (
     r"(?P<ins>"
         r"(?P<interval>{0})"
         r"ins"
-        r"("
+        r"(?:"
             r"(?P<inserted>{1}+|{2})"
             r"|"
             r"(?P<length>\d+)"
@@ -61,13 +61,13 @@ insertion = (
 )
 delins = (
     r"(?P<delins>"
-        r"("
+        r"(?:"
             r"(?P<interval>{0})"
             r"|"
             r"(?P<position>{1})"
         r")"
         r"delins"
-        r"("
+        r"(?:"
             r"(?P<inserted>{2}+|{3})"
             r"|"
             r"(?P<length>\d+)"
@@ -78,12 +78,12 @@ delins = (
 )
 substitution = (
     r"(?P<sub>"
-        r"((?P<no_protein>0)|(?P<not_predicted>\?)|(?P<equal>=))"
+        r"(?:(?P<no_protein>0)|(?P<not_predicted>\?)|(?P<equal>=))"
         r"|"
-        r"("
+        r"(?:"
             r"(?P<ref>{0})(?P<pos>\d+)"
             r"("
-                r"(?P<new>((?P<mosaic>\=/)?({0}))|(?P<choice>{1})|(\*))"
+                r"(?P<new>(?:(?P<mosaic>\=/)?({0}))|(?P<choice>{1})|(?:\*))"
                 r"|"
                 r"(?P<silent>\=)"
                 r"|"
@@ -96,12 +96,12 @@ frame_shift = (
     r"(?P<fs>"
         r"(?P<left_aa>{0})(?P<position>\d+)(?P<right_aa>{0})?fs"
         r"(?P<shift>"
-            r"("
-                r"({0}\d+)"
+            r"(?:"
+                r"(?:{0}\d+)"
                 r"|"
-                r"(\*\?)"
+                r"(?:\*\?)"
                 r"|"
-                r"(\*\d+)"
+                r"(?:\*\d+)"
             r")"
         r")?"
     r")"
@@ -110,26 +110,26 @@ frame_shift = (
 
 # Remove capture groups used for use in joining regexes in
 # multi-variants since capture groups cannot be defined more than once.
-any_event = r"({0})".format(
+any_event = r"(?:{0})".format(
     r"|".join([insertion, deletion, delins, substitution, frame_shift])
 )
 any_event, _ = re.subn(r"P<\w+(_\w+)?>", ':', any_event)
 predicted_variant = r"p.\({0}\)".format(any_event)
-single_variant = r"(p\.{0})|({1})".format(any_event, predicted_variant)
-multi_variant = r"p\.\[({0})(;{0}){{1,}}(?!;)\]".format(any_event)
+single_variant = r"(?:p\.{0})|(?:{1})".format(any_event, predicted_variant)
+multi_variant = r"p\.\[(?:{0})(?:;{0}){{1,}}(?!;)\]".format(any_event)
 
 
 # ---- Compiled Regexes
 deletion_re = re.compile(
-    r"(p\.)?(?P<predicted>\()?({0})(?(predicted)\)|)".format(deletion))
+    r"(?:p\.)?(?P<predicted>\()?{0}(?(predicted)\)|)".format(deletion))
 insertion_re = re.compile(
-    r"(p\.)?(?P<predicted>\()?({0})(?(predicted)\)|)".format(insertion))
+    r"(?:p\.)?(?P<predicted>\()?{0}(?(predicted)\)|)".format(insertion))
 delins_re = re.compile(
-    r"(p\.)?(?P<predicted>\()?({0})(?(predicted)\)|)".format(delins))
+    r"(?:p\.)?(?P<predicted>\()?{0}(?(predicted)\)|)".format(delins))
 substitution_re = re.compile(
-    r"(p\.)?(?P<predicted>\()?({0})(?(predicted)\)|)".format(substitution))
+    r"(?:p\.)?(?P<predicted>\()?{0}(?(predicted)\)|)".format(substitution))
 frame_shift_re = re.compile(
-    r"(p\.)?(?P<predicted>\()?({0})(?(predicted)\)|)".format(frame_shift))
+    r"(?:p\.)?(?P<predicted>\()?{0}(?(predicted)\)|)".format(frame_shift))
 
 single_variant_re = re.compile(single_variant)
 multi_variant_re = re.compile(multi_variant)
