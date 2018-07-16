@@ -29,6 +29,7 @@ AA_CODES = {
         'Tyr': 'Y', 'Y': 'Tyr',
         'Val': 'V', 'V': 'Val',
         'Ter': '*', '*': 'Ter',
+        '???': '?', '?': '???',
 }
 
 amino_acids = '(?:{})'.format(
@@ -143,4 +144,4 @@ any_event_re = re.compile(any_event)
 
 
 def split_amino_acids(aa_str):
-    return re.findall('[A-Z][^A-Z]*', aa_str)
+    return re.findall('[A-Z\?][^A-Z\?]*', aa_str)
