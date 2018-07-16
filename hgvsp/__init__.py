@@ -14,7 +14,8 @@ from . import dna, rna, protein
 
 __all__ = [
     'dna', 'rna', 'protein', 'Event', 'Level', 'infer_level',
-    'infer_type', 'single_variant_re', 'multi_variant_re', 'is_multi'
+    'infer_type', 'single_variant_re', 'multi_variant_re', 'is_multi',
+    'constants'
 ]
 
 
