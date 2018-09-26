@@ -87,9 +87,9 @@ substitution = (
         r"(?:(?P<no_protein>0)|(?P<not_predicted>\?)|(?P<equal>=))"
         r"|"
         r"(?:"
-            r"(?P<ref>{0})(?P<pos>\d+)"
+            r"(?P<pre>{0})(?P<pos>\d+)"
             r"(?:"
-                r"(?P<new>(?:(?P<mosaic>\=/)?(?:{0}))|(?P<choice>{1})|(?:\*))"
+                r"(?P<post>(?:(?P<mosaic>\=/)?(?:{0}))|(?P<choice>{1})|(?:\*))"
                 r"|"
                 r"(?P<silent>\=)"
                 r"|"
@@ -120,9 +120,11 @@ any_event = r"(?:{0})".format(
     r"|".join([insertion, deletion, delins, substitution, frame_shift])
 )
 any_event, _ = re.subn(r"P<\w+(_\w+)?>", ':', any_event)
+predicted_event = r"\({0}\)".format(any_event)
 predicted_variant = r"p.\({0}\)".format(any_event)
 single_variant = r"(?:p\.{0})|(?:{1})".format(any_event, predicted_variant)
-multi_variant = r"p\.\[(?:{0})(?:;{0}){{1,}}(?!;)\]".format(any_event)
+multi_variant = r"p\.\[(?:{0}|{1})(?:;{0}|{1}){{1,}}(?!;)\]".format(
+    any_event, predicted_event)
 
 
 # ---- Compiled Regexes

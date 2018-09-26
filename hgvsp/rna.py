@@ -54,7 +54,7 @@ substitution = (
             r"(?:"
                 r"(?P<position>{0})"
                 r"(?:"
-                    r"(?:(?P<mosaic>(?:\=(?:/|//)))?(?P<ref>[{1}])>(?P<new>[{1}]))"
+                    r"(?:(?P<mosaic>(?:\=(?:/|//)))?(?P<ref>[{1}])>(?P<alt>[{1}]))"
                     r"|"
                     r"(?P<silent>\=)"
                 r")"
