@@ -153,9 +153,13 @@ class TestVariantRegexPatterns(TestCase):
                 'p.[Trp24Cys;Lys23_Val25del;His4_Gln5insAla;'
                 'Cys28fs;Cys28delinsVal]'
             ))
+        self.assertIsNotNone(multi_variant_re.fullmatch(
+            'p.[(Trp24Cys);(Trp24Cys)]'))
+        
         # Non-multi should be none
         self.assertIsNone(multi_variant_re.fullmatch('p.[Trp24Cys;]'))
         self.assertIsNone(multi_variant_re.fullmatch('p.[(Trp24Cys)]'))
         self.assertIsNone(multi_variant_re.fullmatch('p.[Trp24Cys,]'))
         self.assertIsNone(multi_variant_re.fullmatch('p.[Trp24Cys]'))
         self.assertIsNone(multi_variant_re.fullmatch('p.[Trp24???]'))
+        
