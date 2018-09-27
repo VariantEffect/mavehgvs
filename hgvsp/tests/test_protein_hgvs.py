@@ -155,6 +155,10 @@ class TestVariantRegexPatterns(TestCase):
             ))
         self.assertIsNotNone(multi_variant_re.fullmatch(
             'p.[(Trp24Cys);(Trp24Cys)]'))
+        self.assertIsNotNone(multi_variant_re.fullmatch(
+            'p.[(Trp24Cys);Trp24Cys]'))
+        self.assertIsNotNone(multi_variant_re.fullmatch(
+            'p.[(Cys28delinsVal);Val7=/del]'))
         
         # Non-multi should be none
         self.assertIsNone(multi_variant_re.fullmatch('p.[Trp24Cys;]'))

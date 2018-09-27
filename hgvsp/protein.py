@@ -123,7 +123,7 @@ any_event, _ = re.subn(r"P<\w+(_\w+)?>", ':', any_event)
 predicted_event = r"\({0}\)".format(any_event)
 predicted_variant = r"p.\({0}\)".format(any_event)
 single_variant = r"(?:p\.{0})|(?:{1})".format(any_event, predicted_variant)
-multi_variant = r"p\.\[(?:{0}|{1})(?:;{0}|{1}){{1,}}(?!;)\]".format(
+multi_variant = r"p\.\[(?:(?:{0})|(?:{1}))(?:(?:;{0}){{1,}}(?!;)|(?:;{1}){{1,}}(?!;))\]".format(
     any_event, predicted_event)
 
 
