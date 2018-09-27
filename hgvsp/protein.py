@@ -87,7 +87,7 @@ substitution = (
         r"(?:(?P<no_protein>0)|(?P<not_predicted>\?)|(?P<equal>=))"
         r"|"
         r"(?:"
-            r"(?P<pre>{0})(?P<pos>\d+)"
+            r"(?P<pre>{0})(?P<position>\d+)"
             r"(?:"
                 r"(?P<post>(?:(?P<mosaic>\=/)?(?:{0}))|(?P<choice>{1})|(?:\*))"
                 r"|"
