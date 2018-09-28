@@ -100,6 +100,9 @@ class TestMatchMulti(TestCase):
         self.assertIsNotNone(
             multi_variant_re.fullmatch(
                 'p.[His4_Gln5insAla;Cys28fs;Cys28delinsVal]'))
+        self.assertIsNotNone(
+            multi_variant_re.fullmatch(
+                'p.[(His4_Gln5insAla);(Cys28fs);Cys28delinsVal]'))
         
     def test_can_validate_dna_multi(self):
         self.assertIsNotNone(multi_variant_re.fullmatch('c.[123A>G;19del]'))

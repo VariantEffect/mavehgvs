@@ -156,9 +156,9 @@ class TestVariantRegexPatterns(TestCase):
         self.assertIsNotNone(multi_variant_re.fullmatch(
             'p.[(Trp24Cys);(Trp24Cys)]'))
         self.assertIsNotNone(multi_variant_re.fullmatch(
-            'p.[(Trp24Cys);Trp24Cys]'))
+            'p.[(Trp24Cys);Cys28delinsVal]'))
         self.assertIsNotNone(multi_variant_re.fullmatch(
-            'p.[(Cys28delinsVal);Val7=/del]'))
+            'p.[(His4_Gln5insAla);(Cys28fs);Cys28delinsVal]'))
         
         # Non-multi should be none
         self.assertIsNone(multi_variant_re.fullmatch('p.[Trp24Cys;]'))
