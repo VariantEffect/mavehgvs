@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='hgvsp',
-    version='0.2',
+    version='0.3',
     packages=['hgvsp', 'hgvsp.tests'],
     url='https://github.com/FowlerLab/hgvs-patterns.git',
     license='MIT',
