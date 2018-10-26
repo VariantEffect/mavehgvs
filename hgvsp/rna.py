@@ -6,7 +6,7 @@ __all__ = [
     'any_event_re',
 ]
 
-nucleotides = 'augcxnh'
+nucleotides = 'acgubdhkmnrsvwyx'
 utr_descriptor = r"(?P<utr>[*-])"
 position = r"(?:\d+|\?)"
 interval = r"(?:{0}_{0})".format(position)
