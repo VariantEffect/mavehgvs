@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from .. import constants
-from .. import multi_variant_re, single_variant_re
+from .. import multi_variant_re, single_variant_re, any_variant_re
 from .. import Level, Event, infer_level, infer_type, is_multi
 
 
@@ -138,7 +138,7 @@ class TestValidateSingle(TestCase):
         self.assertIsNotNone(single_variant_re.fullmatch('m.19_21insXXX'))
         self.assertIsNotNone(single_variant_re.fullmatch('n.123_127delinsAAA'))
     
-    def test_can_validate_rna_multi(self):
+    def test_can_validate_rna(self):
         self.assertIsNotNone(single_variant_re.fullmatch('r.123a>g'))
         self.assertIsNotNone(single_variant_re.fullmatch('r.19del'))
     
@@ -147,3 +147,33 @@ class TestValidateSingle(TestCase):
     
     def test_does_not_match_invalid(self):
         self.assertIsNone(single_variant_re.fullmatch('c.'))
+
+
+class TestAnyVariantPattern(TestCase):
+    def test_matches_single_variant(self):
+        self.assertIsNotNone(any_variant_re.fullmatch('c.123A>G'))
+        self.assertIsNotNone(any_variant_re.fullmatch('g.19del'))
+        self.assertIsNotNone(any_variant_re.fullmatch('m.19_21ins(5)'))
+        self.assertIsNotNone(any_variant_re.fullmatch('m.19_21insXXX'))
+        self.assertIsNotNone(any_variant_re.fullmatch('n.123_127delinsAAA'))
+        self.assertIsNotNone(any_variant_re.fullmatch('r.19del'))
+        self.assertIsNotNone(any_variant_re.fullmatch('p.Arg78_Gly79ins23'))
+        self.assertIsNotNone(any_variant_re.fullmatch('p.(Arg78_Gly79ins23)'))
+        
+    def test_matches_multi_variant(self):
+        self.assertIsNotNone(any_variant_re.fullmatch('c.[123A>G;19del]'))
+        self.assertIsNotNone(any_variant_re.fullmatch('g.[123A>G;19del]'))
+        self.assertIsNotNone(any_variant_re.fullmatch('m.[123A>G;19del]'))
+        self.assertIsNotNone(any_variant_re.fullmatch('n.[123A>G;19del]'))
+        self.assertIsNotNone(any_variant_re.fullmatch('r.[123a>g;19del]'))
+        self.assertIsNotNone(any_variant_re.fullmatch('r.[123a>g,19del]'))
+        self.assertIsNotNone(any_variant_re.fullmatch('p.[Cys28fs;C28delinsG]'))
+        self.assertIsNotNone(any_variant_re.fullmatch('p.[C28fs;(C28delinsG)]'))
+        
+    def test_none_if_no_match(self):
+        self.assertIsNone(any_variant_re.fullmatch('c.123A>F'))
+        self.assertIsNone(any_variant_re.fullmatch(
+            'p.[His4_Gln5insAla,Cys28fs,Cys28delinsVal]'))
+        
+        
+        

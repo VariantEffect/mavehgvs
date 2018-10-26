@@ -98,7 +98,7 @@ class TestEventValidators(TestCase):
         self.assertIsNotNone(delins_re.fullmatch('p.(C28_L29delinsT^G^L)'))
 
     def test_does_not_match_invalid_delins(self):
-        self.assertIsNone(delins_re.fullmatch('Cys28delinsZ'))
+        self.assertIsNone(delins_re.fullmatch('Cys28delinsJ'))
         self.assertIsNone(delins_re.fullmatch(''))
         self.assertIsNone(delins_re.fullmatch('(Cys28_Cys)delinsTrpVal'))
         self.assertIsNone(delins_re.fullmatch('C28_L29delinsTG^G^L'))

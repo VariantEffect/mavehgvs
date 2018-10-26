@@ -59,7 +59,7 @@ class TestEventValidators(TestCase):
         self.assertIsNotNone(deletion_re.fullmatch('19_21del=//del'))
         
     def test_does_not_match_invalid_deletions(self):
-        self.assertIsNone(deletion_re.fullmatch('19delR'))
+        self.assertIsNone(deletion_re.fullmatch('19delE'))
         self.assertIsNone(deletion_re.fullmatch(''))
         self.assertIsNone(deletion_re.fullmatch('delA'))
         self.assertIsNone(
@@ -104,7 +104,7 @@ class TestEventValidators(TestCase):
                 delins_re.fullmatch('{}.123_127delinsA'.format(c)))
         
     def test_does_not_match_invalid_delins(self):
-        self.assertIsNone(delins_re.fullmatch('19delinsR'))
+        self.assertIsNone(delins_re.fullmatch('19delinsE'))
         self.assertIsNone(delins_re.fullmatch(''))
         self.assertIsNone(delins_re.fullmatch('delinsA'))
         self.assertIsNone(
