@@ -66,6 +66,7 @@ multi_variant = r"({0})|({1})|({2})".format(
 # ---- Compiled Regex Expressions
 single_variant_re = re.compile(single_variant)
 multi_variant_re = re.compile(multi_variant)
+any_variant_re = re.compile(r"({})|({})".format(single_variant, multi_variant))
 
 
 def infer_type(hgvs):
