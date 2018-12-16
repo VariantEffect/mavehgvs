@@ -29,7 +29,7 @@ AA_CODES = {
     'U': 'Sec', 'Sec': 'U',
     'V': 'Val', 'Val': 'V',
     'W': 'Trp', 'Trp': 'W',
-    'Xa': 'Xaa', 'Xaa': 'Xa',
+    'X': 'Xaa', 'Xaa': 'X',
     'Y': 'Tyr', 'Tyr': 'Y',
     'Z': 'Glx', 'Glx': 'Z',
     '*': 'Ter', 'Ter': '*',

@@ -130,12 +130,14 @@ class TestEventValidators(TestCase):
         self.assertIsNotNone(any_event_re.fullmatch('Cys28delinsTrpVal'))
         self.assertIsNotNone(any_event_re.fullmatch('Arg78_Gly79ins23'))
         self.assertIsNotNone(any_event_re.fullmatch('Arg78_???79ins23'))
+        self.assertIsNotNone(any_event_re.fullmatch('Arg78_X79ins23'))
         self.assertIsNotNone(any_event_re.fullmatch('Trp24=/Cys'))
 
 
 class TestVariantRegexPatterns(TestCase):
     def test_single_var_re_matches_each_variant_type(self):
         self.assertIsNotNone(single_variant_re.fullmatch('p.Trp24Cys^Gly'))
+        self.assertIsNotNone(single_variant_re.fullmatch('p.Trp24X'))
         self.assertIsNotNone(single_variant_re.fullmatch('p.(Trp24Cys)'))
         self.assertIsNotNone(single_variant_re.fullmatch('p.Lys23_Val25del'))
         self.assertIsNotNone(single_variant_re.fullmatch('p.(Lys23_Val25del)'))
