@@ -13,13 +13,13 @@ event page are matchable.
 To install `hgvs-patterns` use either of the commands below
 
 ```bash
-pip install git+https://github.com/FowlerLab/hgvs-patterns.git
+pip install git+https://github.com/VariantEffect/hgvs-patterns.git
 ```
 
 Or
 
 ```bash
-git clone https://github.com/FowlerLab/hgvs-patterns
+git clone https://github.com/VariantEffect/hgvs-patterns
 cd hgvs-patterns
 python setup.py install
 ```
