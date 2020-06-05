@@ -23,7 +23,6 @@ __all__ = [
     "single_variant_re",
     "multi_variant_re",
     "is_multi",
-    "constants",
 ]
 
 

@@ -1,6 +1,5 @@
 from unittest import TestCase
 
-from hgvsp import constants
 from hgvsp.dna import (
     deletion_re,
     insertion_re,
@@ -15,7 +14,7 @@ from hgvsp.dna import (
 class TestEventValidators(TestCase):
     def test_valid_substitutions_pass(self):
         self.assertIsNotNone(substitution_re.fullmatch("123A>G"))
-        for c in constants.dna_prefix:
+        for c in ("c", "n", "g", "m"):
             self.assertIsNotNone(substitution_re.fullmatch("{}.123A>G".format(c)))
         self.assertIsNotNone(substitution_re.fullmatch("123A>X"))
         self.assertIsNotNone(substitution_re.fullmatch("123A>N"))
@@ -41,7 +40,7 @@ class TestEventValidators(TestCase):
 
     def test_valid_deletions_pass(self):
         self.assertIsNotNone(deletion_re.fullmatch("19del"))
-        for c in constants.dna_prefix:
+        for c in ("c", "n", "g", "m"):
             self.assertIsNotNone(deletion_re.fullmatch("{}.123delA".format(c)))
         self.assertIsNotNone(deletion_re.fullmatch("19delT"))
         self.assertIsNotNone(deletion_re.fullmatch("19_21del"))
@@ -75,7 +74,7 @@ class TestEventValidators(TestCase):
         self.assertIsNotNone(insertion_re.fullmatch("32717298_32717299ins(100)"))
         self.assertIsNotNone(insertion_re.fullmatch("761_762insN"))
         self.assertIsNotNone(insertion_re.fullmatch("(222_226)insG"))
-        for c in constants.dna_prefix:
+        for c in ("c", "n", "g", "m"):
             self.assertIsNotNone(insertion_re.fullmatch("{}.123_124insA".format(c)))
 
     def test_does_not_match_invalid_insertions(self):
@@ -95,7 +94,7 @@ class TestEventValidators(TestCase):
         self.assertIsNotNone(delins_re.fullmatch("142_144delinsTGG"))
         self.assertIsNotNone(delins_re.fullmatch("9002_9009delinsTTT"))
         self.assertIsNotNone(delins_re.fullmatch("9002_9009delins(5)"))
-        for c in constants.dna_prefix:
+        for c in ("c", "n", "g", "m"):
             self.assertIsNotNone(delins_re.fullmatch("{}.123_127delinsA".format(c)))
 
     def test_does_not_match_invalid_delins(self):
