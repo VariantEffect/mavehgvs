@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from .. import constants
-from ..dna import (
+from hgvsp import constants
+from hgvsp.dna import (
     deletion_re,
     insertion_re,
     delins_re,
