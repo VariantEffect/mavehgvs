@@ -1,22 +1,21 @@
 from unittest import TestCase
 
-from hgvsp import constants
 from hgvsp import multi_variant_re, single_variant_re, any_variant_re
 from hgvsp import Level, Event, infer_level, infer_type, is_multi
 
 
 class TestInferLevel(TestCase):
     def test_infers_protein(self):
-        self.assertEqual(Level.PROTEIN, infer_level(constants.protein_prefix))
+        self.assertEqual(Level.PROTEIN, infer_level("p"))
 
     def test_infers_dna(self):
-        self.assertEqual(Level.DNA, infer_level(constants.coding_prefix))
-        self.assertEqual(Level.DNA, infer_level(constants.non_coding_prefix))
-        self.assertEqual(Level.DNA, infer_level(constants.genomic_prefix))
-        self.assertEqual(Level.DNA, infer_level(constants.mitochondrial_prefix))
+        self.assertEqual(Level.DNA, infer_level("c"))
+        self.assertEqual(Level.DNA, infer_level("n"))
+        self.assertEqual(Level.DNA, infer_level("g"))
+        self.assertEqual(Level.DNA, infer_level("m"))
 
     def test_infers_rna(self):
-        self.assertEqual(Level.RNA, infer_level(constants.rna_prefix))
+        self.assertEqual(Level.RNA, infer_level("r"))
 
     def test_infers_none(self):
         self.assertEqual(None, infer_level("t"))
