@@ -1,9 +1,9 @@
-from setuptools import setup
+import setuptools
 
-setup(
+setuptools.setup(
     name='hgvsp',
     version='0.4',
-    packages=['hgvsp', 'hgvsp.tests'],
+    packages=['hgvsp'],
     url='https://github.com/FowlerLab/hgvs-patterns.git',
     license='MIT',
     author='Daniel',
@@ -17,4 +17,5 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
     ],
+    test_suite="tests",
 )

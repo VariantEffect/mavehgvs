@@ -1,8 +1,8 @@
 from unittest import TestCase
 
-from .. import constants
-from .. import multi_variant_re, single_variant_re, any_variant_re
-from .. import Level, Event, infer_level, infer_type, is_multi
+from hgvsp import constants
+from hgvsp import multi_variant_re, single_variant_re, any_variant_re
+from hgvsp import Level, Event, infer_level, infer_type, is_multi
 
 
 class TestInferLevel(TestCase):
