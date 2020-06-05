@@ -13,9 +13,17 @@ from enum import Enum
 from . import dna, rna, protein
 
 __all__ = [
-    'dna', 'rna', 'protein', 'Event', 'Level', 'infer_level',
-    'infer_type', 'single_variant_re', 'multi_variant_re', 'is_multi',
-    'constants'
+    "dna",
+    "rna",
+    "protein",
+    "Event",
+    "Level",
+    "infer_level",
+    "infer_type",
+    "single_variant_re",
+    "multi_variant_re",
+    "is_multi",
+    "constants",
 ]
 
 
@@ -23,15 +31,16 @@ class Event(Enum):
     """
     Enum for supported mutation events.
     """
-    DELETION = 'del'
-    INSERTION = 'ins'
-    DELINS = 'delins'
-    SUBSTITUTION = 'sub'
-    FRAME_SHIFT = 'fs'
-    
+
+    DELETION = "del"
+    INSERTION = "ins"
+    DELINS = "delins"
+    SUBSTITUTION = "sub"
+    FRAME_SHIFT = "fs"
+
     @classmethod
     def str_to_enum(cls, item):
-        if item[0] in ['>', '=', '=//', '=/']:
+        if item[0] in [">", "=", "=//", "=/"]:
             return cls.SUBSTITUTION
         else:
             return cls._value2member_map_.get(item, None)
@@ -41,10 +50,11 @@ class Level(Enum):
     """
     Enum specifying supported HGVS syntax types.
     """
-    DNA = 'dna'
-    RNA = 'rna'
-    PROTEIN = 'protein'
-    
+
+    DNA = "dna"
+    RNA = "rna"
+    PROTEIN = "protein"
+
     @classmethod
     def str_to_enum(cls, item):
         return cls._value2member_map_.get(item, None)
@@ -53,14 +63,10 @@ class Level(Enum):
 # Remove capture groups used for use in joining regexes in
 # multi-variants since capture groups cannot be defined more than once.
 single_variant = r"({0})|({1})|({2})".format(
-    dna.single_variant,
-    rna.single_variant,
-    protein.single_variant,
+    dna.single_variant, rna.single_variant, protein.single_variant,
 )
 multi_variant = r"({0})|({1})|({2})".format(
-    dna.multi_variant,
-    rna.multi_variant,
-    protein.multi_variant,
+    dna.multi_variant, rna.multi_variant, protein.multi_variant,
 )
 
 # ---- Compiled Regex Expressions
@@ -98,8 +104,8 @@ def infer_type(hgvs):
         return Event.FRAME_SHIFT
     else:
         return Event.SUBSTITUTION
-    
-    
+
+
 def infer_level(hgvs):
     """
     Infer the level of hgvs variant as supported by `Level` by inspecting
@@ -117,15 +123,15 @@ def infer_level(hgvs):
     """
     if not hgvs:
         return None
-    if hgvs[0] in 'cgnm':
+    if hgvs[0] in "cgnm":
         return Level.DNA
-    elif hgvs[0] == 'r':
+    elif hgvs[0] == "r":
         return Level.RNA
-    elif hgvs[0] == 'p':
+    elif hgvs[0] == "p":
         return Level.PROTEIN
     else:
         return None
-    
+
 
 def is_multi(hgvs):
     return bool(multi_variant_re.fullmatch(hgvs))
