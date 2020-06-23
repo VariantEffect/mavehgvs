@@ -163,11 +163,12 @@ class TestAnyVariantPattern(TestCase):
         self.assertIsNotNone(any_variant_re.fullmatch("n.[123A>G;19del]"))
         self.assertIsNotNone(any_variant_re.fullmatch("r.[123a>g;19del]"))
         self.assertIsNotNone(any_variant_re.fullmatch("r.[123a>g,19del]"))
-        self.assertIsNotNone(any_variant_re.fullmatch("p.[Cys28fs;C28delinsG]"))
-        self.assertIsNotNone(any_variant_re.fullmatch("p.[C28fs;(C28delinsG)]"))
+        self.assertIsNotNone(any_variant_re.fullmatch("p.[Cys28fs;Cys28delinsGly]"))
 
     def test_none_if_no_match(self):
         self.assertIsNone(any_variant_re.fullmatch("c.123A>F"))
         self.assertIsNone(
             any_variant_re.fullmatch("p.[His4_Gln5insAla,Cys28fs,Cys28delinsVal]")
         )
+        self.assertIsNone(any_variant_re.fullmatch("p.[C28fs;(C28delinsG)]"))
+        self.assertIsNone(any_variant_re.fullmatch("p.[Cys28fs;C28delinsG]"))
