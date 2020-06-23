@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.com/VariantEffect/hgvs-patterns.svg?branch=dev)](https://travis-ci.com/VariantEffect/hgvs-patterns)
+[![Coverage Status](https://coveralls.io/repos/github/VariantEffect/hgvs-patterns/badge.svg?branch=dev)](https://coveralls.io/github/VariantEffect/hgvs-patterns?branch=dev)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 # hgvs-patterns
 A python utility containing HGVS Regex patterns to match a subset of the 
 [HGVS](http://varnomen.hgvs.org/) standard. 
