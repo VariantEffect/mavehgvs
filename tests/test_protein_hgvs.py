@@ -19,7 +19,7 @@ class TestEventValidators(TestCase):
         self.assertIsNotNone(substitution_re.fullmatch("Cys188="))
         self.assertIsNotNone(substitution_re.fullmatch("Trp24*"))
         self.assertIsNotNone(substitution_re.fullmatch("Trp24Ter"))
-        self.assertIsNotNone(substitution_re.fullmatch("Trp24Ter^Ala^G"))
+        self.assertIsNotNone(substitution_re.fullmatch("Trp24Ter^Ala^Gly"))
         self.assertIsNotNone(substitution_re.fullmatch("Trp24?"))
         self.assertIsNotNone(substitution_re.fullmatch("Trp24=/Cys"))
         self.assertIsNotNone(substitution_re.fullmatch("p.Trp24=/Cys"))
@@ -38,6 +38,9 @@ class TestEventValidators(TestCase):
         self.assertIsNone(substitution_re.fullmatch("12a<E"))
         self.assertIsNone(substitution_re.fullmatch("12-1>a"))
         self.assertIsNone(substitution_re.fullmatch("+12a>g"))
+        self.assertIsNone(substitution_re.fullmatch("Y24C"))
+        self.assertIsNone(substitution_re.fullmatch("Y24*"))
+        self.assertIsNone(substitution_re.fullmatch("Trp24Ter^A^G"))
 
     def test_valid_deletions_pass(self):
         self.assertIsNotNone(deletion_re.fullmatch("Val7del"))
@@ -85,17 +88,12 @@ class TestEventValidators(TestCase):
 
     def test_valid_delins_passes(self):
         self.assertIsNotNone(delins_re.fullmatch("Cys28delinsTrpVal"))
-        self.assertIsNotNone(delins_re.fullmatch("C28_L29delinsT"))
-        self.assertIsNotNone(delins_re.fullmatch("C28_L29delins*"))
         self.assertIsNotNone(delins_re.fullmatch("Cys28delinsTrpVal"))
         self.assertIsNotNone(delins_re.fullmatch("Cys28delins???Val"))
         self.assertIsNotNone(delins_re.fullmatch("Cys28delins?Val"))
         self.assertIsNotNone(
             delins_re.fullmatch("Glu125_Ala132delinsGlyLeuHisArgPheIleValLeu")
         )
-        self.assertIsNotNone(delins_re.fullmatch("C28_L29delinsT^G^L"))
-        self.assertIsNotNone(delins_re.fullmatch("p.C28_L29delinsT^G^L"))
-        self.assertIsNotNone(delins_re.fullmatch("p.(C28_L29delinsT^G^L)"))
 
     def test_does_not_match_invalid_delins(self):
         self.assertIsNone(delins_re.fullmatch("Cys28delinsJ"))
@@ -104,6 +102,11 @@ class TestEventValidators(TestCase):
         self.assertIsNone(delins_re.fullmatch("C28_L29delinsTG^G^L"))
         self.assertIsNone(delins_re.fullmatch("Cys28+5delinsZ"))
         self.assertIsNone(delins_re.fullmatch("*?_45+1delinsg"))
+        self.assertIsNone(delins_re.fullmatch("C28_L29delinsT"))
+        self.assertIsNone(delins_re.fullmatch("C28_L29delins*"))
+        self.assertIsNone(delins_re.fullmatch("C28_L29delinsT^G^L"))
+        self.assertIsNone(delins_re.fullmatch("p.C28_L29delinsT^G^L"))
+        self.assertIsNone(delins_re.fullmatch("p.(C28_L29delinsT^G^L)"))
 
     def test_valid_frameshift_passes(self):
         self.assertIsNotNone(frame_shift_re.fullmatch("Arg97ProfsTer23"))
@@ -125,19 +128,19 @@ class TestEventValidators(TestCase):
         self.assertIsNone(frame_shift_re.fullmatch("*?_45+1delinsc"))
 
     def test_any_event_re_matches_any(self):
-        self.assertIsNotNone(any_event_re.fullmatch("Trp24Ter^Ala^G"))
+        self.assertIsNotNone(any_event_re.fullmatch("Trp24Ter^Ala^Gly"))
         self.assertIsNotNone(any_event_re.fullmatch("Arg97ProfsTer23"))
         self.assertIsNotNone(any_event_re.fullmatch("Cys28delinsTrpVal"))
         self.assertIsNotNone(any_event_re.fullmatch("Arg78_Gly79ins23"))
         self.assertIsNotNone(any_event_re.fullmatch("Arg78_???79ins23"))
-        self.assertIsNotNone(any_event_re.fullmatch("Arg78_X79ins23"))
+        self.assertIsNotNone(any_event_re.fullmatch("Arg78_Xaa79ins23"))
         self.assertIsNotNone(any_event_re.fullmatch("Trp24=/Cys"))
 
 
 class TestVariantRegexPatterns(TestCase):
     def test_single_var_re_matches_each_variant_type(self):
         self.assertIsNotNone(single_variant_re.fullmatch("p.Trp24Cys^Gly"))
-        self.assertIsNotNone(single_variant_re.fullmatch("p.Trp24X"))
+        self.assertIsNotNone(single_variant_re.fullmatch("p.Trp24Xaa"))
         self.assertIsNotNone(single_variant_re.fullmatch("p.(Trp24Cys)"))
         self.assertIsNotNone(single_variant_re.fullmatch("p.Lys23_Val25del"))
         self.assertIsNotNone(single_variant_re.fullmatch("p.(Lys23_Val25del)"))
