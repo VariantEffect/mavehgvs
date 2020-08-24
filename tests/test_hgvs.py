@@ -131,7 +131,7 @@ class TestValidateSingle(TestCase):
         self.assertIsNotNone(single_variant_re.fullmatch("c.123A>G"))
         self.assertIsNotNone(single_variant_re.fullmatch("g.19del"))
         self.assertIsNotNone(single_variant_re.fullmatch("m.19_21ins(5)"))
-        self.assertIsNotNone(single_variant_re.fullmatch("m.19_21insXXX"))
+        self.assertIsNotNone(single_variant_re.fullmatch("m.19_21insAAA"))
         self.assertIsNotNone(single_variant_re.fullmatch("n.123_127delinsAAA"))
 
     def test_can_validate_rna(self):
@@ -150,7 +150,7 @@ class TestAnyVariantPattern(TestCase):
         self.assertIsNotNone(any_variant_re.fullmatch("c.123A>G"))
         self.assertIsNotNone(any_variant_re.fullmatch("g.19del"))
         self.assertIsNotNone(any_variant_re.fullmatch("m.19_21ins(5)"))
-        self.assertIsNotNone(any_variant_re.fullmatch("m.19_21insXXX"))
+        self.assertIsNotNone(any_variant_re.fullmatch("m.19_21insAAA"))
         self.assertIsNotNone(any_variant_re.fullmatch("n.123_127delinsAAA"))
         self.assertIsNotNone(any_variant_re.fullmatch("r.19del"))
         self.assertIsNotNone(any_variant_re.fullmatch("p.Arg78_Gly79ins23"))
