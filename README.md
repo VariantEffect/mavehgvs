@@ -7,7 +7,7 @@ A python utility containing HGVS Regex patterns to match a subset of the
 [HGVS](http://varnomen.hgvs.org/) standard. 
 
 # Supported Syntax
-Regex patterns have been implmeneted for DNA, RNA and Protein **subsitutions**, **deletions**, **insertions**, 
+Regex patterns have been implemented for DNA, RNA and Protein **substitutions**, **deletions**, **insertions**, 
 **deletion-insertions** and **frame-shifts**. Support for all syntax in the HGVS guidelines
 within these events is not currently implemented. In general, patterns matching 
 the [examples](http://varnomen.hgvs.org/recommendations/DNA/variant/substitution/) given on each
