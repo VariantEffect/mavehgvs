@@ -16,7 +16,7 @@ class TestEventValidators(TestCase):
         self.assertIsNotNone(substitution_re.fullmatch("123A>G"))
         for c in ("c", "n", "g", "m"):
             self.assertIsNotNone(substitution_re.fullmatch("{}.123A>G".format(c)))
-        self.assertIsNotNone(substitution_re.fullmatch("123A>X"))
+        self.assertIsNotNone(substitution_re.fullmatch("123A>C"))
         self.assertIsNotNone(substitution_re.fullmatch("123A>N"))
         self.assertIsNotNone(substitution_re.fullmatch("*123A>G"))
         self.assertIsNotNone(substitution_re.fullmatch("-123A>G"))
@@ -37,6 +37,7 @@ class TestEventValidators(TestCase):
         self.assertIsNone(substitution_re.fullmatch("12A<E"))
         self.assertIsNone(substitution_re.fullmatch("12>A"))
         self.assertIsNone(substitution_re.fullmatch("+12A>G"))
+        self.assertIsNone(substitution_re.fullmatch("123A>X"))
 
     def test_valid_deletions_pass(self):
         self.assertIsNotNone(deletion_re.fullmatch("19del"))
