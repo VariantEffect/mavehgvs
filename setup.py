@@ -1,4 +1,15 @@
 import setuptools
+import sys
+
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
+requirements = [
+    "fqfa>=1.1.0",
+]
+# require backported dataclasses in Python 3.6
+if sys.version_info.major == 3 and sys.version_info.minor == 6:
+    requirements.append("dataclasses")
 
 setuptools.setup(
     name="hgvsp",
@@ -18,5 +29,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",
     ],
+    python_requires=">=3.6",
+    install_requires=requirements,
     test_suite="tests",
 )
