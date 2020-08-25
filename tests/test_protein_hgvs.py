@@ -15,12 +15,11 @@ from hgvsp.protein import (
 class TestEventValidators(TestCase):
     def test_valid_substitutions_pass(self):
         self.assertIsNotNone(substitution_re.fullmatch("Trp24Cys"))
-        self.assertIsNotNone(substitution_re.fullmatch("Trp24???"))
         self.assertIsNotNone(substitution_re.fullmatch("Cys188="))
         self.assertIsNotNone(substitution_re.fullmatch("Trp24*"))
         self.assertIsNotNone(substitution_re.fullmatch("Trp24Ter"))
         self.assertIsNotNone(substitution_re.fullmatch("Trp24Ter^Ala^Gly"))
-        self.assertIsNotNone(substitution_re.fullmatch("Trp24?"))
+        self.assertIsNotNone(substitution_re.fullmatch("Trp24Xaa"))
         self.assertIsNotNone(substitution_re.fullmatch("Trp24=/Cys"))
         self.assertIsNotNone(substitution_re.fullmatch("p.Trp24=/Cys"))
         self.assertIsNotNone(substitution_re.fullmatch("p.(Trp24=/Cys)"))
@@ -41,13 +40,13 @@ class TestEventValidators(TestCase):
         self.assertIsNone(substitution_re.fullmatch("Y24C"))
         self.assertIsNone(substitution_re.fullmatch("Y24*"))
         self.assertIsNone(substitution_re.fullmatch("Trp24Ter^A^G"))
+        self.assertIsNone(substitution_re.fullmatch("Trp24?"))
+        self.assertIsNone(substitution_re.fullmatch("Trp24???"))
 
     def test_valid_deletions_pass(self):
         self.assertIsNotNone(deletion_re.fullmatch("Val7del"))
         self.assertIsNotNone(deletion_re.fullmatch("Lys23_Val25del"))
         self.assertIsNotNone(deletion_re.fullmatch("Trp4del"))
-        self.assertIsNotNone(deletion_re.fullmatch("???4del"))
-        self.assertIsNotNone(deletion_re.fullmatch("?4del"))
         self.assertIsNotNone(deletion_re.fullmatch("Gly2_Met46del"))
         self.assertIsNotNone(deletion_re.fullmatch("Val7=/del"))
         self.assertIsNotNone(deletion_re.fullmatch("p.Val7=/del"))
@@ -62,11 +61,12 @@ class TestEventValidators(TestCase):
         self.assertIsNone(deletion_re.fullmatch("1704+1delaaa"))
         self.assertIsNone(deletion_re.fullmatch("19_21del(5)"))
         self.assertIsNone(deletion_re.fullmatch("19_21deluuu"))
+        self.assertIsNone(deletion_re.fullmatch("???4del"))
+        self.assertIsNone(deletion_re.fullmatch("?4del"))
 
     def test_valid_insertions_pass(self):
         self.assertIsNotNone(insertion_re.fullmatch("His4_Gln5insAla"))
-        self.assertIsNotNone(insertion_re.fullmatch("His4_Gln5ins???"))
-        self.assertIsNotNone(insertion_re.fullmatch("His4_Gln5ins?"))
+        self.assertIsNotNone(insertion_re.fullmatch("His4_Gln5insXaa"))
         self.assertIsNotNone(insertion_re.fullmatch("His4_Gln5insAla^Gly^Ser"))
         self.assertIsNotNone(insertion_re.fullmatch("Lys2_Gly3insGlnSerLys"))
         self.assertIsNotNone(insertion_re.fullmatch("Met3_His4insGlyTer"))
@@ -85,12 +85,14 @@ class TestEventValidators(TestCase):
         self.assertIsNone(insertion_re.fullmatch("(Val582_Asn583)insXXXXX"))
         self.assertIsNone(insertion_re.fullmatch("Val582_Asn583ins"))
         self.assertIsNone(insertion_re.fullmatch("Val582+1_Asn583insXXXXX"))
+        self.assertIsNone(any_event_re.fullmatch("Arg78_???79ins23"))
+        self.assertIsNone(insertion_re.fullmatch("His4_Gln5ins???"))
+        self.assertIsNone(insertion_re.fullmatch("His4_Gln5ins?"))
 
     def test_valid_delins_passes(self):
         self.assertIsNotNone(delins_re.fullmatch("Cys28delinsTrpVal"))
         self.assertIsNotNone(delins_re.fullmatch("Cys28delinsTrpVal"))
-        self.assertIsNotNone(delins_re.fullmatch("Cys28delins???Val"))
-        self.assertIsNotNone(delins_re.fullmatch("Cys28delins?Val"))
+        self.assertIsNotNone(delins_re.fullmatch("Cys28delinsXaaVal"))
         self.assertIsNotNone(
             delins_re.fullmatch("Glu125_Ala132delinsGlyLeuHisArgPheIleValLeu")
         )
@@ -107,12 +109,13 @@ class TestEventValidators(TestCase):
         self.assertIsNone(delins_re.fullmatch("C28_L29delinsT^G^L"))
         self.assertIsNone(delins_re.fullmatch("p.C28_L29delinsT^G^L"))
         self.assertIsNone(delins_re.fullmatch("p.(C28_L29delinsT^G^L)"))
+        self.assertIsNone(delins_re.fullmatch("Cys28delins???Val"))
+        self.assertIsNone(delins_re.fullmatch("Cys28delins?Val"))
 
     def test_valid_frameshift_passes(self):
         self.assertIsNotNone(frame_shift_re.fullmatch("Arg97ProfsTer23"))
         self.assertIsNotNone(frame_shift_re.fullmatch("Glu5ValfsTer5"))
         self.assertIsNotNone(frame_shift_re.fullmatch("Ile327Argfs*?"))
-        self.assertIsNotNone(frame_shift_re.fullmatch("Ile327Argfs???5"))
         self.assertIsNotNone(frame_shift_re.fullmatch("Ile327fs"))
         self.assertIsNotNone(frame_shift_re.fullmatch("Gln151Thrfs*9"))
         self.assertIsNotNone(frame_shift_re.fullmatch("p.Ile327fs"))
@@ -123,16 +126,17 @@ class TestEventValidators(TestCase):
         self.assertIsNone(frame_shift_re.fullmatch(""))
         self.assertIsNone(frame_shift_re.fullmatch("fsTer"))
         self.assertIsNone(frame_shift_re.fullmatch("Glu5_Val7fsTer5"))
+        self.assertIsNone(frame_shift_re.fullmatch("Glu5_Val7fs*Ter5"))
         self.assertIsNone(frame_shift_re.fullmatch("Ile327Argfs*?Ter"))
         self.assertIsNone(frame_shift_re.fullmatch("Ile327fs(4)"))
         self.assertIsNone(frame_shift_re.fullmatch("*?_45+1delinsc"))
+        self.assertIsNone(frame_shift_re.fullmatch("Ile327Argfs???5"))
 
     def test_any_event_re_matches_any(self):
         self.assertIsNotNone(any_event_re.fullmatch("Trp24Ter^Ala^Gly"))
         self.assertIsNotNone(any_event_re.fullmatch("Arg97ProfsTer23"))
         self.assertIsNotNone(any_event_re.fullmatch("Cys28delinsTrpVal"))
         self.assertIsNotNone(any_event_re.fullmatch("Arg78_Gly79ins23"))
-        self.assertIsNotNone(any_event_re.fullmatch("Arg78_???79ins23"))
         self.assertIsNotNone(any_event_re.fullmatch("Arg78_Xaa79ins23"))
         self.assertIsNotNone(any_event_re.fullmatch("Trp24=/Cys"))
 
