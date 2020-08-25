@@ -1,5 +1,7 @@
 import re
 
+from fqfa.constants.iupac.protein import AA_CODES_ALL
+
 __all__ = [
     "deletion_re",
     "insertion_re",
@@ -12,41 +14,7 @@ __all__ = [
     "predicted_variant_re",
 ]
 
-#: Valid protein HGVS amino acid strings
-AA_CODES = (
-    "Ala",
-    "Asx",
-    "Cys",
-    "Asp",
-    "Glu",
-    "Phe",
-    "Gly",
-    "His",
-    "Ile",
-    "Lys",
-    "Leu",
-    "Met",
-    "Asn",
-    "Pro",
-    "Gln",
-    "Arg",
-    "Ser",
-    "Thr",
-    "Sec",
-    "Val",
-    "Trp",
-    "Xaa",
-    "Tyr",
-    "Glx",
-    "Ter",
-    "???",
-    "?",
-    "*",
-)
-
-amino_acids = "(?:{})".format(
-    "|".join(AA_CODES).replace("?", "\?").replace("*", "\*")
-)
+amino_acids = rf"(?:{'|'.join(AA_CODES_ALL.values())})"
 
 position = r"(?:(?:{0}\d+)|\?)".format(amino_acids)
 interval = r"(?:{0}_{0})".format(position)

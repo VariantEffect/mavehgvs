@@ -1,5 +1,7 @@
 import re
 
+from fqfa.constants.iupac.dna import DNA_CHARACTERS
+
 __all__ = [
     "deletion_re",
     "insertion_re",
@@ -10,7 +12,7 @@ __all__ = [
     "any_event_re",
 ]
 
-nucleotides = "ACGTBDHKMNRSVWY"
+nucleotides = ''.join(DNA_CHARACTERS)
 utr_descriptor = r"(?P<utr>[*-])"
 position = r"(?:\d+|\?|(?:[*-]?\d+(?:[\+-]?(?:\d+|\?))?))"
 interval = r"(?:{0}_{0})".format(position)
