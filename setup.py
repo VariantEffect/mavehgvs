@@ -14,15 +14,17 @@ if sys.version_info.major == 3 and sys.version_info.minor == 6:
 setuptools.setup(
     name="hgvsp",
     version="0.4",
-    packages=["hgvsp"],
-    url="https://github.com/VariantEffect/hgvs-patterns.git",
     author="Daniel Esposito and Alan F Rubin",
     author_email="alan.rubin@wehi.edu.au",
     description=(
         "Regular expression-based validation of HGVS variant strings for clinical genetics and genomics applications."
     ),
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/VariantEffect/hgvs-patterns",
+    packages=setuptools.find_packages(),
     classifiers=[
-        "Development Status :: 5 - Production/Stable",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
         "License :: OSI Approved :: BSD License",
