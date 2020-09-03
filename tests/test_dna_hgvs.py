@@ -15,7 +15,7 @@ class TestEventValidators(TestCase):
     def test_valid_substitutions_pass(self):
         self.assertIsNotNone(substitution_re.fullmatch("123A>G"))
         for c in ("c", "n", "g", "m"):
-            self.assertIsNotNone(substitution_re.fullmatch("{}.123A>G".format(c)))
+            self.assertIsNotNone(substitution_re.fullmatch(f"{c}.123A>G"))
         self.assertIsNotNone(substitution_re.fullmatch("123A>C"))
         self.assertIsNotNone(substitution_re.fullmatch("123A>N"))
         self.assertIsNotNone(substitution_re.fullmatch("*123A>G"))
@@ -42,7 +42,7 @@ class TestEventValidators(TestCase):
     def test_valid_deletions_pass(self):
         self.assertIsNotNone(deletion_re.fullmatch("19del"))
         for c in ("c", "n", "g", "m"):
-            self.assertIsNotNone(deletion_re.fullmatch("{}.123delA".format(c)))
+            self.assertIsNotNone(deletion_re.fullmatch(f"{c}.123delA"))
         self.assertIsNotNone(deletion_re.fullmatch("19delT"))
         self.assertIsNotNone(deletion_re.fullmatch("19_21del"))
         self.assertIsNotNone(deletion_re.fullmatch("*183_186+48del"))
@@ -76,7 +76,7 @@ class TestEventValidators(TestCase):
         self.assertIsNotNone(insertion_re.fullmatch("761_762insN"))
         self.assertIsNotNone(insertion_re.fullmatch("(222_226)insG"))
         for c in ("c", "n", "g", "m"):
-            self.assertIsNotNone(insertion_re.fullmatch("{}.123_124insA".format(c)))
+            self.assertIsNotNone(insertion_re.fullmatch(f"{c}.123_124insA"))
 
     def test_does_not_match_invalid_insertions(self):
         self.assertIsNone(insertion_re.fullmatch("19insR"))
@@ -96,7 +96,7 @@ class TestEventValidators(TestCase):
         self.assertIsNotNone(delins_re.fullmatch("9002_9009delinsTTT"))
         self.assertIsNotNone(delins_re.fullmatch("9002_9009delins(5)"))
         for c in ("c", "n", "g", "m"):
-            self.assertIsNotNone(delins_re.fullmatch("{}.123_127delinsA".format(c)))
+            self.assertIsNotNone(delins_re.fullmatch(f"{c}.123_127delinsA"))
 
     def test_does_not_match_invalid_delins(self):
         self.assertIsNone(delins_re.fullmatch("19delinsE"))

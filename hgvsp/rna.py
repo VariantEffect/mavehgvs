@@ -13,42 +13,42 @@ __all__ = [
 nucleotides = "acgubdhkmnrsvwyx"
 utr_descriptor = r"(?P<utr>[*-])"
 position = r"(?:\d+|\?)"
-interval = r"(?:{0}_{0})".format(position)
-fragment = r"(?:\({0}\))".format(interval)
+interval = rf"(?:{position}_{position})"
+fragment = rf"(?:\({interval}\))"
 intronic_position = r"(?:\d+|\?|\d+(?:[\+-]?(?:\d+|\?))?)"
-intronic_interval = r"(?:{0}_{0})".format(intronic_position)
+intronic_interval = rf"(?:{intronic_position}_{intronic_position})"
 
 # Expression with capture groups
 edge_cases = r"(?:0|spl|\?)"
 deletion = (
     r"(?P<del>"
-    r"(?:(?:\=(?:/|//))?(?P<interval>{0})del)"
+    rf"(?:(?:\=(?:/|//))?(?P<interval>{interval})del)"
     r"|"
-    r"(?:(?P<fragment>{1})del)"
+    rf"(?:(?P<fragment>{fragment})del)"
     r"|"
-    r"(?:(?P<position>{2})del(?P<base>[{3}])?)"
-    r")".format(interval, fragment, position, nucleotides)
+    rf"(?:(?P<position>{position})del(?P<base>[{nucleotides}])?)"
+    r")"
 )
 insertion = (
     r"(?P<ins>"
-    r"(?:(?P<interval>{0})|(?P<fragment>{1}))"
+    rf"(?:(?P<interval>{interval})|(?P<fragment>{fragment}))"
     r"ins"
     r"(?:"
-    r"(?P<intronic>\[(?:{2})(?:;{2}){{1,}}(?!;)\])"
+    rf"(?P<intronic>\[(?:{intronic_interval})(?:;{intronic_interval}){{1,}}(?!;)\])"
     r"|"
-    r"(?:(?P<bases>[{3}]+)|(?P<length>\(\d+\)))"
+    rf"(?:(?P<bases>[{nucleotides}]+)|(?P<length>\(\d+\)))"
     r")"
-    r")".format(interval, fragment, intronic_interval, nucleotides)
+    r")"
 )
 delins = (
     r"(?P<delins>"
     r"(?:"
-    r"(?:(?P<interval>{0})delins)"
+    rf"(?:(?P<interval>{interval})delins)"
     r"|"
-    r"(?:(?P<position>{1})delins)"
+    rf"(?:(?P<position>{position})delins)"
     r")"
-    r"(?:(?P<bases>[{2}]+)|(?P<length>\(\d+\)))"
-    r")".format(interval, position, nucleotides)
+    rf"(?:(?P<bases>[{nucleotides}]+)|(?P<length>\(\d+\)))"
+    r")"
 )
 substitution = (
     r"(?P<sub>"
@@ -56,35 +56,33 @@ substitution = (
     r"(?:0|\?|spl)"
     r"|"
     r"(?:"
-    r"(?P<position>{0})"
+    rf"(?P<position>{position})"
     r"(?:"
-    r"(?:(?P<mosaic>(?:\=(?:/|//)))?(?P<ref>[{1}])>(?P<alt>[{1}]))"
+    rf"(?:(?P<mosaic>(?:\=(?:/|//)))?(?P<ref>[{nucleotides}])>(?P<alt>[{nucleotides}]))"
     r"|"
     r"(?P<silent>\=)"
     r")"
     r")"
     r")"
-    r")".format(position, nucleotides)
+    r")"
 )
 
 
 # Remove capture groups used for use in joining regexes in
 # multi-variants since capture groups cannot be defined more than once.
-any_event = r"(?:{})".format(r"|".join([insertion, deletion, delins, substitution]))
+any_event = rf"(?:{r'|'.join([insertion, deletion, delins, substitution])})"
 any_event, _ = re.subn(r"P<\w+(_\w+)?>", ":", any_event)
 
-single_variant = r"r\.{0}".format(any_event)
-comma_separated = r"(?:(?:{0})(?:,{0}){{1,}}(?!,))".format(any_event)
-semi_colon_separated = r"(?:{0})(?:;{0}){{1,}}(?!;)".format(any_event)
-multi_variant = r"r\.(?:(?:\[{0}\])|(?:\[{1}\]))".format(
-    semi_colon_separated, comma_separated
-)
+single_variant = rf"r\.{any_event}"
+comma_separated = rf"(?:(?:{any_event})(?:,{any_event}){{1,}}(?!,))"
+semi_colon_separated = rf"(?:{any_event})(?:;{any_event}){{1,}}(?!;)"
+multi_variant = rf"r\.(?:(?:\[{semi_colon_separated}\])|(?:\[{comma_separated}\]))"
 
 # ---- Compiled Regexes
-deletion_re = re.compile(r"(?:r\.)?{0}?{1}".format(utr_descriptor, deletion))
-insertion_re = re.compile(r"(?:r\.)?{0}?{1}".format(utr_descriptor, insertion))
-delins_re = re.compile(r"(?:r\.)?{0}?{1}".format(utr_descriptor, delins))
-substitution_re = re.compile(r"(?:r\.)?{0}?{1}".format(utr_descriptor, substitution))
+deletion_re = re.compile(rf"(?:r\.)?{utr_descriptor}?{deletion}")
+insertion_re = re.compile(rf"(?:r\.)?{utr_descriptor}?{insertion}")
+delins_re = re.compile(rf"(?:r\.)?{utr_descriptor}?{delins}")
+substitution_re = re.compile(rf"(?:r\.)?{utr_descriptor}?{substitution}")
 
 single_variant_re = re.compile(single_variant)
 multi_variant_re = re.compile(multi_variant)

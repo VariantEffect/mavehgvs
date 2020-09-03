@@ -16,72 +16,72 @@ __all__ = [
 
 amino_acids = rf"(?:{'|'.join(AA_CODES_ALL.values())})"
 
-position = r"(?:(?:{0}\d+)|\?)".format(amino_acids)
-interval = r"(?:{0}_{0})".format(position)
-amino_acid_choice = r"(?:(?:{0}){{1}}(?:\^(?:{0}))+(?!\^))".format(amino_acids)
+position = rf"(?:(?:{amino_acids}\d+)|\?)"
+interval = rf"(?:{position}_{position})"
+amino_acid_choice = rf"(?:(?:{amino_acids}){{1}}(?:\^(?:{amino_acids}))+(?!\^))"
 
 
 # Expression with capture groups
 deletion = (
     r"(?P<del>"
     r"(?:"
-    r"(?P<interval>{0})"
+    rf"(?P<interval>{interval})"
     r"|"
-    r"(?:(?P<position>{1})(?P<mosaic>\=/)?)"
+    rf"(?:(?P<position>{position})(?P<mosaic>\=/)?)"
     r")"
     r"del"
-    r")".format(interval, position)
+    r")"
 )
 insertion = (
     r"(?P<ins>"
-    r"(?P<interval>{0})"
+    rf"(?P<interval>{interval})"
     r"ins"
     r"(?:"
-    r"(?P<inserted>{1}+|{2})"
+    rf"(?P<inserted>{amino_acids}+|{amino_acid_choice})"
     r"|"
     r"(?P<length>\d+)"
     r"|"
     r"(?P<unknown>(?:\(\d+\))|X+)"
     r")"
-    r")".format(interval, amino_acids, amino_acid_choice)
+    r")"
 )
 delins = (
     r"(?P<delins>"
     r"(?:"
-    r"(?P<interval>{0})"
+    rf"(?P<interval>{interval})"
     r"|"
-    r"(?P<position>{1})"
+    rf"(?P<position>{position})"
     r")"
     r"delins"
     r"(?:"
-    r"(?P<inserted>{2}+|{3})"
+    rf"(?P<inserted>{amino_acids}+|{amino_acid_choice})"
     r"|"
     r"(?P<length>\d+)"
     r"|"
     r"(?P<unknown>(?:\(\d+\))|X+)"
     r")"
-    r")".format(interval, position, amino_acids, amino_acid_choice)
+    r")"
 )
 substitution = (
     r"(?P<sub>"
     r"(?:(?P<no_protein>0)|(?P<not_predicted>\?)|(?P<equal>=))"
     r"|"
     r"(?:"
-    r"(?P<pre>{0})(?P<position>\d+)"
+    rf"(?P<pre>{amino_acids})(?P<position>\d+)"
     r"(?:"
-    r"(?P<post>(?:(?P<mosaic>\=/)?(?:{0}))|(?P<choice>{1})|(?:\*))"
+    rf"(?P<post>(?:(?P<mosaic>\=/)?(?:{amino_acids}))|(?P<choice>{amino_acid_choice})|(?:\*))"
     r"|"
     r"(?P<silent>\=)"
     r")"
     r")"
-    r")".format(amino_acids, amino_acid_choice)
+    r")"
 )
 frame_shift = (
     r"(?P<fs>"
-    r"(?P<left_aa>{0})(?P<position>\d+)(?P<right_aa>{0})?fs"
+    rf"(?P<left_aa>{amino_acids})(?P<position>\d+)(?P<right_aa>{amino_acids})?fs"
     r"(?P<shift>"
     r"(?:"
-    r"(?:{0}\d+)"
+    rf"(?:{amino_acids}\d+)"
     r"|"
     r"(?:\*\?)"
     r"|"
@@ -89,36 +89,34 @@ frame_shift = (
     r")"
     r")?"
     r")"
-).format(amino_acids)
+)
 
 
 # Remove capture groups used for use in joining regexes in
 # multi-variants since capture groups cannot be defined more than once.
-any_event = r"(?:{0})".format(
-    r"|".join([insertion, deletion, delins, substitution, frame_shift])
-)
+any_event = rf"(?:{'|'.join([insertion, deletion, delins, substitution, frame_shift])})"
 any_event, _ = re.subn(r"P<\w+(_\w+)?>", ":", any_event)
-predicted_event = r"\({0}\)".format(any_event)
-predicted_variant = r"p.\({0}\)".format(any_event)
-single_variant = r"(?:p\.{0})|(?:{1})".format(any_event, predicted_variant)
+predicted_event = rf"\({any_event}\)"
+predicted_variant = rf"p.\({any_event}\)"
+single_variant = rf"(?:p\.{any_event})|(?:{predicted_variant})"
 
-multi_any = r"({}|{})".format(predicted_event, any_event)
-multi_variant = r"p\.\[(?:{0})(?:;{0}){{1,}}(?!;)\]".format(multi_any)
+multi_any = rf"({predicted_event}|{any_event})"
+multi_variant = rf"p\.\[(?:{multi_any})(?:;{multi_any}){{1,}}(?!;)\]"
 
 
 # ---- Compiled Regexes
 deletion_re = re.compile(
-    r"(?:p\.)?(?P<predicted>\()?{0}(?(predicted)\)|)".format(deletion)
+    rf"(?:p\.)?(?P<predicted>\()?{deletion}(?(predicted)\)|)"
 )
 insertion_re = re.compile(
-    r"(?:p\.)?(?P<predicted>\()?{0}(?(predicted)\)|)".format(insertion)
+    rf"(?:p\.)?(?P<predicted>\()?{insertion}(?(predicted)\)|)"
 )
-delins_re = re.compile(r"(?:p\.)?(?P<predicted>\()?{0}(?(predicted)\)|)".format(delins))
+delins_re = re.compile(rf"(?:p\.)?(?P<predicted>\()?{delins}(?(predicted)\)|)")
 substitution_re = re.compile(
-    r"(?:p\.)?(?P<predicted>\()?{0}(?(predicted)\)|)".format(substitution)
+    rf"(?:p\.)?(?P<predicted>\()?{substitution}(?(predicted)\)|)"
 )
 frame_shift_re = re.compile(
-    r"(?:p\.)?(?P<predicted>\()?{0}(?(predicted)\)|)".format(frame_shift)
+    rf"(?:p\.)?(?P<predicted>\()?{frame_shift}(?(predicted)\)|)"
 )
 
 single_variant_re = re.compile(single_variant)
