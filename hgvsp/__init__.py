@@ -61,17 +61,13 @@ class Level(Enum):
 
 # Remove capture groups used for use in joining regexes in
 # multi-variants since capture groups cannot be defined more than once.
-single_variant = r"({0})|({1})|({2})".format(
-    dna.single_variant, rna.single_variant, protein.single_variant,
-)
-multi_variant = r"({0})|({1})|({2})".format(
-    dna.multi_variant, rna.multi_variant, protein.multi_variant,
-)
+single_variant = rf"({dna.single_variant})|({rna.single_variant})|({protein.single_variant})"
+multi_variant = rf"({dna.multi_variant})|({rna.multi_variant})|({protein.multi_variant})"
 
 # ---- Compiled Regex Expressions
 single_variant_re = re.compile(single_variant)
 multi_variant_re = re.compile(multi_variant)
-any_variant_re = re.compile(r"({})|({})".format(single_variant, multi_variant))
+any_variant_re = re.compile(rf"({single_variant})|({multi_variant})")
 
 
 def infer_type(hgvs):
