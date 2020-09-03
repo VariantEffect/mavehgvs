@@ -72,8 +72,6 @@ substitution = (
     r"(?P<post>(?:(?P<mosaic>\=/)?(?:{0}))|(?P<choice>{1})|(?:\*))"
     r"|"
     r"(?P<silent>\=)"
-    r"|"
-    r"(?P<unknown>\?)"
     r")"
     r")"
     r")".format(amino_acids, amino_acid_choice)
