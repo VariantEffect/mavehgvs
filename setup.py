@@ -7,9 +7,6 @@ with open("README.md", "r") as fh:
 requirements = [
     "fqfa>=1.1.0",
 ]
-# require backported dataclasses in Python 3.6
-if sys.version_info.major == 3 and sys.version_info.minor == 6:
-    requirements.append("dataclasses")
 
 setuptools.setup(
     name="hgvsp",
