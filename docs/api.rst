@@ -1,3 +1,5 @@
+.. _api-docs:
+
 mavehgvs API documentation
 ==========================
 
