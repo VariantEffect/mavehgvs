@@ -47,6 +47,43 @@ Many other variant types are not supported. Unsupported variants include:
 * variants in trans or unknown phase
 * complex variants (e.g. translocations)
 
+Substitution
+------------
+
+# TODO
+
+Deletion
+--------
+
+# TODO
+
+Duplication
+-----------
+
+# TODO
+
+Insertion
+---------
+
+MAVE-HGVS only supports simple insertions of a specified nucleotide or amino acid sequence.
+Insertions of a number of unknown bases or amino acids are not supported.
+Insertions using ambiguity characters (e.g. N or Xaa) are not supported.
+Insertions must be specified by listing the full inserted sequence. Referring to the sequence that is inserted based on
+its position in the reference sequence is not supported.
+
+Examples of valid insertions include:
+
+* g.234_235insT
+* c.84_85insCTG
+* c.99+6_99+7insA
+* p.His7_Gln8insSer
+* p.Ala12_Pro13insGlyProCys
+
+Deletion-Insertion
+------------------
+
+# TODO
+
 Example nucleotide variants
 ---------------------------
 

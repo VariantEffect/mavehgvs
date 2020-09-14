@@ -4,9 +4,7 @@ import sys
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-requirements = [
-    "fqfa>=1.1.0",
-]
+requirements = ["fqfa>=1.1.0"]
 
 setuptools.setup(
     name="hgvsp",
