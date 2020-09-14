@@ -105,12 +105,8 @@ multi_variant = rf"p\.\[(?:{multi_any})(?:;{multi_any}){{1,}}(?!;)\]"
 
 
 # ---- Compiled Regexes
-deletion_re = re.compile(
-    rf"(?:p\.)?(?P<predicted>\()?{deletion}(?(predicted)\)|)"
-)
-insertion_re = re.compile(
-    rf"(?:p\.)?(?P<predicted>\()?{insertion}(?(predicted)\)|)"
-)
+deletion_re = re.compile(rf"(?:p\.)?(?P<predicted>\()?{deletion}(?(predicted)\)|)")
+insertion_re = re.compile(rf"(?:p\.)?(?P<predicted>\()?{insertion}(?(predicted)\)|)")
 delins_re = re.compile(rf"(?:p\.)?(?P<predicted>\()?{delins}(?(predicted)\)|)")
 substitution_re = re.compile(
     rf"(?:p\.)?(?P<predicted>\()?{substitution}(?(predicted)\)|)"

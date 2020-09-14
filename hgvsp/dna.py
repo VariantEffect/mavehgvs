@@ -1,82 +1,117 @@
 import re
 
-from fqfa.constants.iupac.dna import DNA_CHARACTERS
+from fqfa.constants.iupac.dna import DNA_BASES
 
-__all__ = [
-    "deletion_re",
-    "insertion_re",
-    "delins_re",
-    "substitution_re",
-    "multi_variant_re",
-    "single_variant_re",
-    "any_event_re",
-]
+any_nt: str = rf"[{''.join(DNA_BASES)}]"
+"""str: Pattern matching any uppercase base.
 
-nucleotides = ''.join(DNA_CHARACTERS)
-utr_descriptor = r"(?P<utr>[*-])"
-position = r"(?:\d+|\?|(?:[*-]?\d+(?:[\+-]?(?:\d+|\?))?))"
-interval = rf"(?:{position}_{position})"
-fragment = rf"(?:\({interval}\))"
-breakpoint_ = rf"(?:{fragment}_{fragment})"
+This does not include IUPAC ambiguity characters.
+"""
+
+pos: str = r"[1-9][0-9]*"
+"""str: Pattern matching a positive integer not starting with 0.
+
+This pattern is used for sequence positions, as position 0 does not exist.
+"""
+
+pos_tx: str = rf"[*-]?{pos}(?:[+-]{pos})?"
+"""str: Pattern matching a position relative to a transcript.
+
+This pattern is used for sequence positions in a spliced transcript or coding sequence, and can express positions in
+the 5' and 3' UTR as well as intronic positions.
+"""
+
+substitution: str = rf"(?P<substitution>(?:(?P<position>{pos})(?P<ref>{any_nt})>(?P<alt>{any_nt}))|(?P<equal>=))"
+"""str: Pattern matching a DNA substitution with only numeric positions.
+
+This pattern does not match substitutions that are relative to a transcript (e.g. UTR and intronic substitutions).
+"""
+
+substitution_tx: str = rf"(?P<substitution_tx>(?:(?P<position>{pos_tx})(?P<ref>{any_nt})>(?P<alt>{any_nt}))|(?P<equal>=))"
+"""str: Pattern matching a DNA substitution with numeric or relative-to-transcript positions.
+"""
+
+deletion: str = rf"(?P<deletion>(?:(?P<start>{pos})_(?P<end>{pos})del)|(?:(?P<pos>{pos})del))"
+"""str: Pattern matching a DNA deletion with only numeric positions.
+
+This pattern does not match deletions that are relative to a transcript (e.g. UTR and intronic deletions).
+"""
+
+deletion_tx: str = rf"(?P<deletion_tx>(?:(?P<start>{pos_tx})_(?P<end>{pos_tx})del)|(?:(?P<pos>{pos_tx})del))"
+"""str: Pattern matching a DNA deletion with numeric or relative-to-transcript positions.
+"""
+
+duplication: str = rf"(?P<duplication>(?:(?P<start>{pos})_(?P<end>{pos})dup)|(?:(?P<pos>{pos})dup))"
+"""str: Pattern matching a DNA duplication with only numeric positions.
+
+This pattern does not match duplications that are relative to a transcript (e.g. UTR and intronic duplications).
+"""
+
+duplication_tx: str = rf"(?P<duplication_tx>(?:(?P<start>{pos_tx})_(?P<end>{pos_tx})dup)|(?:(?P<pos>{pos_tx})dup))"
+"""str: Pattern matching a DNA duplication with numeric or relative-to-transcript positions.
+"""
+
+insertion: str = rf"(?P<insertion>(?P<start>{pos})_(?P<end>{pos})ins(?P<bases>{any_nt}+))"
+"""str: Pattern matching a DNA insertion with only numeric positions.
+
+This pattern does not match deletions that are relative to a transcript (e.g. UTR and intronic substitutions).
+"""
+
+insertion_tx: str = rf"(?P<insertion_tx>(?P<start>{pos_tx})_(?P<end>{pos_tx})ins(?P<bases>{any_nt}+))"
+"""str: Pattern matching a DNA insertion with numeric or relative-to-transcript positions.
+"""
+
+delins: str = rf"(?P<delins>(?:(?P<start>{pos})_(?P<end>{pos})delins)|(?:(?P<pos>{pos})delins)(?P<bases>{any_nt}+))"
+"""str: Pattern matching a DNA deletion-insertion with only numeric positions.
+
+This pattern does not match deletion-insertions that are relative to a transcript (e.g. UTR and intronic deletion-insertions).
+"""
+
+delins_tx: str = rf"(?P<delins>(?:(?P<start>{pos_tx})_(?P<end>{pos_tx})delins)|(?:(?P<pos>{pos_tx})delins)(?P<bases>{any_nt}+))"
+"""str: Pattern matching a DNA deletion-insertion with numeric or relative-to-transcript positions.
+"""
 
 
-# Expression with capture groups
-deletion = (
-    r"(?P<del>"
-    rf"(?:(?P<interval>{interval})(?:(?:\=(?:/|//))|(?:del\=(?:/|//)))?del)"
-    r"|"
-    rf"(?:(?P<breakpoint>{breakpoint_})del)"
-    r"|"
-    rf"(?:(?P<position>{position})del(?P<base>[{nucleotides}])?)"
-    r")"
-)
-insertion = (
-    r"(?P<ins>"
-    r"(?:"
-    rf"(?:(?P<interval>{interval})ins)"
-    r"|"
-    rf"(?:(?P<fragment>{fragment})ins)"
-    r")"
-    rf"(?:(?P<bases>[{nucleotides}]+)|(?P<length>\(\d+\)))"
-    r")"
-)
-delins = (
-    r"(?P<delins>"
-    r"(?:"
-    rf"(?:(?P<interval>{interval})delins)"
-    r"|"
-    rf"(?:(?P<position>{position})delins)"
-    r")"
-    rf"(?:(?P<bases>[{nucleotides}]+)|(?P<length>\(\d+\)))"
-    r")"
-)
-substitution = (
-    r"(?P<sub>"
-    rf"(?P<position>{position})"
-    r"(?:"
-    rf"(?:(?P<mosaic>(?:\=/)|(?:\=//))?(?P<ref>[{nucleotides}])>(?P<alt>[{nucleotides}]))"
-    r"|"
-    r"(?P<silent>\=)"
-    r")"
-    r")"
-)
+# TODO: type hints
+def combine_patterns(patterns):
+    """Combine multiple pattern strings and generate a compiled regular expression object.
+
+    Because multiple identical group names are not allowed in a pattern, the resulting object strips out all named
+    match groups except the first one (which defines the match type) and replaces them with non-capturing parentheses.
+
+    The function assumes that all input patterns are enclosed in parentheses.
+
+    # TODO: doc string
+
+    """
+    combined = rf"{r'|'.join(patterns)}"
+    combined = re.sub(r"P<\w+(_\w+)?>", ":", combined)  # TODO: keep the first capture group that holds the event type
+
+    return re.compile(combined)
 
 
 # Remove capture groups used for use in joining regexes in
 # multi-variants since capture groups cannot be defined more than once.
-any_event = rf"{utr_descriptor}?(?:{r'|'.join([insertion, deletion, delins, substitution])})"
-any_event, _ = re.subn(r"P<\w+(_\w+)?>", ":", any_event)
+any_event_re = combine_patterns([substitution, deletion, duplication, insertion])
 
-single_variant = rf"[cngm]\.{any_event}"
-multi_variant = rf"[cngm]\.\[(?:{any_event})(?:;{any_event}){{1,}}(?!;)\]"
+any_event_tx_re = combine_patterns([substitution_tx, deletion_tx, duplication_tx, insertion_tx])
 
+single_variant_re = combine_patterns([rf"(?:[cn]\.{any_event_tx_re.pattern})", rf"(?:[gmo]\.{any_event_re.pattern})"])
+
+multi_variant = rf"(?:[cn]\.\[{any_event_tx_re.pattern}(?:;{any_event_tx_re.pattern}){{1,}}\])|(?:[gmo]\.\[{any_event_re.pattern}(?:;{any_event_re.pattern}){{1,}})\]"
+multi_variant_re = re.compile(re.sub(r"P<\w+(_\w+)?>", ":", multi_variant))
+# TODO: remove all capture groups from the multi-variant
+# Another pass of regexes will be needed to recover the various capture groups after initial validation
 
 # ---- Compiled Regexes
-deletion_re = re.compile(rf"(?:[cngm]\.)?{utr_descriptor}?{deletion}")
-insertion_re = re.compile(rf"(?:[cngm]\.)?{utr_descriptor}?{insertion}")
-delins_re = re.compile(rf"(?:[cngm]\.)?{utr_descriptor}?{delins}")
-substitution_re = re.compile(rf"(?:[cngm]\.)?{utr_descriptor}?{substitution}")
+#deletion_re = combine_patterns([rf"(?:[cn]\.{deletion_tx})", rf"(?:[gmo]\.{deletion})"])
+#duplication_re = combine_patterns([rf"(?:[cn]\.{duplication_tx})", rf"(?:[gmo]\.{duplication})"])
+#insertion_re = combine_patterns([rf"(?:[cn]\.{insertion_tx})", rf"(?:[gmo]\.{insertion})"])
+#delins_re = combine_patterns([rf"(?:[cn]\.{delins_tx})", rf"(?:[gmo]\.{delins})"])
+#substitution_re = combine_patterns([rf"(?:[cn]\.{substitution_tx})", rf"(?:[gmo]\.{substitution})"])
 
-single_variant_re = re.compile(single_variant)
-multi_variant_re = re.compile(multi_variant)
-any_event_re = re.compile(any_event)
+deletion_re = re.compile(deletion_tx)
+duplication_re = re.compile(duplication_tx)
+insertion_re = re.compile(insertion_tx)
+delins_re = re.compile(delins_tx)
+substitution_re = re.compile(substitution_tx)
