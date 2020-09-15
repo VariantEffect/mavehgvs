@@ -1,5 +1,5 @@
 import re
-
+from typing import Sequence
 from fqfa.constants.iupac.dna import DNA_BASES
 
 any_nt: str = rf"[{''.join(DNA_BASES)}]"
@@ -72,20 +72,37 @@ delins_tx: str = rf"(?P<delins>(?:(?P<start>{pos_tx})_(?P<end>{pos_tx})delins)|(
 """
 
 
-# TODO: type hints
-def combine_patterns(patterns):
+def combine_patterns(patterns: Sequence[str]) -> re.Pattern:
     """Combine multiple pattern strings and generate a compiled regular expression object.
 
     Because multiple identical group names are not allowed in a pattern, the resulting object strips out all named
-    match groups except the first one (which defines the match type) and replaces them with non-capturing parentheses.
+    match groups except the first one from each input pattern (which defines the match type) and replaces them with
+    non-capturing parentheses.
 
     The function assumes that all input patterns are enclosed in parentheses.
 
-    # TODO: doc string
+    Parameters
+    ----------
+    patterns : Sequence[str]
+        Sequence of pattern strings to combine.
+
+    Returns
+    -------
+    re.Pattern
+        Compiled regular expression that matches any of the input patterns. The first named match group from each input
+        pattern is retained.
 
     """
-    combined = rf"{r'|'.join(patterns)}"
-    combined = re.sub(r"P<\w+(_\w+)?>", ":", combined)  # TODO: keep the first capture group that holds the event type
+    tag_re = re.compile(r"\(\?P<\w+>")
+    stripped_patterns = list()
+    for p in patterns:
+        tags = list(tag_re.finditer(p))
+        sp = p
+        for t in tags[:0:-1]:
+            start, end = t.span()
+            sp = "".join((sp[:start], "(?:", sp[end:]))
+        stripped_patterns.append(sp)
+    combined = rf"{r'|'.join(stripped_patterns)}"
 
     return re.compile(combined)
 
