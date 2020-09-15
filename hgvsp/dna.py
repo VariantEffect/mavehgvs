@@ -1,5 +1,5 @@
 import re
-from typing import Sequence
+from typing import Sequence, Optional, Pattern
 from fqfa.constants.iupac.dna import DNA_BASES
 
 any_nt: str = rf"[{''.join(DNA_BASES)}]"
@@ -72,7 +72,7 @@ delins_tx: str = rf"(?P<delins>(?:(?P<start>{pos_tx})_(?P<end>{pos_tx})delins)|(
 """
 
 
-def combine_patterns(patterns: Sequence[str]) -> re.Pattern:
+def combine_patterns(patterns: Sequence[str], groupname: Optional[str] = None) -> Pattern:
     """Combine multiple pattern strings and generate a compiled regular expression object.
 
     Because multiple identical group names are not allowed in a pattern, the resulting object strips out all named
@@ -86,11 +86,15 @@ def combine_patterns(patterns: Sequence[str]) -> re.Pattern:
     patterns : Sequence[str]
         Sequence of pattern strings to combine.
 
+    groupname : Optional[str]
+        Name for the capture group surrounding the resulting pattern. If this is None, a non-capturing group will be
+        used instead.
+
     Returns
     -------
     re.Pattern
         Compiled regular expression that matches any of the input patterns. The first named match group from each input
-        pattern is retained.
+        pattern is retained. The resulting pattern is encapsulated by a group.
 
     """
     tag_re = re.compile(r"\(\?P<\w+>")
@@ -102,18 +106,21 @@ def combine_patterns(patterns: Sequence[str]) -> re.Pattern:
             start, end = t.span()
             sp = "".join((sp[:start], "(?:", sp[end:]))
         stripped_patterns.append(sp)
-    combined = rf"{r'|'.join(stripped_patterns)}"
+    if groupname is None:
+        combined = rf"(?:{r'|'.join(stripped_patterns)})"
+    else:
+        combined = rf"(?P<{groupname}>{r'|'.join(stripped_patterns)})"
 
     return re.compile(combined)
 
 
 # Remove capture groups used for use in joining regexes in
 # multi-variants since capture groups cannot be defined more than once.
-any_event_re = combine_patterns([substitution, deletion, duplication, insertion])
+any_event_re = combine_patterns([substitution, deletion, duplication, insertion], "any_event")
 
-any_event_tx_re = combine_patterns([substitution_tx, deletion_tx, duplication_tx, insertion_tx])
+any_event_tx_re = combine_patterns([substitution_tx, deletion_tx, duplication_tx, insertion_tx], "any_event_tx")
 
-single_variant_re = combine_patterns([rf"(?:[cn]\.{any_event_tx_re.pattern})", rf"(?:[gmo]\.{any_event_re.pattern})"])
+single_variant_re = re.compile(rf"(?:[cn]\.{any_event_tx_re.pattern})|(?:[gmo]\.{any_event_re.pattern})")
 
 multi_variant = rf"(?:[cn]\.\[{any_event_tx_re.pattern}(?:;{any_event_tx_re.pattern}){{1,}}\])|(?:[gmo]\.\[{any_event_re.pattern}(?:;{any_event_re.pattern}){{1,}})\]"
 multi_variant_re = re.compile(re.sub(r"P<\w+(_\w+)?>", ":", multi_variant))
