@@ -72,7 +72,9 @@ delins_tx: str = rf"(?P<delins>(?:(?P<start>{pos_tx})_(?P<end>{pos_tx})delins)|(
 """
 
 
-def combine_patterns(patterns: Sequence[str], groupname: Optional[str] = None) -> Pattern:
+def combine_patterns(
+    patterns: Sequence[str], groupname: Optional[str] = None
+) -> Pattern:
     """Combine multiple pattern strings and generate a compiled regular expression object.
 
     Because multiple identical group names are not allowed in a pattern, the resulting object strips out all named
@@ -116,11 +118,17 @@ def combine_patterns(patterns: Sequence[str], groupname: Optional[str] = None) -
 
 # Remove capture groups used for use in joining regexes in
 # multi-variants since capture groups cannot be defined more than once.
-any_event_re = combine_patterns([substitution, deletion, duplication, insertion], "any_event")
+any_event_re = combine_patterns(
+    [substitution, deletion, duplication, insertion], "any_event"
+)
 
-any_event_tx_re = combine_patterns([substitution_tx, deletion_tx, duplication_tx, insertion_tx], "any_event_tx")
+any_event_tx_re = combine_patterns(
+    [substitution_tx, deletion_tx, duplication_tx, insertion_tx], "any_event_tx"
+)
 
-single_variant_re = re.compile(rf"(?:[cn]\.{any_event_tx_re.pattern})|(?:[gmo]\.{any_event_re.pattern})")
+single_variant_re = re.compile(
+    rf"(?:[cn]\.{any_event_tx_re.pattern})|(?:[gmo]\.{any_event_re.pattern})"
+)
 
 multi_variant = rf"(?:[cn]\.\[{any_event_tx_re.pattern}(?:;{any_event_tx_re.pattern}){{1,}}\])|(?:[gmo]\.\[{any_event_re.pattern}(?:;{any_event_re.pattern}){{1,}})\]"
 multi_variant_re = re.compile(re.sub(r"P<\w+(_\w+)?>", ":", multi_variant))
@@ -128,11 +136,11 @@ multi_variant_re = re.compile(re.sub(r"P<\w+(_\w+)?>", ":", multi_variant))
 # Another pass of regexes will be needed to recover the various capture groups after initial validation
 
 # ---- Compiled Regexes
-#deletion_re = combine_patterns([rf"(?:[cn]\.{deletion_tx})", rf"(?:[gmo]\.{deletion})"])
-#duplication_re = combine_patterns([rf"(?:[cn]\.{duplication_tx})", rf"(?:[gmo]\.{duplication})"])
-#insertion_re = combine_patterns([rf"(?:[cn]\.{insertion_tx})", rf"(?:[gmo]\.{insertion})"])
-#delins_re = combine_patterns([rf"(?:[cn]\.{delins_tx})", rf"(?:[gmo]\.{delins})"])
-#substitution_re = combine_patterns([rf"(?:[cn]\.{substitution_tx})", rf"(?:[gmo]\.{substitution})"])
+# deletion_re = combine_patterns([rf"(?:[cn]\.{deletion_tx})", rf"(?:[gmo]\.{deletion})"])
+# duplication_re = combine_patterns([rf"(?:[cn]\.{duplication_tx})", rf"(?:[gmo]\.{duplication})"])
+# insertion_re = combine_patterns([rf"(?:[cn]\.{insertion_tx})", rf"(?:[gmo]\.{insertion})"])
+# delins_re = combine_patterns([rf"(?:[cn]\.{delins_tx})", rf"(?:[gmo]\.{delins})"])
+# substitution_re = combine_patterns([rf"(?:[cn]\.{substitution_tx})", rf"(?:[gmo]\.{substitution})"])
 
 deletion_re = re.compile(deletion_tx)
 duplication_re = re.compile(duplication_tx)
