@@ -77,9 +77,10 @@ def combine_patterns(
 ) -> Pattern:
     """Combine multiple pattern strings and generate a compiled regular expression object.
 
-    Because multiple identical group names are not allowed in a pattern, the resulting object strips out all named
-    match groups except the first one from each input pattern (which defines the match type) and replaces them with
-    non-capturing parentheses.
+    Because multiple identical group names are not allowed in a pattern, the resulting object renames all named match
+    groups such they are prefixed with the first match group name in the pattern. For example,
+    :code:`(?P<substitution>(?P<position>[1-9][0-9]*)...` becomes
+    :code:`(?P<substitution>(?P<substitution_position>[1-9][0-9]*)...`.
 
     The function assumes that all input patterns are enclosed in parentheses.
 
@@ -95,19 +96,20 @@ def combine_patterns(
     Returns
     -------
     re.Pattern
-        Compiled regular expression that matches any of the input patterns. The first named match group from each input
-        pattern is retained. The resulting pattern is encapsulated by a group.
+        Compiled regular expression that matches any of the input patterns. Match groups are renamed as described above
+        to attempt to ensure uniqueness across the combined pattern.
 
     """
-    tag_re = re.compile(r"\(\?P<\w+>")
+    tag_re = re.compile(r"\(\?P<(\w+)>")
     stripped_patterns = list()
     for p in patterns:
         tags = list(tag_re.finditer(p))
-        sp = p
+        prefix = f"{tags[0].group(1)}_"
+        new_p = p
         for t in tags[:0:-1]:
-            start, end = t.span()
-            sp = "".join((sp[:start], "(?:", sp[end:]))
-        stripped_patterns.append(sp)
+            start, end = t.span(1)
+            new_p = "".join((new_p[:start], prefix, new_p[start:]))
+        stripped_patterns.append(new_p)
     if groupname is None:
         combined = rf"(?:{r'|'.join(stripped_patterns)})"
     else:
