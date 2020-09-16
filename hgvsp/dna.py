@@ -133,8 +133,7 @@ single_variant_re = re.compile(
 )
 
 multi_variant = rf"(?:[cn]\.\[{any_event_tx_re.pattern}(?:;{any_event_tx_re.pattern}){{1,}}\])|(?:[gmo]\.\[{any_event_re.pattern}(?:;{any_event_re.pattern}){{1,}})\]"
-multi_variant_re = re.compile(re.sub(r"P<\w+(_\w+)?>", ":", multi_variant))
-# TODO: remove all capture groups from the multi-variant
+multi_variant_re = re.compile(re.sub(r"P<\w+>", ":", multi_variant))
 # Another pass of regexes will be needed to recover the various capture groups after initial validation
 
 # ---- Compiled Regexes
