@@ -20,56 +20,109 @@ occur in MAVE datasets, while excluding many variant types that are unlikely to 
 Key differences between HGVS and MAVE-HGVS
 ------------------------------------------
 
-Unlike standard HGVS strings that begin with an identifier (e.g. "NM_001130145.3:c.832C>T"), MAVE-HGVS strings are
-usually encountered without this extra information (e.g. "c.832C>T"). Because all variants in a single dataset are
-typically variants of the same target sequence, making this information redundant. Additionally some MAVE datasets
-(such as those interrogating synthetic proteins or codon-optimized sequences) do not have a suitable identifier in a
-reference database.
+Standard HGVS strings have the format :code:`reference:variant` (e.g. :code:`NM_001130145.3:c.832C>T`).
+MAVE-HGVS strings typically include the variant portion only and the reference portion is inferred based on the MAVE
+design.
 
-MAVE-HGVS supports a subset of variant types. Supported variants include:
+Reference identifiers in MAVE-HGVS are optional, and would typically be used in cases where a mix of MAVE datasets are
+being analyzed jointly or for experimental designs that contain multiple target sequences.
+Reference identifiers in MAVE-HGVS can contain any word characters, numbers, or the underscore.
+
+MAVE-HGVS does not distinguish between variants that have been observed experimentally and the predicted consequence of
+observed variants.
+Therefore, variants that contain :code:`()` to denote predicted consequences are considered invalid.
+
+MAVE-HGVS supports a subset of HGVS variants including:
 
 * substitutions
 * deletions
 * duplications
 * insertions
 * frame shifts
-* extensions
 
-Many other variant types are not supported. Unsupported variants include:
+Many HGVS variants are unsupported including:
 
 * inversions
 * conversions
+* extensions
 * changes in methylation state
 * RNA fusion transcripts
 * mosaicism
 * chimerism
-* most variants describing uncertainty
+* variants with uncertain consequence
 * variants in trans or unknown phase
 * complex variants (e.g. translocations)
 
 Substitution
 ------------
 
-# TODO
+MAVE-HGVS supports substitutions of a single nucleotide or amino acid.
+
+Unlike in HGVS, variants that describe identity to the reference at a single position (e.g. :code:`c.44=`) are not
+valid.
+
+Variants describing identity to the full reference (e.g. :code:`c.=`) are valid and are the intended way to specify
+identity to the target (wild-type) sequence.
+
+MAVE-HGVS does not support extension variants, which extend an amino acid sequence to the N- or C- terminal end
+(e.g. :code:`p.Met1ext-4` for gain of an upstream start or :code:`p.Ter345Lysext5` for a new downstream termination
+codon). Variants that result in an N-terminal extension should use `Insertion`_ syntax and variants that remove a
+termination codon should be written as standard substitution variants.
+
+Substitutions of more than one base at a time are covered under `Deletion-Insertion`_.
+
+Examples of valid substitutions include:
+
+* g.48C>A
+* c.=
+* c.122-6T>A
+* p.Glu27Trp
+* p.Ter345Lys
 
 Deletion
 --------
 
-# TODO
+MAVE-HGVS supports deletions of specified nucleotides or amino acids.
+
+Deletions of an unknown number of bases or amino acids are not supported.
+For example, deletions where the breakpoint is not known or where the deletion extends past the end of the target
+cannot be represented with uncertainty.
+To represent a deletion of a sequence including the start or end of the target, specify the deletion exactly as if it
+extended to the first or last position.
+
+Examples of valid deletions include:
+
+* g.44del
+* c.78+5_78+10del
+* c.1_95del
+* p.Gly18del
+* p.Gln7_Asn19del
 
 Duplication
 -----------
 
-# TODO
+MAVE-HGVS supports duplications of one or more nucleotides or amino acids.
+The syntax is the same as HGVS.
+
+Examples of valid insertions include:
+
+* g.22_24dup
+* c.77dup
+* c.101+1_101+7dup
+* p.Pro12_Gly18dup
+* p.Cys5dup
 
 Insertion
 ---------
 
-MAVE-HGVS only supports simple insertions of a specified nucleotide or amino acid sequence.
-Insertions of a number of unknown bases or amino acids are not supported.
-Insertions using ambiguity characters (e.g. N or Xaa) are not supported.
-Insertions must be specified by listing the full inserted sequence. Referring to the sequence that is inserted based on
-its position in the reference sequence is not supported.
+MAVE-HGVS supports insertions of a specified nucleotide or amino acid sequence.
+
+Insertions of a number of unspecified bases or amino acids or insertions using ambiguity characters (e.g. N or Xaa)
+are not supported.
+
+Insertions must be specified by listing the complete inserted sequence.
+Referring to the sequence that is inserted based on its position in the reference sequence is not considered valid for
+MAVE-HGVS.
 
 Examples of valid insertions include:
 
@@ -82,13 +135,15 @@ Examples of valid insertions include:
 Deletion-Insertion
 ------------------
 
-# TODO
+MAVE-HGVS supports deletion-insertions of a specified nucleotide or amino acid sequence.
 
-Example nucleotide variants
----------------------------
+Deletion-insertions of a number of unspecified bases or amino acids or insertions using ambiguity characters
+(e.g. N or Xaa) are not supported. This includes deletion-insertions with uncertain breakpoints.
 
-Example protein variants
-------------------------
+Examples of valid insertions include:
 
-Unlike HGVS, MAVE-HGVS does not distinguish between protein variants that have been observed experimentally and those
-that are predicted based on DNA level data.
+* g.22delinsAACG
+* c.83_85delinsT
+* c.43-6_595+12delinsCTT
+* p.Ile71_Cys80delinsSer
+* p.His44delinsValProGlyGlu
