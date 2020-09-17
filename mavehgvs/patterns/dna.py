@@ -162,6 +162,7 @@ def remove_named_groups(pattern: str, noncapturing: bool = True) -> str:
 
 
 multi_variant = rf"(?P<dna_tx_multi>[cn]\.\[{remove_named_groups(any_event_tx_re.pattern)}(?:;{remove_named_groups(any_event_tx_re.pattern)}){{1,}}\])|(?P<dna_multi>[gmo]\.\[{remove_named_groups(any_event_re.pattern)}(?:;{remove_named_groups(any_event_re.pattern)}){{1,}})\]"
+multi_variant_re = re.compile(multi_variant)
 # Another pass of regexes will be needed to recover the various capture groups after initial validation
 
 # ---- Compiled Regexes

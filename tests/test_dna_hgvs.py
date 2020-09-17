@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from mavehgvs.dna import (
+from mavehgvs.patterns.dna import (
     deletion_re,
     insertion_re,
     delins_re,
