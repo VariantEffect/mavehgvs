@@ -15,92 +15,81 @@ pos: str = r"[1-9][0-9]*"
 This pattern is used for sequence positions, as position 0 does not exist.
 """
 
-pos_tx: str = rf"[*-]?{pos}(?:[+-]{pos})?"
+pos_cn: str = rf"[*-]?{pos}(?:[+-]{pos})?"
 """str: Pattern matching a position relative to a transcript.
 
 This pattern is used for sequence positions in a spliced transcript or coding sequence, and can express positions in
 the 5' and 3' UTR as well as intronic positions.
 """
 
-substitution_tx: str = rf"(?P<substitution_tx>(?:(?P<position>{pos_tx})(?P<ref>{dna_nt})>(?P<alt>{dna_nt}))|(?P<equal>=))"
+substitution_cn: str = rf"(?P<substitution_cn>(?:(?P<position>{pos_cn})(?P<ref>{dna_nt})>(?P<alt>{dna_nt}))|(?P<equal>=))"
 """str: Pattern matching a DNA substitution with numeric or relative-to-transcript positions.
 """
 
-deletion_tx: str = rf"(?P<deletion_tx>(?:(?P<start>{pos_tx})_(?P<end>{pos_tx})del)|(?:(?P<pos>{pos_tx})del))"
+deletion_cn: str = rf"(?P<deletion_cn>(?:(?P<start>{pos_cn})_(?P<end>{pos_cn})del)|(?:(?P<pos>{pos_cn})del))"
 """str: Pattern matching a DNA deletion with numeric or relative-to-transcript positions.
 """
 
-duplication_tx: str = rf"(?P<duplication_tx>(?:(?P<start>{pos_tx})_(?P<end>{pos_tx})dup)|(?:(?P<pos>{pos_tx})dup))"
+duplication_cn: str = rf"(?P<duplication_cn>(?:(?P<start>{pos_cn})_(?P<end>{pos_cn})dup)|(?:(?P<pos>{pos_cn})dup))"
 """str: Pattern matching a DNA duplication with numeric or relative-to-transcript positions.
 """
 
-insertion_tx: str = rf"(?P<insertion_tx>(?P<start>{pos_tx})_(?P<end>{pos_tx})ins(?P<bases>{dna_nt}+))"
+insertion_cn: str = rf"(?P<insertion_cn>(?P<start>{pos_cn})_(?P<end>{pos_cn})ins(?P<bases>{dna_nt}+))"
 """str: Pattern matching a DNA insertion with numeric or relative-to-transcript positions.
 """
 
-delins_tx: str = rf"(?P<delins>(?:(?P<start>{pos_tx})_(?P<end>{pos_tx})delins)|(?:(?P<pos>{pos_tx})delins)(?P<bases>{dna_nt}+))"
+delins_cn: str = rf"(?P<delins>(?:(?P<start>{pos_cn})_(?P<end>{pos_cn})delins)|(?:(?P<pos>{pos_cn})delins)(?P<bases>{dna_nt}+))"
 """str: Pattern matching a DNA deletion-insertion with numeric or relative-to-transcript positions.
 """
 
-substitution: str = substitution_tx.replace(pos_tx, pos).replace("(?P<substitution_tx>", "(?P<substitution>")
-"""str: Pattern matching a DNA substitution with only numeric positions.
+substitution_gmo: str = substitution_cn.replace(pos_cn, pos).replace("(?P<substitution_cn>", "(?P<substitution_gmo>")
+"""str: Pattern matching a DNA substitution with only numeric positions for genomic-style variants.
 
 This pattern does not match substitutions that are relative to a transcript (e.g. UTR and intronic substitutions).
 """
 
-deletion: str = deletion_tx.replace(pos_tx, pos).replace("(?P<deletion_tx>", "(?P<deletion>")
-"""str: Pattern matching a DNA deletion with only numeric positions.
+deletion_gmo: str = deletion_cn.replace(pos_cn, pos).replace("(?P<deletion_cn>", "(?P<deletion_gmo>")
+"""str: Pattern matching a DNA deletion with only numeric positions for genomic-style variants.
 
 This pattern does not match deletions that are relative to a transcript (e.g. UTR and intronic deletions).
 """
 
-duplication: str = duplication_tx.replace(pos_tx, pos).replace("(?P<duplication_tx>", "(?P<duplication>")
-"""str: Pattern matching a DNA duplication with only numeric positions.
+duplication_gmo: str = duplication_cn.replace(pos_cn, pos).replace("(?P<duplication_cn>", "(?P<duplication_gmo>")
+"""str: Pattern matching a DNA duplication with only numeric positions for genomic-style variants.
 
 This pattern does not match duplications that are relative to a transcript (e.g. UTR and intronic duplications).
 """
 
-insertion: str = insertion_tx.replace(pos_tx, pos).replace("(?P<insertion_tx>", "(?P<insertion>")
-"""str: Pattern matching a DNA insertion with only numeric positions.
+insertion_gmo: str = insertion_cn.replace(pos_cn, pos).replace("(?P<insertion_cn>", "(?P<insertion_gmo>")
+"""str: Pattern matching a DNA insertion with only numeric positions for genomic-style variants.
 
 This pattern does not match deletions that are relative to a transcript (e.g. UTR and intronic substitutions).
 """
 
-delins: str = delins_tx.replace(pos_tx, pos).replace("(?P<delins_tx>", "(?P<delins>")
-"""str: Pattern matching a DNA deletion-insertion with only numeric positions.
+delins_gmo: str = delins_cn.replace(pos_cn, pos).replace("(?P<delins_cn>", "(?P<delins_gmo>")
+"""str: Pattern matching a DNA deletion-insertion with only numeric positions for genomic-style variants.
 
 This pattern does not match deletion-insertions that are relative to a transcript (e.g. UTR and intronic deletion-insertions).
 """
 
+variant_gmo = combine_patterns([substitution_gmo, deletion_gmo, duplication_gmo, insertion_gmo, delins_gmo], None)
 
-# Remove capture groups used for use in joining regexes in
-# multi-variants since capture groups cannot be defined more than once.
-any_event_re = combine_patterns(
-    [substitution, deletion, duplication, insertion], "any_event"
-)
+variant_cn = combine_patterns([substitution_cn, deletion_cn, duplication_cn, insertion_cn, delins_cn], None)
 
-any_event_tx_re = combine_patterns(
-    [substitution_tx, deletion_tx, duplication_tx, insertion_tx], "any_event_tx"
-)
+dna_single_variant = rf"(?P<dna_cn>[cn]\.{variant_cn})|(?P<dna_gmo>[gmo]\.{variant_gmo})"
 
-single_variant_re = re.compile(
-    rf"(?P<dna_tx>[cn]\.{any_event_tx_re.pattern})|(?P<dna>[gmo]\.{any_event_re.pattern})"
-)
-
-
-multi_variant = rf"(?P<dna_tx_multi>[cn]\.\[{remove_named_groups(any_event_tx_re.pattern)}(?:;{remove_named_groups(any_event_tx_re.pattern)}){{1,}}\])|(?P<dna_multi>[gmo]\.\[{remove_named_groups(any_event_re.pattern)}(?:;{remove_named_groups(any_event_re.pattern)}){{1,}})\]"
-multi_variant_re = re.compile(multi_variant)
+dna_multi_variant = rf"(?P<dna_cn_multi>[cn]\.\[{remove_named_groups(variant_cn)}(?:;{remove_named_groups(variant_cn)}){{1,}}\])|(?P<dna_gmo_multi>[gmo]\.\[{remove_named_groups(variant_gmo)}(?:;{remove_named_groups(variant_gmo)}){{1,}})\]"
 # Another pass of regexes will be needed to recover the various capture groups after initial validation
 
 # ---- Compiled Regexes
-# deletion_re = combine_patterns([rf"(?:[cn]\.{deletion_tx})", rf"(?:[gmo]\.{deletion})"])
-# duplication_re = combine_patterns([rf"(?:[cn]\.{duplication_tx})", rf"(?:[gmo]\.{duplication})"])
-# insertion_re = combine_patterns([rf"(?:[cn]\.{insertion_tx})", rf"(?:[gmo]\.{insertion})"])
-# delins_re = combine_patterns([rf"(?:[cn]\.{delins_tx})", rf"(?:[gmo]\.{delins})"])
-# substitution_re = combine_patterns([rf"(?:[cn]\.{substitution_tx})", rf"(?:[gmo]\.{substitution})"])
+# deletion_re = combine_patterns([rf"(?:[cn]\.{deletion_cn})", rf"(?:[gmo]\.{deletion})"])
+# duplication_re = combine_patterns([rf"(?:[cn]\.{duplication_cn})", rf"(?:[gmo]\.{duplication})"])
+# insertion_re = combine_patterns([rf"(?:[cn]\.{insertion_cn})", rf"(?:[gmo]\.{insertion})"])
+# delins_re = combine_patterns([rf"(?:[cn]\.{delins_cn})", rf"(?:[gmo]\.{delins})"])
+# substitution_re = combine_patterns([rf"(?:[cn]\.{substitution_cn})", rf"(?:[gmo]\.{substitution})"])
 
-deletion_re = re.compile(deletion_tx)
-duplication_re = re.compile(duplication_tx)
-insertion_re = re.compile(insertion_tx)
-delins_re = re.compile(delins_tx)
-substitution_re = re.compile(substitution_tx)
+deletion_re = re.compile(deletion_cn)
+duplication_re = re.compile(duplication_cn)
+insertion_re = re.compile(insertion_cn)
+delins_re = re.compile(delins_cn)
+substitution_re = re.compile(substitution_cn)
