@@ -3,14 +3,26 @@
 mavehgvs API documentation
 ==========================
 
-.. automodule:: hgvsp
+Utility functions for regular expression patterns
+-------------------------------------------------
+
+.. automodule:: mavehgvs.patterns.util
    :members:
 
-.. automodule:: hgvsp.dna
+DNA pattern strings
+-------------------
+
+.. automodule:: mavehgvs.patterns.dna
    :members:
 
-.. automodule:: hgvsp.rna
+RNA pattern strings
+-------------------
+
+.. automodule:: mavehgvs.patterns.rna
    :members:
 
-.. automodule:: hgvsp.protein
+Protein pattern strings
+-----------------------
+
+.. automodule:: mavehgvs.patterns.protein
    :members:
