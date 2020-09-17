@@ -32,7 +32,8 @@ MAVE-HGVS does not distinguish between variants that have been observed experime
 observed variants.
 Therefore, variants that contain :code:`()` to denote predicted consequences are considered invalid.
 
-Like HGVS, MAVE-HGVS supports multi-variants that describe multiple variants in a single variant string.
+Like HGVS, MAVE-HGVS supports alleles (called multi-variants in MAVE-HGVS) that describe multiple variants in a single
+variant string.
 Multi-variants are represented as a semicolon-separated list of valid MAVE-HGVS variants.
 
 MAVE-HGVS supports a subset of HGVS variants including:
