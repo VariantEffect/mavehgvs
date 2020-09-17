@@ -32,6 +32,9 @@ MAVE-HGVS does not distinguish between variants that have been observed experime
 observed variants.
 Therefore, variants that contain :code:`()` to denote predicted consequences are considered invalid.
 
+Like HGVS, MAVE-HGVS supports multi-variants that describe multiple variants in a single variant string.
+Multi-variants are represented as a semicolon-separated list of valid MAVE-HGVS variants.
+
 MAVE-HGVS supports a subset of HGVS variants including:
 
 * substitutions
@@ -59,15 +62,27 @@ Substitution
 MAVE-HGVS supports substitutions of a single nucleotide or amino acid.
 
 Unlike in HGVS, variants that describe identity to the reference at a single position (e.g. :code:`c.44=`) are not
-valid.
-
+valid for nucleotide positions.
 Variants describing identity to the full reference (e.g. :code:`c.=`) are valid and are the intended way to specify
 identity to the target (wild-type) sequence.
 
+Variants that describe identity to the reference at a single amino acid position (e.g. :code:`p.Cys22=`) are valid and
+are the preferred way to describe specific synonymous variants.
+
+The target-identity variants :code:`c.=` and :code:`p.=` are only valid on their own and are considered invalid as
+part of multi-variants.
+
+.. warning:: Many variants currently in MaveDB use only '=' as part of multi-variants and are therefore invalid
+   MAVE-HGVS.
+   Additionally, some MaveDB datasets have a one-to-one relationship between nucleotide and protein multi-variants
+   resulting in duplicate protein variants in the multi-variant.
+   This should also be considered invalid.
+
 MAVE-HGVS does not support extension variants, which extend an amino acid sequence to the N- or C- terminal end
 (e.g. :code:`p.Met1ext-4` for gain of an upstream start or :code:`p.Ter345Lysext5` for a new downstream termination
-codon). Variants that result in an N-terminal extension should use `Insertion`_ syntax and variants that remove a
-termination codon should be written as standard substitution variants.
+codon).
+Variants that result in an N-terminal extension should use `Insertion`_ syntax and variants that remove a termination
+codon should be written as standard substitution variants.
 
 Substitutions of more than one base at a time are covered under `Deletion-Insertion`_.
 
@@ -78,6 +93,16 @@ Examples of valid substitutions include:
 * c.122-6T>A
 * p.Glu27Trp
 * p.Ter345Lys
+* p.Cys22=
+
+Examples of valid HGVS substitutions that are invalid in MAVE-HGVS:
+
+* g.48C>W
+* c.22=
+* c.122=/T>A
+* p.(Glu27Trp)
+* p.*345Lys
+* p.Glu23Xaa
 
 Deletion
 --------
@@ -98,19 +123,42 @@ Examples of valid deletions include:
 * p.Gly18del
 * p.Gln7_Asn19del
 
+Examples of valid HGVS deletions that are invalid in MAVE-HGVS:
+
+* c.(78+1_79-1)_(124+1_125-1)delExamples of valid HGVS insertions that are invalid in MAVE-HGVS:
+
+* c.84_85ins100_125
+* g.234_235ins(10)
+* g.234_235ins(?)
+* c.(122_125)insG
+* p.(His7_Gln8insSer)
+* p.(His7_Gln8insX)
+* p.(Ala12_Pro13ins(2))
+
+* g.(?_85)_(124_?)del
+* c.122=/del
+* p.(Gly18del)
+
 Duplication
 -----------
 
 MAVE-HGVS supports duplications of one or more nucleotides or amino acids.
 The syntax is the same as HGVS.
 
-Examples of valid insertions include:
+Examples of valid duplications include:
 
 * g.22_24dup
 * c.77dup
 * c.101+1_101+7dup
 * p.Pro12_Gly18dup
 * p.Cys5dup
+
+Examples of valid HGVS duplications that are invalid in MAVE-HGVS:
+
+* c.(78+1_79-1)_(124+1_125-1)dup
+* g.(?_85)_(124_?)dup
+* c.122_125=//dup
+* p.(Cys5dup)
 
 Insertion
 ---------
@@ -132,6 +180,16 @@ Examples of valid insertions include:
 * p.His7_Gln8insSer
 * p.Ala12_Pro13insGlyProCys
 
+Examples of valid HGVS insertions that are invalid in MAVE-HGVS:
+
+* c.84_85ins100_125
+* g.234_235ins(10)
+* g.234_235ins(?)
+* c.(122_125)insG
+* p.(His7_Gln8insSer)
+* p.(His7_Gln8insX)
+* p.(Ala12_Pro13ins(2))
+
 Deletion-Insertion
 ------------------
 
@@ -140,7 +198,7 @@ MAVE-HGVS supports deletion-insertions of a specified nucleotide or amino acid s
 Deletion-insertions of a number of unspecified bases or amino acids or insertions using ambiguity characters
 (e.g. N or Xaa) are not supported. This includes deletion-insertions with uncertain breakpoints.
 
-Examples of valid insertions include:
+Examples of valid deletion-insertions include:
 
 * g.22delinsAACG
 * c.83_85delinsT
