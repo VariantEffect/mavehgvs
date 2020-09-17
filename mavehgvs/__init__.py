@@ -10,7 +10,7 @@ or p.[Leu4Gly;Gly7Leu]
 import re
 from enum import Enum
 
-from . import dna, rna, protein
+from mavehgvs.patterns import dna, rna, protein
 
 __all__ = [
     "dna",
