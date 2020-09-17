@@ -80,16 +80,3 @@ dna_single_variant = rf"(?P<dna_cn>[cn]\.{variant_cn})|(?P<dna_gmo>[gmo]\.{varia
 
 dna_multi_variant = rf"(?P<dna_cn_multi>[cn]\.\[{remove_named_groups(variant_cn)}(?:;{remove_named_groups(variant_cn)}){{1,}}\])|(?P<dna_gmo_multi>[gmo]\.\[{remove_named_groups(variant_gmo)}(?:;{remove_named_groups(variant_gmo)}){{1,}})\]"
 # Another pass of regexes will be needed to recover the various capture groups after initial validation
-
-# ---- Compiled Regexes
-# deletion_re = combine_patterns([rf"(?:[cn]\.{deletion_cn})", rf"(?:[gmo]\.{deletion})"])
-# duplication_re = combine_patterns([rf"(?:[cn]\.{duplication_cn})", rf"(?:[gmo]\.{duplication})"])
-# insertion_re = combine_patterns([rf"(?:[cn]\.{insertion_cn})", rf"(?:[gmo]\.{insertion})"])
-# delins_re = combine_patterns([rf"(?:[cn]\.{delins_cn})", rf"(?:[gmo]\.{delins})"])
-# substitution_re = combine_patterns([rf"(?:[cn]\.{substitution_cn})", rf"(?:[gmo]\.{substitution})"])
-
-deletion_re = re.compile(deletion_cn)
-duplication_re = re.compile(duplication_cn)
-insertion_re = re.compile(insertion_cn)
-delins_re = re.compile(delins_cn)
-substitution_re = re.compile(substitution_cn)
