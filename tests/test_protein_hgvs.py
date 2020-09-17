@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from hgvsp.protein import (
+from mavehgvs.protein import (
     substitution_re,
     deletion_re,
     delins_re,

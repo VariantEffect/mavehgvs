@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 requirements = ["fqfa>=1.1.0"]
 
 setuptools.setup(
-    name="hgvsp",
+    name="mavehgvs",
     version="0.4",
     author="Daniel Esposito and Alan F Rubin",
     author_email="alan.rubin@wehi.edu.au",

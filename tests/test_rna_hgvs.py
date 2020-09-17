@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from hgvsp.rna import (
+from mavehgvs.rna import (
     deletion_re,
     insertion_re,
     delins_re,

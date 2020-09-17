@@ -17,6 +17,6 @@ before_script:
   - pip3 install coverage
   - pip3 install coveralls
 script:
-  - coverage run --source hgvsp -m unittest
+  - coverage run --source mavehgvs -m unittest
 after_success:
   - coveralls
