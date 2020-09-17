@@ -2,7 +2,7 @@ import re
 from typing import Sequence, Optional, Pattern
 from fqfa.constants.iupac.dna import DNA_BASES
 
-any_nt: str = rf"[{''.join(DNA_BASES)}]"
+dna_nt: str = rf"[{''.join(DNA_BASES)}]"
 """str: Pattern matching any uppercase base.
 
 This does not include IUPAC ambiguity characters.
@@ -21,13 +21,13 @@ This pattern is used for sequence positions in a spliced transcript or coding se
 the 5' and 3' UTR as well as intronic positions.
 """
 
-substitution: str = rf"(?P<substitution>(?:(?P<position>{pos})(?P<ref>{any_nt})>(?P<alt>{any_nt}))|(?P<equal>=))"
+substitution: str = rf"(?P<substitution>(?:(?P<position>{pos})(?P<ref>{dna_nt})>(?P<alt>{dna_nt}))|(?P<equal>=))"
 """str: Pattern matching a DNA substitution with only numeric positions.
 
 This pattern does not match substitutions that are relative to a transcript (e.g. UTR and intronic substitutions).
 """
 
-substitution_tx: str = rf"(?P<substitution_tx>(?:(?P<position>{pos_tx})(?P<ref>{any_nt})>(?P<alt>{any_nt}))|(?P<equal>=))"
+substitution_tx: str = rf"(?P<substitution_tx>(?:(?P<position>{pos_tx})(?P<ref>{dna_nt})>(?P<alt>{dna_nt}))|(?P<equal>=))"
 """str: Pattern matching a DNA substitution with numeric or relative-to-transcript positions.
 """
 
@@ -51,23 +51,23 @@ duplication_tx: str = rf"(?P<duplication_tx>(?:(?P<start>{pos_tx})_(?P<end>{pos_
 """str: Pattern matching a DNA duplication with numeric or relative-to-transcript positions.
 """
 
-insertion: str = rf"(?P<insertion>(?P<start>{pos})_(?P<end>{pos})ins(?P<bases>{any_nt}+))"
+insertion: str = rf"(?P<insertion>(?P<start>{pos})_(?P<end>{pos})ins(?P<bases>{dna_nt}+))"
 """str: Pattern matching a DNA insertion with only numeric positions.
 
 This pattern does not match deletions that are relative to a transcript (e.g. UTR and intronic substitutions).
 """
 
-insertion_tx: str = rf"(?P<insertion_tx>(?P<start>{pos_tx})_(?P<end>{pos_tx})ins(?P<bases>{any_nt}+))"
+insertion_tx: str = rf"(?P<insertion_tx>(?P<start>{pos_tx})_(?P<end>{pos_tx})ins(?P<bases>{dna_nt}+))"
 """str: Pattern matching a DNA insertion with numeric or relative-to-transcript positions.
 """
 
-delins: str = rf"(?P<delins>(?:(?P<start>{pos})_(?P<end>{pos})delins)|(?:(?P<pos>{pos})delins)(?P<bases>{any_nt}+))"
+delins: str = rf"(?P<delins>(?:(?P<start>{pos})_(?P<end>{pos})delins)|(?:(?P<pos>{pos})delins)(?P<bases>{dna_nt}+))"
 """str: Pattern matching a DNA deletion-insertion with only numeric positions.
 
 This pattern does not match deletion-insertions that are relative to a transcript (e.g. UTR and intronic deletion-insertions).
 """
 
-delins_tx: str = rf"(?P<delins>(?:(?P<start>{pos_tx})_(?P<end>{pos_tx})delins)|(?:(?P<pos>{pos_tx})delins)(?P<bases>{any_nt}+))"
+delins_tx: str = rf"(?P<delins>(?:(?P<start>{pos_tx})_(?P<end>{pos_tx})delins)|(?:(?P<pos>{pos_tx})delins)(?P<bases>{dna_nt}+))"
 """str: Pattern matching a DNA deletion-insertion with numeric or relative-to-transcript positions.
 """
 
@@ -129,11 +129,39 @@ any_event_tx_re = combine_patterns(
 )
 
 single_variant_re = re.compile(
-    rf"(?:[cn]\.{any_event_tx_re.pattern})|(?:[gmo]\.{any_event_re.pattern})"
+    rf"(?P<dna_tx>[cn]\.{any_event_tx_re.pattern})|(?P<dna>[gmo]\.{any_event_re.pattern})"
 )
 
-multi_variant = rf"(?:[cn]\.\[{any_event_tx_re.pattern}(?:;{any_event_tx_re.pattern}){{1,}}\])|(?:[gmo]\.\[{any_event_re.pattern}(?:;{any_event_re.pattern}){{1,}})\]"
-multi_variant_re = re.compile(re.sub(r"P<\w+>", ":", multi_variant))
+
+def remove_named_groups(pattern: str, noncapturing: bool = True) -> str:
+    """Function that replaces named match groups in a regular expression pattern.
+
+    Named groups are replaced with either regular parentheses or non-capturing parentheses.
+
+    Parameters
+    ----------
+    pattern : str
+        The pattern string to strip match groups from.
+
+    noncapturing : bool
+        If True, the named grouping parentheses are replaced by non-capturing parentheses.
+        If False, regular parentheses are used.
+
+    Returns
+    -------
+    str
+        The pattern string without named match groups.
+
+    """
+    if noncapturing:
+        new_parens = "(?:"
+    else:
+        new_parens = "("
+
+    return re.sub(r'\(\?P<\w+>', new_parens, pattern)
+
+
+multi_variant = rf"(?P<dna_tx_multi>[cn]\.\[{remove_named_groups(any_event_tx_re.pattern)}(?:;{remove_named_groups(any_event_tx_re.pattern)}){{1,}}\])|(?P<dna_multi>[gmo]\.\[{remove_named_groups(any_event_re.pattern)}(?:;{remove_named_groups(any_event_re.pattern)}){{1,}})\]"
 # Another pass of regexes will be needed to recover the various capture groups after initial validation
 
 # ---- Compiled Regexes
