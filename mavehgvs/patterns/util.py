@@ -2,13 +2,13 @@
 """
 
 import re
-from typing import Sequence, Optional, Pattern
+from typing import Sequence, Optional
 
 
 def combine_patterns(
     patterns: Sequence[str], groupname: Optional[str] = None
-) -> Pattern:
-    """Combine multiple pattern strings and generate a compiled regular expression object.
+) -> str:
+    """Combine multiple pattern strings into a single pattern string.
 
     Because multiple identical group names are not allowed in a pattern, the resulting object renames all named match
     groups such they are prefixed with the first match group name in the pattern. For example,
@@ -28,9 +28,9 @@ def combine_patterns(
 
     Returns
     -------
-    re.Pattern
-        Compiled regular expression that matches any of the input patterns. Match groups are renamed as described above
-        to attempt to ensure uniqueness across the combined pattern.
+    str
+        Pattern string that matches any of the input patterns. Match groups are renamed as described above to attempt
+        to ensure uniqueness across the combined pattern.
 
     """
     tag_re = re.compile(r"\(\?P<(\w+)>")
@@ -48,7 +48,7 @@ def combine_patterns(
     else:
         combined = rf"(?P<{groupname}>{r'|'.join(stripped_patterns)})"
 
-    return re.compile(combined)
+    return combined
 
 
 def remove_named_groups(pattern: str, noncapturing: bool = True) -> str:
