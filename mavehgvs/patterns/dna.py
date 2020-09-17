@@ -22,54 +22,54 @@ This pattern is used for sequence positions in a spliced transcript or coding se
 the 5' and 3' UTR as well as intronic positions.
 """
 
-substitution: str = rf"(?P<substitution>(?:(?P<position>{pos})(?P<ref>{dna_nt})>(?P<alt>{dna_nt}))|(?P<equal>=))"
-"""str: Pattern matching a DNA substitution with only numeric positions.
-
-This pattern does not match substitutions that are relative to a transcript (e.g. UTR and intronic substitutions).
-"""
-
 substitution_tx: str = rf"(?P<substitution_tx>(?:(?P<position>{pos_tx})(?P<ref>{dna_nt})>(?P<alt>{dna_nt}))|(?P<equal>=))"
 """str: Pattern matching a DNA substitution with numeric or relative-to-transcript positions.
-"""
-
-deletion: str = rf"(?P<deletion>(?:(?P<start>{pos})_(?P<end>{pos})del)|(?:(?P<pos>{pos})del))"
-"""str: Pattern matching a DNA deletion with only numeric positions.
-
-This pattern does not match deletions that are relative to a transcript (e.g. UTR and intronic deletions).
 """
 
 deletion_tx: str = rf"(?P<deletion_tx>(?:(?P<start>{pos_tx})_(?P<end>{pos_tx})del)|(?:(?P<pos>{pos_tx})del))"
 """str: Pattern matching a DNA deletion with numeric or relative-to-transcript positions.
 """
 
-duplication: str = rf"(?P<duplication>(?:(?P<start>{pos})_(?P<end>{pos})dup)|(?:(?P<pos>{pos})dup))"
-"""str: Pattern matching a DNA duplication with only numeric positions.
-
-This pattern does not match duplications that are relative to a transcript (e.g. UTR and intronic duplications).
-"""
-
 duplication_tx: str = rf"(?P<duplication_tx>(?:(?P<start>{pos_tx})_(?P<end>{pos_tx})dup)|(?:(?P<pos>{pos_tx})dup))"
 """str: Pattern matching a DNA duplication with numeric or relative-to-transcript positions.
-"""
-
-insertion: str = rf"(?P<insertion>(?P<start>{pos})_(?P<end>{pos})ins(?P<bases>{dna_nt}+))"
-"""str: Pattern matching a DNA insertion with only numeric positions.
-
-This pattern does not match deletions that are relative to a transcript (e.g. UTR and intronic substitutions).
 """
 
 insertion_tx: str = rf"(?P<insertion_tx>(?P<start>{pos_tx})_(?P<end>{pos_tx})ins(?P<bases>{dna_nt}+))"
 """str: Pattern matching a DNA insertion with numeric or relative-to-transcript positions.
 """
 
-delins: str = rf"(?P<delins>(?:(?P<start>{pos})_(?P<end>{pos})delins)|(?:(?P<pos>{pos})delins)(?P<bases>{dna_nt}+))"
+delins_tx: str = rf"(?P<delins>(?:(?P<start>{pos_tx})_(?P<end>{pos_tx})delins)|(?:(?P<pos>{pos_tx})delins)(?P<bases>{dna_nt}+))"
+"""str: Pattern matching a DNA deletion-insertion with numeric or relative-to-transcript positions.
+"""
+
+substitution: str = substitution_tx.replace(pos_tx, pos).replace("(?P<substitution_tx>", "(?P<substitution>")
+"""str: Pattern matching a DNA substitution with only numeric positions.
+
+This pattern does not match substitutions that are relative to a transcript (e.g. UTR and intronic substitutions).
+"""
+
+deletion: str = deletion_tx.replace(pos_tx, pos).replace("(?P<deletion_tx>", "(?P<deletion>")
+"""str: Pattern matching a DNA deletion with only numeric positions.
+
+This pattern does not match deletions that are relative to a transcript (e.g. UTR and intronic deletions).
+"""
+
+duplication: str = duplication_tx.replace(pos_tx, pos).replace("(?P<duplication_tx>", "(?P<duplication>")
+"""str: Pattern matching a DNA duplication with only numeric positions.
+
+This pattern does not match duplications that are relative to a transcript (e.g. UTR and intronic duplications).
+"""
+
+insertion: str = insertion_tx.replace(pos_tx, pos).replace("(?P<insertion_tx>", "(?P<insertion>")
+"""str: Pattern matching a DNA insertion with only numeric positions.
+
+This pattern does not match deletions that are relative to a transcript (e.g. UTR and intronic substitutions).
+"""
+
+delins: str = delins_tx.replace(pos_tx, pos).replace("(?P<delins_tx>", "(?P<delins>")
 """str: Pattern matching a DNA deletion-insertion with only numeric positions.
 
 This pattern does not match deletion-insertions that are relative to a transcript (e.g. UTR and intronic deletion-insertions).
-"""
-
-delins_tx: str = rf"(?P<delins>(?:(?P<start>{pos_tx})_(?P<end>{pos_tx})delins)|(?:(?P<pos>{pos_tx})delins)(?P<bases>{dna_nt}+))"
-"""str: Pattern matching a DNA deletion-insertion with numeric or relative-to-transcript positions.
 """
 
 
