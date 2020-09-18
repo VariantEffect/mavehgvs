@@ -1,10 +1,9 @@
-import re
 from fqfa.constants.iupac.dna import DNA_BASES
 from mavehgvs.patterns.util import combine_patterns, remove_named_groups
 
 
 dna_nt: str = rf"[{''.join(DNA_BASES)}]"
-"""str: Pattern matching any uppercase base.
+"""str: Pattern matching any uppercase DNA base.
 
 This does not include IUPAC ambiguity characters.
 """
@@ -15,68 +14,81 @@ pos: str = r"[1-9][0-9]*"
 This pattern is used for sequence positions, as position 0 does not exist.
 """
 
-pos_cn: str = rf"[*-]?{pos}(?:[+-]{pos})?"
+pos_cnr: str = rf"[*-]?{pos}(?:[+-]{pos})?"
 """str: Pattern matching a position relative to a transcript.
 
 This pattern is used for sequence positions in a spliced transcript or coding sequence, and can express positions in
 the 5' and 3' UTR as well as intronic positions.
 """
 
-substitution_cn: str = rf"(?P<substitution_cn>(?:(?P<position>{pos_cn})(?P<ref>{dna_nt})>(?P<alt>{dna_nt}))|(?P<equal>=))"
+dna_sub_cn: str = rf"(?P<dna_sub_cn>(?:(?P<position>{pos_cnr})(?P<ref>{dna_nt})>(?P<alt>{dna_nt}))|(?P<equal>=))"
 """str: Pattern matching a DNA substitution with numeric or relative-to-transcript positions.
 """
 
-deletion_cn: str = rf"(?P<deletion_cn>(?:(?P<start>{pos_cn})_(?P<end>{pos_cn})del)|(?:(?P<pos>{pos_cn})del))"
+dna_del_cn: str = rf"(?P<dna_del_cn>(?:(?P<start>{pos_cnr})_(?P<end>{pos_cnr})del)|(?:(?P<pos>{pos_cnr})del))"
 """str: Pattern matching a DNA deletion with numeric or relative-to-transcript positions.
 """
 
-duplication_cn: str = rf"(?P<duplication_cn>(?:(?P<start>{pos_cn})_(?P<end>{pos_cn})dup)|(?:(?P<pos>{pos_cn})dup))"
+dna_dup_cn: str = rf"(?P<dna_dup_cn>(?:(?P<start>{pos_cnr})_(?P<end>{pos_cnr})dup)|(?:(?P<pos>{pos_cnr})dup))"
 """str: Pattern matching a DNA duplication with numeric or relative-to-transcript positions.
 """
 
-insertion_cn: str = rf"(?P<insertion_cn>(?P<start>{pos_cn})_(?P<end>{pos_cn})ins(?P<bases>{dna_nt}+))"
+dna_ins_cn: str = rf"(?P<dna_ins_cn>(?P<start>{pos_cnr})_(?P<end>{pos_cnr})ins(?P<seq>{dna_nt}+))"
 """str: Pattern matching a DNA insertion with numeric or relative-to-transcript positions.
 """
 
-delins_cn: str = rf"(?P<delins>(?:(?P<start>{pos_cn})_(?P<end>{pos_cn})delins)|(?:(?P<pos>{pos_cn})delins)(?P<bases>{dna_nt}+))"
+dna_delins_cn: str = rf"(?P<dna_delins_cn>(?:(?P<start>{pos_cnr})_(?P<end>{pos_cnr})delins)|(?:(?P<pos>{pos_cnr})delins)(?P<seq>{dna_nt}+))"
 """str: Pattern matching a DNA deletion-insertion with numeric or relative-to-transcript positions.
 """
 
-substitution_gmo: str = substitution_cn.replace(pos_cn, pos).replace("(?P<substitution_cn>", "(?P<substitution_gmo>")
+dna_sub_gmo: str = dna_sub_cn.replace(pos_cnr, pos).replace("(?P<dna_sub_cn>", "(?P<dna_sub_gmo>")
 """str: Pattern matching a DNA substitution with only numeric positions for genomic-style variants.
 
 This pattern does not match substitutions that are relative to a transcript (e.g. UTR and intronic substitutions).
 """
 
-deletion_gmo: str = deletion_cn.replace(pos_cn, pos).replace("(?P<deletion_cn>", "(?P<deletion_gmo>")
+dna_del_gmo: str = dna_del_cn.replace(pos_cnr, pos).replace("(?P<dna_del_cn>", "(?P<dna_del_gmo>")
 """str: Pattern matching a DNA deletion with only numeric positions for genomic-style variants.
 
 This pattern does not match deletions that are relative to a transcript (e.g. UTR and intronic deletions).
 """
 
-duplication_gmo: str = duplication_cn.replace(pos_cn, pos).replace("(?P<duplication_cn>", "(?P<duplication_gmo>")
+dna_dup_gmo: str = dna_dup_cn.replace(pos_cnr, pos).replace("(?P<dna_dup_cn>", "(?P<dna_dup_gmo>")
 """str: Pattern matching a DNA duplication with only numeric positions for genomic-style variants.
 
 This pattern does not match duplications that are relative to a transcript (e.g. UTR and intronic duplications).
 """
 
-insertion_gmo: str = insertion_cn.replace(pos_cn, pos).replace("(?P<insertion_cn>", "(?P<insertion_gmo>")
+dna_ins_gmo: str = dna_ins_cn.replace(pos_cnr, pos).replace("(?P<dna_ins_cn>", "(?P<dna_ins_gmo>")
 """str: Pattern matching a DNA insertion with only numeric positions for genomic-style variants.
 
 This pattern does not match deletions that are relative to a transcript (e.g. UTR and intronic substitutions).
 """
 
-delins_gmo: str = delins_cn.replace(pos_cn, pos).replace("(?P<delins_cn>", "(?P<delins_gmo>")
+dna_delins_gmo: str = dna_delins_cn.replace(pos_cnr, pos).replace("(?P<dna_delins_cn>", "(?P<dna_delins_gmo>")
 """str: Pattern matching a DNA deletion-insertion with only numeric positions for genomic-style variants.
 
 This pattern does not match deletion-insertions that are relative to a transcript (e.g. UTR and intronic deletion-insertions).
 """
 
-variant_gmo = combine_patterns([substitution_gmo, deletion_gmo, duplication_gmo, insertion_gmo, delins_gmo], None)
+dna_variant_gmo: str = combine_patterns([dna_sub_gmo, dna_del_gmo, dna_dup_gmo, dna_ins_gmo, dna_delins_gmo], None)
+"""str: Pattern matching any of the genomic-style DNA variants.
 
-variant_cn = combine_patterns([substitution_cn, deletion_cn, duplication_cn, insertion_cn, delins_cn], None)
+This pattern does not match duplications that are relative to a transcript (e.g. UTR and intronic duplications).
+"""
 
-dna_single_variant = rf"(?P<dna_cn>[cn]\.{variant_cn})|(?P<dna_gmo>[gmo]\.{variant_gmo})"
+dna_variant_cn: str = combine_patterns([dna_sub_cn, dna_del_cn, dna_dup_cn, dna_ins_cn, dna_delins_cn], None)
+"""str: Pattern matching any of the transcript-style DNA variants.
+"""
 
-dna_multi_variant = rf"(?P<dna_cn_multi>[cn]\.\[{remove_named_groups(variant_cn)}(?:;{remove_named_groups(variant_cn)}){{1,}}\])|(?P<dna_gmo_multi>[gmo]\.\[{remove_named_groups(variant_gmo)}(?:;{remove_named_groups(variant_gmo)}){{1,}})\]"
-# Another pass of regexes will be needed to recover the various capture groups after initial validation
+dna_single_variant: str = rf"(?P<dna_cn>[cn]\.{dna_variant_cn})|(?P<dna_gmo>[gmo]\.{dna_variant_gmo})"
+"""str: Pattern matching any complete single DNA variant, including the prefix character.
+"""
+
+dna_multi_variant: str = rf"(?P<dna_cn_multi>[cn]\.\[{remove_named_groups(dna_variant_cn)}(?:;{remove_named_groups(dna_variant_cn)}){{1,}}\])|(?P<dna_gmo_multi>[gmo]\.\[{remove_named_groups(dna_variant_gmo)}(?:;{remove_named_groups(dna_variant_gmo)}){{1,}})\]"
+"""str: Pattern matching any complete DNA multi-variant, including the prefix character.
+
+Named capture groups have been removed from the variant patterns because of non-uniqueness.
+Another applications of single-variant regular expressions is needed to recover the named groups from each individual
+variant in the multi-variant.
+"""
