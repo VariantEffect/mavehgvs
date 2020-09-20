@@ -5,9 +5,7 @@ import re
 from typing import Sequence, Optional
 
 
-def combine_patterns(
-    patterns: Sequence[str], groupname: Optional[str] = None
-) -> str:
+def combine_patterns(patterns: Sequence[str], groupname: Optional[str] = None) -> str:
     """Combine multiple pattern strings into a single pattern string.
 
     Because multiple identical group names are not allowed in a pattern, the resulting object renames all named match
@@ -76,4 +74,4 @@ def remove_named_groups(pattern: str, noncapturing: bool = True) -> str:
     else:
         new_parens = "("
 
-    return re.sub(r'\(\?P<\w+>', new_parens, pattern)
+    return re.sub(r"\(\?P<\w+>", new_parens, pattern)

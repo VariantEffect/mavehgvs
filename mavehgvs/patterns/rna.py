@@ -28,7 +28,9 @@ rna_delins: str = rf"(?P<rna_delins>(?:(?P<start>{pos_cnr})_(?P<end>{pos_cnr}))|
 """str: Pattern matching a RNA deletion-insertion with numeric or relative-to-transcript positions.
 """
 
-rna_variant: str = combine_patterns([rna_sub, rna_del, rna_dup, rna_ins, rna_delins], None)
+rna_variant: str = combine_patterns(
+    [rna_sub, rna_del, rna_dup, rna_ins, rna_delins], None
+)
 """str: Pattern matching any single RNA variant event.
 """
 
