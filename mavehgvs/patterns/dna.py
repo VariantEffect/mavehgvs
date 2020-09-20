@@ -21,7 +21,7 @@ This pattern is used for sequence positions in a spliced transcript or coding se
 the 5' and 3' UTR as well as intronic positions.
 """
 
-dna_sub_cn: str = rf"(?P<dna_sub_cn>(?:(?P<position>{pos_cnr})(?P<ref>{dna_nt})>(?P<alt>{dna_nt}))|(?P<equal>=))"
+dna_sub_cn: str = rf"(?P<dna_sub_cn>(?:(?P<position>{pos_cnr})(?P<ref>{dna_nt})>(?P<new>{dna_nt}))|(?P<equal>=))"
 """str: Pattern matching a DNA substitution with numeric or relative-to-transcript positions.
 """
 

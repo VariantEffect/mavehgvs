@@ -8,7 +8,7 @@ rna_nt: str = rf"[{''.join(RNA_BASES).lower()}]"
 This does not include IUPAC ambiguity characters.
 """
 
-rna_sub: str = rf"(?P<rna_sub>(?:(?P<position>{pos_cnr})(?P<ref>{rna_nt})>(?P<alt>{rna_nt}))|(?P<equal>=))"
+rna_sub: str = rf"(?P<rna_sub>(?:(?P<position>{pos_cnr})(?P<ref>{rna_nt})>(?P<new>{rna_nt}))|(?P<equal>=))"
 """str: Pattern matching a RNA substitution with numeric or relative-to-transcript positions.
 """
 
