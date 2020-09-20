@@ -1,6 +1,6 @@
 from fqfa.constants.iupac.rna import RNA_BASES
 from mavehgvs.patterns.util import combine_patterns, remove_named_groups
-from mavehgvs.patterns.dna import pos_cnr
+from mavehgvs.patterns.shared import pos_cnr
 
 rna_nt: str = rf"[{''.join(RNA_BASES).lower()}]"
 """str: Pattern matching any lowercase RNA base.

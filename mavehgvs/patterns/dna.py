@@ -1,24 +1,11 @@
 from fqfa.constants.iupac.dna import DNA_BASES
 from mavehgvs.patterns.util import combine_patterns, remove_named_groups
-
+from mavehgvs.patterns.shared import pos, pos_cnr
 
 dna_nt: str = rf"[{''.join(DNA_BASES)}]"
 """str: Pattern matching any uppercase DNA base.
 
 This does not include IUPAC ambiguity characters.
-"""
-
-pos: str = r"[1-9][0-9]*"
-"""str: Pattern matching a positive integer not starting with 0.
-
-This pattern is used for sequence positions, as position 0 does not exist.
-"""
-
-pos_cnr: str = rf"[*-]?{pos}(?:[+-]{pos})?"
-"""str: Pattern matching a position relative to a transcript.
-
-This pattern is used for sequence positions in a spliced transcript or coding sequence, and can express positions in
-the 5' and 3' UTR as well as intronic positions.
 """
 
 dna_sub_cn: str = rf"(?P<dna_sub_cn>(?:(?P<position>{pos_cnr})(?P<ref>{dna_nt})>(?P<new>{dna_nt}))|(?P<equal>=))"
@@ -47,7 +34,9 @@ dna_sub_gmo: str = dna_sub_cn.replace(pos_cnr, pos).replace("(?P<dna_sub_cn>", "
 This pattern does not match substitutions that are relative to a transcript (e.g. UTR and intronic substitutions).
 """
 
-dna_del_gmo: str = dna_del_cn.replace(pos_cnr, pos).replace("(?P<dna_del_cn>", "(?P<dna_del_gmo>")
+dna_del_gmo: str = dna_del_cn.replace(pos_cnr, pos).replace(
+    "(?P<dna_del_cn>", "(?P<dna_del_gmo>"
+)
 """str: Pattern matching a DNA deletion with only numeric positions for genomic-style variants.
 
 This pattern does not match deletions that are relative to a transcript (e.g. UTR and intronic deletions).
