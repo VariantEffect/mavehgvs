@@ -37,7 +37,7 @@ dna_ins_cn: str = rf"(?P<dna_ins_cn>(?P<start>{pos_cnr})_(?P<end>{pos_cnr})ins(?
 """str: Pattern matching a DNA insertion with numeric or relative-to-transcript positions.
 """
 
-dna_delins_cn: str = rf"(?P<dna_delins_cn>(?:(?P<start>{pos_cnr})_(?P<end>{pos_cnr})delins)|(?:(?P<pos>{pos_cnr})delins)(?P<seq>{dna_nt}+))"
+dna_delins_cn: str = rf"(?P<dna_delins_cn>(?:(?P<start>{pos_cnr})_(?P<end>{pos_cnr}))|(?:(?P<pos>{pos_cnr}))delins(?P<seq>{dna_nt}+))"
 """str: Pattern matching a DNA deletion-insertion with numeric or relative-to-transcript positions.
 """
 
