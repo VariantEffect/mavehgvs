@@ -95,6 +95,8 @@ Examples of valid substitutions include:
 * p.Glu27Trp
 * p.Ter345Lys
 * p.Cys22=
+* r.22g>u
+* r.*33a>c
 
 Examples of valid HGVS substitutions that are invalid in MAVE-HGVS:
 
@@ -104,6 +106,8 @@ Examples of valid HGVS substitutions that are invalid in MAVE-HGVS:
 * p.(Glu27Trp)
 * p.*345Lys
 * p.Glu23Xaa
+* r.84=
+* r.spl
 
 Deletion
 --------
@@ -123,6 +127,7 @@ Examples of valid deletions include:
 * c.1_95del
 * p.Gly18del
 * p.Gln7_Asn19del
+* r.34_36del
 
 Examples of valid HGVS deletions that are invalid in MAVE-HGVS:
 
@@ -130,6 +135,8 @@ Examples of valid HGVS deletions that are invalid in MAVE-HGVS:
 * g.(?_85)_(124_?)del
 * c.122=/del
 * p.(Gly18del)
+* r.=/9_12del
+* r.(155_185)del
 
 Duplication
 -----------
@@ -144,6 +151,7 @@ Examples of valid duplications include:
 * c.101+1_101+7dup
 * p.Pro12_Gly18dup
 * p.Cys5dup
+* r.12dup
 
 Examples of valid HGVS duplications that are invalid in MAVE-HGVS:
 
@@ -171,6 +179,7 @@ Examples of valid insertions include:
 * c.99+6_99+7insA
 * p.His7_Gln8insSer
 * p.Ala12_Pro13insGlyProCys
+* r.22_23insauc
 
 Examples of valid HGVS insertions that are invalid in MAVE-HGVS:
 
@@ -181,6 +190,8 @@ Examples of valid HGVS insertions that are invalid in MAVE-HGVS:
 * p.(His7_Gln8insSer)
 * p.(His7_Gln8insX)
 * p.(Ala12_Pro13ins(2))
+* r.(27_30)insu
+* r.74_74insnnn
 
 Deletion-Insertion
 ------------------
@@ -197,3 +208,4 @@ Examples of valid deletion-insertions include:
 * c.43-6_595+12delinsCTT
 * p.Ile71_Cys80delinsSer
 * p.His44delinsValProGlyGlu
+* r.92delinsgac
