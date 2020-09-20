@@ -132,7 +132,7 @@ Examples of valid deletions include:
 Examples of valid HGVS deletions that are invalid in MAVE-HGVS:
 
 * c.(78+1_79-1)_(124+1_125-1)del
-* g.(?_85)_(124_?)del
+* g.(?_85)_(124\_?)del
 * c.122=/del
 * p.(Gly18del)
 * r.=/9_12del
@@ -156,7 +156,7 @@ Examples of valid duplications include:
 Examples of valid HGVS duplications that are invalid in MAVE-HGVS:
 
 * c.(78+1_79-1)_(124+1_125-1)dup
-* g.(?_85)_(124_?)dup
+* g.(?_85)_(124\_?)dup
 * c.122_125=//dup
 * p.(Cys5dup)
 
