@@ -12,11 +12,11 @@ dna_sub_cn: str = rf"(?P<dna_sub_cn>(?:(?P<position>{pos_cnr})(?P<ref>{dna_nt})>
 """str: Pattern matching a DNA substitution with numeric or relative-to-transcript positions.
 """
 
-dna_del_cn: str = rf"(?P<dna_del_cn>(?:(?P<start>{pos_cnr})_(?P<end>{pos_cnr})del)|(?:(?P<pos>{pos_cnr})del))"
+dna_del_cn: str = rf"(?P<dna_del_cn>(?:(?:(?P<start>{pos_cnr})_(?P<end>{pos_cnr}))|(?P<pos>{pos_cnr}))del)"
 """str: Pattern matching a DNA deletion with numeric or relative-to-transcript positions.
 """
 
-dna_dup_cn: str = rf"(?P<dna_dup_cn>(?:(?P<start>{pos_cnr})_(?P<end>{pos_cnr})dup)|(?:(?P<pos>{pos_cnr})dup))"
+dna_dup_cn: str = rf"(?P<dna_dup_cn>(?:(?:(?P<start>{pos_cnr})_(?P<end>{pos_cnr}))|(?P<pos>{pos_cnr}))dup)"
 """str: Pattern matching a DNA duplication with numeric or relative-to-transcript positions.
 """
 
@@ -24,7 +24,7 @@ dna_ins_cn: str = rf"(?P<dna_ins_cn>(?P<start>{pos_cnr})_(?P<end>{pos_cnr})ins(?
 """str: Pattern matching a DNA insertion with numeric or relative-to-transcript positions.
 """
 
-dna_delins_cn: str = rf"(?P<dna_delins_cn>(?:(?P<start>{pos_cnr})_(?P<end>{pos_cnr}))|(?:(?P<pos>{pos_cnr}))delins(?P<seq>{dna_nt}+))"
+dna_delins_cn: str = rf"(?P<dna_delins_cn>(?:(?:(?P<start>{pos_cnr})_(?P<end>{pos_cnr}))|(?P<pos>{pos_cnr}))delins(?P<seq>{dna_nt}+))"
 """str: Pattern matching a DNA deletion-insertion with numeric or relative-to-transcript positions.
 """
 
