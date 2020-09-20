@@ -24,7 +24,7 @@ rna_ins: str = rf"(?P<rna_ins>(?P<start>{pos_cnr})_(?P<end>{pos_cnr})ins(?P<seq>
 """str: Pattern matching a RNA insertion with numeric or relative-to-transcript positions.
 """
 
-rna_delins: str = rf"(?P<rna_delins>(?:(?P<start>{pos_cnr})_(?P<end>{pos_cnr})delins)|(?:(?P<pos>{pos_cnr})delins)(?P<seq>{rna_nt}+))"
+rna_delins: str = rf"(?P<rna_delins>(?:(?P<start>{pos_cnr})_(?P<end>{pos_cnr}))|(?:(?P<pos>{pos_cnr}))delins(?P<seq>{rna_nt}+))"
 """str: Pattern matching a RNA deletion-insertion with numeric or relative-to-transcript positions.
 """
 

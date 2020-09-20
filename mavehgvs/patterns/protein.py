@@ -1,125 +1,48 @@
-import re
+from fqfa.constants.iupac.protein import AA_CODES
+from mavehgvs.patterns.util import combine_patterns, remove_named_groups
 
-from fqfa.constants.iupac.protein import AA_CODES_ALL
+amino_acid: str = rf"(?:{'|'.join(AA_CODES.values())})"
+"""str: Pattern matching any amino acid or Ter.
 
-__all__ = [
-    "deletion_re",
-    "insertion_re",
-    "delins_re",
-    "substitution_re",
-    "multi_variant_re",
-    "single_variant_re",
-    "any_event_re",
-    "frame_shift_re",
-    "predicted_variant_re",
-]
+This does not include ambiguous amino acids such as Glx and Xaa.
+"""
 
-amino_acids = rf"(?:{'|'.join(AA_CODES_ALL.values())})"
+aa_pos: str = rf"(?:{amino_acid}[1-9][0-9]*)"
+"""str: Pattern matching an amino acid code followed by a position.
+"""
 
-position = rf"(?:(?:{amino_acids}\d+)|\?)"
-interval = rf"(?:{position}_{position})"
-amino_acid_choice = rf"(?:(?:{amino_acids}){{1}}(?:\^(?:{amino_acids}))+(?!\^))"
+pro_sub: str = rf"(?P<pro_sub>(?:(?P<ref_pos>{aa_pos})(?P<new>{amino_acid}|=))|(?P<equal>=))"
+"""str: Pattern matching a protein substitution.
+"""
 
+pro_del: str = rf"(?P<pro_del>(?:(?P<start>{aa_pos})_(?P<end>{aa_pos})del)|(?:(?P<pos>{aa_pos})del))"
+"""str: Pattern matching a protein deletion.
+"""
 
-# Expression with capture groups
-deletion = (
-    r"(?P<del>"
-    r"(?:"
-    rf"(?P<interval>{interval})"
-    r"|"
-    rf"(?:(?P<position>{position})(?P<mosaic>\=/)?)"
-    r")"
-    r"del"
-    r")"
-)
-insertion = (
-    r"(?P<ins>"
-    rf"(?P<interval>{interval})"
-    r"ins"
-    r"(?:"
-    rf"(?P<inserted>{amino_acids}+|{amino_acid_choice})"
-    r"|"
-    r"(?P<length>\d+)"
-    r"|"
-    r"(?P<unknown>(?:\(\d+\))|X+)"
-    r")"
-    r")"
-)
-delins = (
-    r"(?P<delins>"
-    r"(?:"
-    rf"(?P<interval>{interval})"
-    r"|"
-    rf"(?P<position>{position})"
-    r")"
-    r"delins"
-    r"(?:"
-    rf"(?P<inserted>{amino_acids}+|{amino_acid_choice})"
-    r"|"
-    r"(?P<length>\d+)"
-    r"|"
-    r"(?P<unknown>(?:\(\d+\))|X+)"
-    r")"
-    r")"
-)
-substitution = (
-    r"(?P<sub>"
-    r"(?:(?P<no_protein>0)|(?P<not_predicted>\?)|(?P<equal>=))"
-    r"|"
-    r"(?:"
-    rf"(?P<pre>{amino_acids})(?P<position>\d+)"
-    r"(?:"
-    rf"(?P<post>(?:(?P<mosaic>\=/)?(?:{amino_acids}))|(?P<choice>{amino_acid_choice})|(?:\*))"
-    r"|"
-    r"(?P<silent>\=)"
-    r")"
-    r")"
-    r")"
-)
-frame_shift = (
-    r"(?P<fs>"
-    rf"(?P<left_aa>{amino_acids})(?P<position>\d+)(?P<right_aa>{amino_acids})?fs"
-    r"(?P<shift>"
-    r"(?:"
-    rf"(?:{amino_acids}\d+)"
-    r"|"
-    r"(?:\*\?)"
-    r"|"
-    r"(?:\*\d+)"
-    r")"
-    r")?"
-    r")"
-)
+pro_dup: str = rf"(?P<pro_dup>(?:(?P<start>{aa_pos})_(?P<end>{aa_pos})dup)|(?:(?P<pos>{aa_pos})dup))"
+"""str: Pattern matching a protein duplication.
+"""
 
+pro_ins: str = rf"(?P<pro_ins>(?P<start>{aa_pos})_(?P<end>{aa_pos})ins(?P<seq>{amino_acid}+))"
+"""str: Pattern matching a protein insertion.
+"""
 
-# Remove capture groups used for use in joining regexes in
-# multi-variants since capture groups cannot be defined more than once.
-any_event = rf"(?:{'|'.join([insertion, deletion, delins, substitution, frame_shift])})"
-any_event, _ = re.subn(r"P<\w+(_\w+)?>", ":", any_event)
-predicted_event = rf"\({any_event}\)"
-predicted_variant = rf"p.\({any_event}\)"
-single_variant = rf"(?:p\.{any_event})|(?:{predicted_variant})"
+pro_delins: str = rf"(?P<pro_del>(?:(?P<start>{aa_pos})_(?P<end>{aa_pos}))|(?:(?P<pos>{aa_pos}))delins(?P<seq>{amino_acid}+))"
+"""str: Pattern matching a protein deletion-insertion.
+"""
 
-multi_any = rf"({predicted_event}|{any_event})"
-multi_variant = rf"p\.\[(?:{multi_any})(?:;{multi_any}){{1,}}(?!;)\]"
+pro_variant: str = combine_patterns([pro_sub, pro_del, pro_dup, pro_ins, pro_delins], None)
+"""str: Pattern matching any single protein variant event.
+"""
 
+pro_single_variant: str = rf"(?P<pro>p\.{pro_variant}))"
+"""str: Pattern matching any complete protein variant, including the prefix character.
+"""
 
-# ---- Compiled Regexes
-deletion_re = re.compile(rf"(?:p\.)?(?P<predicted>\()?{deletion}(?(predicted)\)|)")
-insertion_re = re.compile(rf"(?:p\.)?(?P<predicted>\()?{insertion}(?(predicted)\)|)")
-delins_re = re.compile(rf"(?:p\.)?(?P<predicted>\()?{delins}(?(predicted)\)|)")
-substitution_re = re.compile(
-    rf"(?:p\.)?(?P<predicted>\()?{substitution}(?(predicted)\)|)"
-)
-frame_shift_re = re.compile(
-    rf"(?:p\.)?(?P<predicted>\()?{frame_shift}(?(predicted)\)|)"
-)
+pro_multi_variant: str = rf"(?P<pro_multi>p\.\[{remove_named_groups(pro_variant)}(?:;{remove_named_groups(pro_variant)}){{1,}}\])"
+"""str: Pattern matching any complete protein multi-variant, including the prefix character.
 
-single_variant_re = re.compile(single_variant)
-multi_variant_re = re.compile(multi_variant)
-predicted_variant_re = re.compile(predicted_variant)
-any_event_re = re.compile(any_event)
-
-
-def split_amino_acids(aa_str):
-    return re.findall("[A-Z\?][^A-Z\?]*", aa_str)
+Named capture groups have been removed from the variant patterns because of non-uniqueness.
+Another applications of single-variant regular expressions is needed to recover the named groups from each individual
+variant in the multi-variant.
+"""
