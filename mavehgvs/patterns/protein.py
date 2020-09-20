@@ -31,7 +31,9 @@ pro_delins: str = rf"(?P<pro_del>(?:(?P<start>{aa_pos})_(?P<end>{aa_pos}))|(?:(?
 """str: Pattern matching a protein deletion-insertion.
 """
 
-pro_variant: str = combine_patterns([pro_sub, pro_del, pro_dup, pro_ins, pro_delins], None)
+pro_variant: str = combine_patterns(
+    [pro_sub, pro_del, pro_dup, pro_ins, pro_delins], None
+)
 """str: Pattern matching any single protein variant event.
 """
 
