@@ -201,7 +201,13 @@ class TestDnaInsCn(unittest.TestCase):
     def setUpClass(cls):
         cls.pattern = re.compile(dna_ins_cn, flags=re.ASCII)
 
-        cls.valid_strings = ["234_235insT", "84_85insCTG", "99+6_99+7insA", "124+100_124-100insTTG", "124+101_124-100insTTG"]
+        cls.valid_strings = [
+            "234_235insT",
+            "84_85insCTG",
+            "99+6_99+7insA",
+            "124+100_124-100insTTG",
+            "124+101_124-100insTTG",
+        ]
 
         cls.invalid_strings = ["84_85ins100_125", "234_235ins(10)", "234_235ins(?)"]
 
