@@ -49,7 +49,7 @@ class TestDnaSubGmo(unittest.TestCase):
 
         cls.valid_strings = ["48C>A", "="]
 
-        cls.invalid_strings = ["122-6T>A", "22g>u", "48C>W", "22=", "122=/T>A"]
+        cls.invalid_strings = ["122-6T>A", "22g>u", "48C>W", "22=", "122=/T>A", "0C>T"]
 
     def test_valid_strings(self):
         for s in self.valid_strings:
@@ -201,7 +201,7 @@ class TestDnaInsCn(unittest.TestCase):
     def setUpClass(cls):
         cls.pattern = re.compile(dna_ins_cn, flags=re.ASCII)
 
-        cls.valid_strings = ["234_235insT", "84_85insCTG", "99+6_99+7insA"]
+        cls.valid_strings = ["234_235insT", "84_85insCTG", "99+6_99+7insA", "124+100_124-100insTTG", "124+101_124-100insTTG"]
 
         cls.invalid_strings = ["84_85ins100_125", "234_235ins(10)", "234_235ins(?)"]
 
