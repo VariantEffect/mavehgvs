@@ -83,6 +83,8 @@ Variants that are measured at the DNA level should generally not use the RNA syn
 Substitution
 ------------
 
+.. note:: TODO: add some noncoding ('n.' variants) to the examples.
+
 MAVE-HGVS supports substitutions of a single nucleotide or amino acid.
 
 Unlike in HGVS, variants that describe identity to the reference at a single position (e.g. :code:`c.44=`) are not
