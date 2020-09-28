@@ -1,0 +1,7 @@
+"c",  "coding DNA sequence"
+"g",  "linear genomic DNA sequence"
+"m",  "mitochondrial genomic DNA sequence"
+"n",  "non-coding DNA sequence"
+"o",  "circular genomic DNA sequence"
+"p",  "protein sequence"
+"r",  "RNA transcript sequence"
