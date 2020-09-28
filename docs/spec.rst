@@ -57,6 +57,29 @@ Many HGVS variants are unsupported including:
 * variants in trans or unknown phase
 * complex variants (e.g. translocations)
 
+Sequence prefixes and sequence types
+------------------------------------
+
+Similarly to HGVS, a MAVE-HGVS variant begins with a single prefix character that defines the sequence type.
+Supported sequence types are the same as for HGVS, and are listed in the following table:
+
+.. csv-table::
+   :file: ../docs/prefix.csv
+   :header: "Prefix", "Description"
+   :widths: 5, 20
+
+Typically MAVE variants are expressed relative to a coding, non-coding, or protein sequence.
+
+A notable exception is when the target sequence for the MAVE consists of both coding and non-coding sequences,
+such as when a full-length gene with introns is mutagenized and splice variants are assayed via saturation genome
+editing or other methods.
+In this case, it is appropriate to use one of the genomic sequence prefixes to describe changes using the contiguous
+region containing all mutagenized sequences as the target sequence.
+
+RNA variants are intended to be used when assaying the functional consequences to an RNA molecule,
+such as a tRNA or ribozyme.
+Variants that are measured at the DNA level should generally not use the RNA syntax.
+
 Substitution
 ------------
 
