@@ -3,6 +3,15 @@
 mavehgvs API documentation
 ==========================
 
+Variant objects
+---------------
+
+Each variant can be parsed into a variant object, which populates and exposes named
+fields for each piece of the variant string.
+
+.. autoclass:: mavehgvs.variant.Variant
+   :members:
+
 Utility functions for regular expression patterns
 -------------------------------------------------
 
