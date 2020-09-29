@@ -1,14 +1,7 @@
-from typing import Optional, Union, List, Tuple, TypeVar
+from typing import Optional, Union, List, Tuple, Sequence, TypeVar
+from mavehgvs.position import VariantPosition
 
-VariantPosition = TypeVar(
-    "VariantPosition", int, str, Tuple[Union[int, str], Union[int, str]]
-)
-"""Type variable for a variant position.
-
-The position can be an int or string (for extended positions relative to transcripts) and contain either a single value
-or a tuple of start and end coordinates for variants affecting a position range (e.g. insertions and deletions).
-"""
-
+# TODO: revisit this naming convention
 VariantSequence = TypeVar("VariantSequence", str, Tuple[str, str])
 """Type variable for a variant sequence.
 
@@ -26,6 +19,82 @@ class Variant:
             MAVE-HGVS variant string to convert into an object.
 
         """
+        self.variant_string = s
+        self.matchdict = None
+        self.validation_failure_message = None
+        self.variant_count = None
+        self._position = None
+        self._prefix = None
+        self._reference_id = None
+        self._sequence = None
+        self._variant_type = None
+
+    @staticmethod
+    def _position_distance(pos1: Union[int, str], pos2: Union[int, str]) -> int:
+        """Calculate the minimum distance between two sequence positions.
+
+        Some distances between positions using the extended notation cannot be calculated exactly without knowing the
+        full target sequence.
+        In such cases this function returns the minimum possible distance.
+
+        Parameters
+        ----------
+        pos1 : Union[int, str]
+            The first position, either as an integer or a string using the extended position notation.
+        pos2 : Union[int, str]
+            The second position, either as an integer or a string using the extended position notation.
+
+        Returns
+        -------
+        int
+            The minimum distance between positions.
+
+        Raises
+        ------
+        ValueError
+            If an integer position is not a positive number.
+        ValueError
+            If a string position is not valid.
+
+        """
+        if isinstance(pos1, int) and isinstance(pos2, int):
+            return pos2 - pos1 + 1
+        else:
+            return None  # TODO: implement this
+
+    @staticmethod
+    def _positions_are_sorted(positions: Sequence[Union[int, str]]) -> bool:
+        """Determine whether positions are in sorted order according to the 3' rule (ascending order).
+
+        Parameters
+        ----------
+        positions : Sequence[Union[int, str]]
+            The positions to check the order of.
+
+        Returns
+        -------
+        bool
+            True if the positions are sorted; else False.
+
+        """
+        pass
+
+    @staticmethod
+    def _substitution_matches_reference(pos: int, ref: str, target: str) -> bool:
+        """Determine whether the reference portion of a substitution matches the target sequence.
+
+        # TODO: this needs to be aware of protein vs nucleotide references
+
+        Parameters
+        ----------
+        pos :
+        ref
+        target
+
+        Returns
+        -------
+
+        """
         pass
 
     def is_valid(self) -> bool:
@@ -37,7 +106,10 @@ class Variant:
             True if the variant string is valid MAVE-HGVS; else False.
 
         """
-        pass
+        if self.validation_failure_message is None:
+            return False
+        else:
+            return True
 
     def is_multi_variant(self) -> Optional[bool]:
         """Return whether the variant is a multi-variant.
@@ -53,8 +125,10 @@ class Variant:
         """
         if not self.is_valid():
             return None
+        elif self.variant_count > 1:
+            return True
         else:
-            pass
+            return False
 
     def prefix(self) -> Optional[str]:
         """Return the single-letter prefix for this variant.
@@ -77,7 +151,7 @@ class Variant:
         if not self.is_valid():
             return None
         else:
-            pass
+            return self._prefix
 
     def variant_type(self) -> Optional[Union[str, List[str]]]:
         """Return the type for this variant.
@@ -104,7 +178,7 @@ class Variant:
         else:
             pass
 
-    def uses_transcript_positions(self) -> Optional[bool]:
+    def uses_extended_positions(self) -> Optional[bool]:
         """Return whether the variant uses the extended position notation to describe intronic or UTR positions.
 
         Examples of variants using the extended position notation include:
@@ -113,8 +187,8 @@ class Variant:
         * r.*33a>c
         * c.43-6_595+12delinsCTT
 
-        This will always be false for variants with a genomic or protein prefix, as variants with these prefixes cannot
-        use positions relative to a transcript.
+        This should always be false for variants with a genomic or protein prefix, as variants with these prefixes
+        cannot use positions relative to a transcript under the MAVE-HGVS specification.
 
         Returns
         -------
@@ -123,19 +197,21 @@ class Variant:
             notation or None if the variant is invalid.
 
         """
+        # TODO: unpack position tuples
         if not self.is_valid():
             return None
+        elif self.is_multi_variant():
+            return any(p.is_extended() for p in self.position())
         else:
-            pass
+            return self.position().is_extended()
 
-    def position(self) -> Optional[Union[VariantPosition, List[VariantPosition]]]:
+    def position(self) -> Optional[Union[VariantPosition, Sequence[VariantPosition]]]:  # TODO: type hints for tuple version
         """Returns the variant position as a single position or tuple containing start and end positions.
 
         Each position is represented as an integer or a string (for variants using extended position notation).
 
         Returns
         -------
-        Optional[Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]]
             Variant position or tuple of start/end positions, or None of the variant is invalid.
             Returns a list of positions or start/end tuples for a multi-variant.
 
@@ -165,3 +241,20 @@ class Variant:
             return None
         else:
             pass
+
+    def reference_id(self) -> Optional[str]:
+        """Returns the reference identifier for the variant (if applicable).
+
+        The reference identifier precedes the prefix and is followed by a :code:`:`.
+        For example in :code:`NM_001130145.3:c.832C>T` the reference identifier is "NM_001130145.3".
+
+        Returns
+        -------
+        Optional[str]
+            The reference identifier, or None if it is not set or the variant is invalid.
+
+        """
+        if not self.is_valid():
+            return None
+        else:
+            return self._reference_id
