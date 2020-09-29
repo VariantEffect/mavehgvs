@@ -1,4 +1,5 @@
 import re
+from functools import total_ordering
 from mavehgvs.patterns.shared import pos
 
 pos_extended: str = rf"(?P<position>{pos})|(?P<position_intron>{pos}[+-]{pos})|(?P<position_utr>[*-]{pos})|(?P<position_utr_intron>[*-]{pos}[+-]{pos})"
@@ -9,6 +10,7 @@ intron. It does not match integer-only positions.
 """
 
 
+@total_ordering
 class VariantPosition:
     _fullmatch = re.compile(pos_extended, flags=re.ASCII).fullmatch
     """Callable[[str, int, int], Optional[Match[str]]]: fullmatch callable for parsing positions
@@ -168,20 +170,107 @@ class VariantPosition:
             pass
 
     def __lt__(self, other: "VariantPosition") -> bool:
-        pass
+        """Less than comparison operator.
 
-    def __le__(self, other: "VariantPosition") -> bool:
-        pass
+        Other comparison operators will be filled in using :py:func:`functools.total_ordering`.
 
-    def __gt__(self, other: "VariantPosition") -> bool:
-        pass
+        Parameters
+        ----------
+        other : VariantPosition
+            The other VariantPosition to compare to.
 
-    def __ge__(self, other: "VariantPosition") -> bool:
-        pass
+        Returns
+        -------
+        bool
+            True if this position evaluates as strictly less than the other position; else False.
+
+        """
+
+        def intron_lt(a: "VariantPosition", b: "VariantPosition") -> bool:
+            """Compare two positions based on their intronic positions assuming the positions are otherwise equal.
+
+            Parameters
+            ----------
+            a : VariantPosition
+                The first position to compare.
+            b : VariantPosition
+                The second position to compare.
+
+            Returns
+            -------
+            bool
+                True if a is strictly less than b based on the intronic position, assuming that all other fields are
+                equal.
+
+            """
+            if a.intronic_position == b.intronic_position:  # variants must be equal
+                return False
+            elif a.intronic_position is None:
+                return b.intronic_position < 0
+            elif b.intronic_position is None:
+                return a.intronic_position < 0
+            else:
+                return a.intronic_position < b.intronic_position
+
+        if self.utr == other.utr:
+            if self.utr is not None:
+                if self.utr_position != other.utr_position:
+                    return self.utr_position < other.utr_position
+                else:
+                    return intron_lt(self, other)
+            else:  # both are not UTR positions
+                if self.position != other.position:
+                    return self.position < other.position
+                else:
+                    return intron_lt(self, other)
+        else:  # 5p < non-UTR < 3p
+            if self.utr == "5p" or other.utr == "3p":
+                return True
+            elif self.utr == "3p" or other.utr == "5p":
+                return False
 
     def __eq__(self, other: "VariantPosition") -> bool:
-        pass
+        """Equality comparison operator.
+
+        Other comparison operators will be filled in using :py:func:`functools.total_ordering`.
+
+        Parameters
+        ----------
+        other : VariantPosition
+            The other VariantPosition to compare to.
+
+        Returns
+        -------
+        bool
+            True if this position is the same as the other position; else False.
+
+        """
+        return (self.position, self.intronic_position, self.utr, self.utr_position) == (
+            other.position,
+            other.intronic_position,
+            other.utr,
+            other.utr_position,
+        )
 
     def __ne__(self, other: "VariantPosition") -> bool:
-        pass
+        """Not equal comparison operator.
 
+        Other comparison operators will be filled in using :py:func:`functools.total_ordering`.
+
+        Parameters
+        ----------
+        other : VariantPosition
+            The other VariantPosition to compare to.
+
+        Returns
+        -------
+        bool
+            True if this position is not the same as the other position; else False.
+
+        """
+        return (self.position, self.intronic_position, self.utr, self.utr_position) != (
+            other.position,
+            other.intronic_position,
+            other.utr,
+            other.utr_position,
+        )
