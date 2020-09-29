@@ -32,6 +32,11 @@ MAVE-HGVS does not distinguish between variants that have been observed experime
 observed variants.
 Therefore, variants that contain :code:`()` to denote predicted consequences are considered invalid.
 
+MAVE-HGVS supports position numberings that are relative to a transcript (e.g. :code:`c.85+12G>A` or :code:`n.*22del`).
+These positions are referred to here as using the extended position notation.
+Variants using the extended position notation should appear alongside variants with simple (integer only) position
+numbers relative to the target sequence, expressed using the appropriate genomic prefix.
+
 Like HGVS, MAVE-HGVS supports alleles (called multi-variants in MAVE-HGVS) that describe multiple variants in a single
 variant string.
 Multi-variants are represented as a semicolon-separated list of valid MAVE-HGVS variants.
