@@ -9,6 +9,9 @@ Variant objects
 Each variant can be parsed into a variant object, which populates and exposes named
 fields for each piece of the variant string.
 
+.. autoclass:: mavehgvs.position.VariantPosition
+   :members:
+
 .. autoclass:: mavehgvs.variant.Variant
    :members:
 
