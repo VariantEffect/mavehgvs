@@ -195,9 +195,11 @@ class VariantPosition:
                 if self.intronic_position == other.intronic_position:
                     return False
                 elif self.intronic_position is None:
-                    return other.intronic_position < 0
+                    return other.intronic_position > 0
                 elif other.intronic_position is None:
-                    return self.intronic_position > 0
+                    return self.intronic_position < 0
+                else:
+                    return self.intronic_position < other.intronic_position
             else:
                 return self.position < other.position
         else:  # 5' < non-UTR < 3'
