@@ -10,8 +10,8 @@ def combine_patterns(patterns: Sequence[str], groupname: Optional[str] = None) -
 
     Because multiple identical group names are not allowed in a pattern, the resulting object renames all named match
     groups such they are prefixed with the first match group name in the pattern. For example,
-    :code:`(?P<substitution>(?P<position>[1-9][0-9]*)...` becomes
-    :code:`(?P<substitution>(?P<substitution_position>[1-9][0-9]*)...`.
+    ``(?P<substitution>(?P<position>[1-9][0-9]*)...`` becomes
+    ``(?P<substitution>(?P<substitution_position>[1-9][0-9]*)...``.
 
     The function assumes that all input patterns are enclosed in parentheses.
 

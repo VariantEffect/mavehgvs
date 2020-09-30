@@ -158,11 +158,11 @@ class Variant:
 
         Valid variant types are:
 
-        * :code:`'substitution'`
-        * :code:`'deletion'`
-        * :code:`'duplication'`
-        * :code:`'insertion'`
-        * :code:`'deletion-insertion'`
+        * ``'substitution'``
+        * ``'deletion'``
+        * ``'duplication'``
+        * ``'insertion'``
+        * ``'deletion-insertion'``
 
         # TODO: consider whether to use properties for this and similar methods
 
@@ -205,7 +205,11 @@ class Variant:
         else:
             return self.position().is_extended()
 
-    def position(self) -> Optional[Union[VariantPosition, Sequence[VariantPosition]]]:  # TODO: type hints for tuple version
+    def position(
+        self
+    ) -> Optional[
+        Union[VariantPosition, Sequence[VariantPosition]]
+    ]:  # TODO: type hints for tuple version
         """Returns the variant position as a single position or tuple containing start and end positions.
 
         Each position is represented as an integer or a string (for variants using extended position notation).
@@ -240,13 +244,13 @@ class Variant:
         if not self.is_valid():
             return None
         else:
-            pass
+            return self._sequence
 
     def reference_id(self) -> Optional[str]:
         """Returns the reference identifier for the variant (if applicable).
 
-        The reference identifier precedes the prefix and is followed by a :code:`:`.
-        For example in :code:`NM_001130145.3:c.832C>T` the reference identifier is "NM_001130145.3".
+        The reference identifier precedes the prefix and is followed by a ``:``.
+        For example in ``NM_001130145.3:c.832C>T`` the reference identifier is "NM_001130145.3".
 
         Returns
         -------
