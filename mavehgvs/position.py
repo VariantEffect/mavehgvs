@@ -91,89 +91,6 @@ class VariantPosition:
         else:
             return p
 
-    def is_utr(self) -> bool:
-        """Return whether this is a UTR position.
-
-        Returns
-        -------
-        bool
-            True if the object describes a position in the UTR; else False.
-
-        """
-        return self.utr is not None
-
-    def is_intronic(self) -> bool:
-        """Return whether this is an intronic position.
-
-        Returns
-        -------
-        bool
-            True if the object describes a position in an intron; else False.
-
-        """
-        return self.intronic_position is not None
-
-    def is_extended(self) -> bool:
-        """Return whether this position was described using the extended syntax.
-
-        Returns
-        -------
-        bool
-            True if the position was described using the extended syntax; else False.
-
-        """
-        return self.utr is not None or self.intronic_position is not None
-
-    # the string annotation used in the type hint below is required for Python 3.6 compatibility
-    def is_adjacent(self, other: "VariantPosition") -> bool:
-        """Return whether this variant and another are immediately adjacent in sequence space.
-
-        The following special cases are not handled correctly:
-
-        * The special case involving the last variant in a transcript sequence and the first base in the 3'
-          UTR will be evaluated as not adjacent, as the object does not have sequence length information.
-        * The special case involving the two middle bases in an intron where the numbering switches from
-          positive with respect to the 5' end of the intron to negative with respect to the 3' end of the intron
-          will be evaluated as not adjacent, as the object does not have intron length information.
-        * This ignores the special case where there is an intron between the last base of the 5' UTR and the first
-          base of the coding sequence because it is not biologically relevant to the best of my knowledge.
-
-        Parameters
-        ----------
-        other : VariantPosition
-            The object to calculate adjacency to.
-
-        Returns
-        -------
-        bool
-            True if the positions describe adjacent bases in sequence space; else False.
-
-        """
-        if self.utr == other.utr:
-            if self.intronic_position is None and other.intronic_position is None:
-                return abs(self.position - other.position) == 1
-            elif (
-                self.position == other.position
-            ):  # intronic positions can only be adjacent if they are relative to the same base
-                if (
-                    self.intronic_position is not None
-                    and other.intronic_position is not None
-                ):
-                    return abs(self.intronic_position - other.intronic_position) == 1
-                else:  # handle special case for first/last base of intron and corresponding first/last base of exon
-                    return (
-                        self.intronic_position == -1
-                        or self.intronic_position == 1
-                        or other.intronic_position == -1
-                        or other.intronic_position == 1
-                    )
-            else:
-                return False
-        else:  # handle special case for last base of 5' utr and first base of non-UTR sequence
-            return (self.position == -1 and other.position == 1) or (
-                other.position == -1 and self.position == 1
-            )
-
     def __lt__(self, other: "VariantPosition") -> bool:
         """Less than comparison operator.
 
@@ -257,3 +174,86 @@ class VariantPosition:
             other.intronic_position,
             other.utr,
         )
+
+    def is_utr(self) -> bool:
+        """Return whether this is a UTR position.
+
+        Returns
+        -------
+        bool
+            True if the object describes a position in the UTR; else False.
+
+        """
+        return self.utr is not None
+
+    def is_intronic(self) -> bool:
+        """Return whether this is an intronic position.
+
+        Returns
+        -------
+        bool
+            True if the object describes a position in an intron; else False.
+
+        """
+        return self.intronic_position is not None
+
+    def is_extended(self) -> bool:
+        """Return whether this position was described using the extended syntax.
+
+        Returns
+        -------
+        bool
+            True if the position was described using the extended syntax; else False.
+
+        """
+        return self.utr is not None or self.intronic_position is not None
+
+    # the string annotation used in the type hint below is required for Python 3.6 compatibility
+    def is_adjacent(self, other: "VariantPosition") -> bool:
+        """Return whether this variant and another are immediately adjacent in sequence space.
+
+        The following special cases are not handled correctly:
+
+        * The special case involving the last variant in a transcript sequence and the first base in the 3'
+          UTR will be evaluated as not adjacent, as the object does not have sequence length information.
+        * The special case involving the two middle bases in an intron where the numbering switches from
+          positive with respect to the 5' end of the intron to negative with respect to the 3' end of the intron
+          will be evaluated as not adjacent, as the object does not have intron length information.
+        * This ignores the special case where there is an intron between the last base of the 5' UTR and the first
+          base of the coding sequence because it is not biologically relevant to the best of my knowledge.
+
+        Parameters
+        ----------
+        other : VariantPosition
+            The object to calculate adjacency to.
+
+        Returns
+        -------
+        bool
+            True if the positions describe adjacent bases in sequence space; else False.
+
+        """
+        if self.utr == other.utr:
+            if self.intronic_position is None and other.intronic_position is None:
+                return abs(self.position - other.position) == 1
+            elif (
+                self.position == other.position
+            ):  # intronic positions can only be adjacent if they are relative to the same base
+                if (
+                    self.intronic_position is not None
+                    and other.intronic_position is not None
+                ):
+                    return abs(self.intronic_position - other.intronic_position) == 1
+                else:  # handle special case for first/last base of intron and corresponding first/last base of exon
+                    return (
+                        self.intronic_position == -1
+                        or self.intronic_position == 1
+                        or other.intronic_position == -1
+                        or other.intronic_position == 1
+                    )
+            else:
+                return False
+        else:  # handle special case for last base of 5' utr and first base of non-UTR sequence
+            return (self.position == -1 and other.position == 1) or (
+                other.position == -1 and self.position == 1
+            )
