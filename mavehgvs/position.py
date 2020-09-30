@@ -69,6 +69,28 @@ class VariantPosition:
         if gdict["position_intron"] is not None:
             self.intronic_position = int(gdict["position_intron"])
 
+    def __repr__(self) -> str:
+        """The object representation is equivalent to the input string.
+
+        Returns
+        -------
+        str
+            The object representation.
+
+        """
+        if self.utr and self.position > 0:
+            p = f"*{self.position}"
+        else:
+            p = f"{self.position}"
+
+        if self.intronic_position is not None:
+            if self.intronic_position > 0:
+                return f"{p}+{self.intronic_position}"
+            else:
+                return f"{p}{self.intronic_position}"
+        else:
+            return p
+
     def is_utr(self) -> bool:
         """Return whether this is a UTR position.
 
