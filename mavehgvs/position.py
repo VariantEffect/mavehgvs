@@ -34,7 +34,7 @@ class VariantPosition:
 
      """
 
-    _fullmatch = re.compile(pos_extended, flags=re.ASCII).fullmatch
+    __fullmatch = re.compile(pos_extended, flags=re.ASCII).fullmatch
     """Callable[[str, int, int], Optional[Match[str]]]: fullmatch callable for parsing positions
     
     Returns a match object if the full string matches one of the position groups in :py:data:`pos_extended`.
@@ -50,7 +50,7 @@ class VariantPosition:
 
         """
         try:
-            gdict = VariantPosition._fullmatch(pos_str).groupdict()
+            gdict = VariantPosition.__fullmatch(pos_str).groupdict()
         except AttributeError:
             raise ValueError(f"invalid variant position string '{pos_str}'")
 
@@ -58,16 +58,13 @@ class VariantPosition:
         self.intronic_position = None
         self.utr = None
 
-        if gdict["position"] is not None:
-            if gdict["position"].startswith("*"):
-                self.utr = True
-                self.position = int(gdict["position"][1:])
-            else:
-                if gdict["position"].startswith("-"):
-                    self.utr = True
-                self.position = int(gdict["position"])
+        if gdict["position"].startswith("*"):  # 3' UTR position
+            self.utr = True
+            self.position = int(gdict["position"][1:])
         else:
-            raise ValueError(f"invalid variant position string '{pos_str}'")
+            if gdict["position"].startswith("-"):  # 5' UTR position
+                self.utr = True
+            self.position = int(gdict["position"])
 
         if gdict["position_intron"] is not None:
             self.intronic_position = int(gdict["position_intron"])
@@ -103,7 +100,7 @@ class VariantPosition:
             True if the position was described using the extended syntax; else False.
 
         """
-        return self.is_intronic() or self.is_utr()
+        return self.utr is not None or self.intronic_position is not None
 
     # the string annotation used in the type hint below is required for Python 3.6 compatibility
     def is_adjacent(self, other: "VariantPosition") -> bool:
