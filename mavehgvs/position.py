@@ -37,7 +37,7 @@ class VariantPosition:
     __fullmatch = re.compile(pos_extended, flags=re.ASCII).fullmatch
     """Callable[[str, int, int], Optional[Match[str]]]: fullmatch callable for parsing positions
     
-    Returns a match object if the full string matches one of the position groups in :py:data:`pos_extended`.
+    Returns an :py:obj:`re.Match` object if the full string matches one of the position groups in :py:data:`pos_extended`.
     """
 
     def __init__(self, pos_str: str) -> None:
