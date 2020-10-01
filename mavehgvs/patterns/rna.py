@@ -34,7 +34,7 @@ rna_variant: str = combine_patterns(
 """str: Pattern matching any single RNA variant event.
 """
 
-rna_single_variant: str = rf"(?P<rna>r\.{rna_variant}))"
+rna_single_variant: str = rf"(?P<rna>r\.{rna_variant})"
 """str: Pattern matching any complete RNA variant, including the prefix character.
 """
 
