@@ -7,11 +7,28 @@ from mavehgvs.variant import VariantPosition
 class TestObjectCreation(unittest.TestCase):
     def test_position_only(self) -> None:
         v = VariantPosition("8")
-        self.assertTupleEqual((v.position, v.intronic_position, v.utr), (8, None, None))
+        self.assertTupleEqual(
+            (v.position, v.amino_acid, v.intronic_position, v.utr),
+            (8, None, None, None),
+        )
 
         v = VariantPosition("92380")
         self.assertTupleEqual(
-            (v.position, v.intronic_position, v.utr), (92380, None, None)
+            (v.position, v.amino_acid, v.intronic_position, v.utr),
+            (92380, None, None, None),
+        )
+
+    def test_amino_acid(self) -> None:
+        v = VariantPosition("Gly8")
+        self.assertTupleEqual(
+            (v.position, v.amino_acid, v.intronic_position, v.utr),
+            (8, "Gly", None, None),
+        )
+
+        v = VariantPosition("Cys92380")
+        self.assertTupleEqual(
+            (v.position, v.amino_acid, v.intronic_position, v.utr),
+            (92380, "Cys", None, None),
         )
 
     def test_invalid_strings(self) -> None:
@@ -28,6 +45,10 @@ class TestObjectCreation(unittest.TestCase):
             "**6",
             "800 + 12",
             "-12*5",
+            "Glu-12",
+            "*5Trp",
+            "Xyz12",
+            "ALA12",
         )
         for s in variant_strings:
             with self.subTest(s=s):
@@ -36,34 +57,52 @@ class TestObjectCreation(unittest.TestCase):
 
     def test_utr(self) -> None:
         v = VariantPosition("*8")
-        self.assertTupleEqual((v.position, v.intronic_position, v.utr), (8, None, True))
+        self.assertTupleEqual(
+            (v.position, v.amino_acid, v.intronic_position, v.utr),
+            (8, None, None, True),
+        )
 
         v = VariantPosition("-80")
         self.assertTupleEqual(
-            (v.position, v.intronic_position, v.utr), (-80, None, True)
+            (v.position, v.amino_acid, v.intronic_position, v.utr),
+            (-80, None, None, True),
         )
 
     def test_intron(self) -> None:
         v = VariantPosition("122-6")
-        self.assertTupleEqual((v.position, v.intronic_position, v.utr), (122, -6, None))
+        self.assertTupleEqual(
+            (v.position, v.amino_acid, v.intronic_position, v.utr),
+            (122, None, -6, None),
+        )
 
         v = VariantPosition("78+10")
-        self.assertTupleEqual((v.position, v.intronic_position, v.utr), (78, 10, None))
+        self.assertTupleEqual(
+            (v.position, v.amino_acid, v.intronic_position, v.utr), (78, None, 10, None)
+        )
 
     def test_utr_intron(self) -> None:
         v = VariantPosition("*89+67")
-        self.assertTupleEqual((v.position, v.intronic_position, v.utr), (89, 67, True))
+        self.assertTupleEqual(
+            (v.position, v.amino_acid, v.intronic_position, v.utr), (89, None, 67, True)
+        )
 
         v = VariantPosition("-127+6")
-        self.assertTupleEqual((v.position, v.intronic_position, v.utr), (-127, 6, True))
+        self.assertTupleEqual(
+            (v.position, v.amino_acid, v.intronic_position, v.utr),
+            (-127, None, 6, True),
+        )
 
         v = VariantPosition("*73-105")
         self.assertTupleEqual(
-            (v.position, v.intronic_position, v.utr), (73, -105, True)
+            (v.position, v.amino_acid, v.intronic_position, v.utr),
+            (73, None, -105, True),
         )
 
         v = VariantPosition("-45-1")
-        self.assertTupleEqual((v.position, v.intronic_position, v.utr), (-45, -1, True))
+        self.assertTupleEqual(
+            (v.position, v.amino_acid, v.intronic_position, v.utr),
+            (-45, None, -1, True),
+        )
 
 
 class TestObjectRepresentation(unittest.TestCase):
@@ -79,6 +118,8 @@ class TestObjectRepresentation(unittest.TestCase):
             "-127+6",
             "*73-105",
             "-45-1",
+            "Cys234",
+            "Ala9",
         )
         for s in variant_strings:
             with self.subTest(s=s):
@@ -86,6 +127,7 @@ class TestObjectRepresentation(unittest.TestCase):
                 self.assertEqual(s, repr(v))
 
 
+# TODO: add amino acid variants
 class TestComparisons(unittest.TestCase):
     def setUp(self) -> None:
         sorted_variant_strings = (
@@ -136,6 +178,7 @@ class TestComparisons(unittest.TestCase):
                 self.assertListEqual(self.sorted_variants, sorted(shuffled_variants))
 
 
+# TODO: add amino acid variants
 class TestAdjacency(unittest.TestCase):
     def test_adjacent_pairs(self) -> None:
         adjacent_pairs = (

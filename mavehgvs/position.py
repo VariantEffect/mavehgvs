@@ -1,31 +1,37 @@
 import re
 from functools import total_ordering
-from mavehgvs.patterns.position import pos_with_groups
+from mavehgvs.patterns.position import pos
+from mavehgvs.patterns.protein import amino_acid
+
+pos_with_groups: str = rf"(?P<position_aa>{amino_acid})?(?P<position>[*-]?{pos})(?P<position_intron>[+-]{pos})?"
+"""str: Pattern matching a position with match groups for parsing into a :py:class:`VariantPosition`.
+"""
 
 
 @total_ordering
 class VariantPosition:
     """Class for storing a variant position.
 
-     The class includes special fields for variants using the extended position syntax.
+    The class includes special fields for variants using the extended position syntax.
+    Attributes
+    ----------
+    position : Optional[int]
+        The position as an integer.
+        Negative positions are only expected for 5' UTR positions.
+    amino_acid : Optional[str]
+         The amino acid at this position for protein variants.
+    intronic_position : Optional[int]
+        The number of bases into the intron for intronic positions.
+        None for non-intronic positions.
 
-     Attributes
-     ----------
-     position : Optional[int]
-         The position as an integer.
-         Negative positions are only expected for 5' UTR positions.
-     intronic_position : Optional[int]
-         The number of bases into the intron for intronic positions.
-         None for non-intronic positions.
+        Nucleotides in the 5' half of the intron have positive ``intronic_position`` and their position is that of
+        the last base of the 5' exon.
+        Nucleotides in the 3' half of the intron have negative ``intronic_position`` and their position is that of
+        the first base of the 3' exon.
+    utr : Optional[bool]
+        True if the position is in the UTR. None for all other positions.
 
-         Nucleotides in the 5' half of the intron have positive ``intronic_position`` and their position is that of
-         the last base of the 5' exon.
-         Nucleotides in the 3' half of the intron have negative ``intronic_position`` and their position is that of
-         the first base of the 3' exon.
-     utr : Optional[bool]
-         True if the position is in the UTR. None for all other positions.
-
-     """
+    """
 
     __fullmatch = re.compile(pos_with_groups, flags=re.ASCII).fullmatch
     """Callable[[str, int, int], Optional[Match[str]]]: fullmatch callable for parsing positions
@@ -48,6 +54,7 @@ class VariantPosition:
             raise ValueError(f"invalid variant position string '{pos_str}'")
 
         self.position = None
+        self.amino_acid = None
         self.intronic_position = None
         self.utr = None
 
@@ -59,8 +66,16 @@ class VariantPosition:
                 self.utr = True
             self.position = int(gdict["position"])
 
+        if gdict["position_aa"] is not None:
+            self.amino_acid = gdict["position_aa"]
+
         if gdict["position_intron"] is not None:
             self.intronic_position = int(gdict["position_intron"])
+
+        if self.amino_acid is not None and (
+            self.intronic_position is not None or self.utr is not None
+        ):
+            raise ValueError("invalid variant")
 
     def __repr__(self) -> str:
         """The object representation is equivalent to the input string.
@@ -81,6 +96,8 @@ class VariantPosition:
                 return f"{p}+{self.intronic_position}"
             else:
                 return f"{p}{self.intronic_position}"
+        elif self.amino_acid is not None:
+            return f"{self.amino_acid}{p}"
         else:
             return p
 
@@ -140,8 +157,9 @@ class VariantPosition:
             True if this position is the same as the other position; else False.
 
         """
-        return (self.position, self.intronic_position, self.utr) == (
+        return (self.position, self.amino_acid, self.intronic_position, self.utr) == (
             other.position,
+            other.amino_acid,
             other.intronic_position,
             other.utr,
         )
@@ -162,8 +180,9 @@ class VariantPosition:
             True if this position is not the same as the other position; else False.
 
         """
-        return (self.position, self.intronic_position, self.utr) != (
+        return (self.position, self.amino_acid, self.intronic_position, self.utr) != (
             other.position,
+            other.amino_acid,
             other.intronic_position,
             other.utr,
         )
@@ -189,6 +208,16 @@ class VariantPosition:
 
         """
         return self.intronic_position is not None
+
+    def is_protein(self) -> bool:
+        """Return whether this is a protein position
+
+        Returns
+        -------
+        bool
+            True if the object describes a position with an amino acid component; else False.
+        """
+        return self.amino_acid is not None
 
     def is_extended(self) -> bool:
         """Return whether this position was described using the extended syntax.
