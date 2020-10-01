@@ -2,6 +2,7 @@ import re
 from functools import total_ordering
 from mavehgvs.patterns.position import pos_with_groups
 
+
 @total_ordering
 class VariantPosition:
     """Class for storing a variant position.

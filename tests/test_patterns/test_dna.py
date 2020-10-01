@@ -55,7 +55,14 @@ class TestDnaSubN(unittest.TestCase):
 
         cls.valid_strings = ["48C>A", "=", "122-6T>A", "19+22A>G"]
 
-        cls.invalid_strings = ["22g>u", "48C>W", "22=", "122=/T>A", "*24G>C", "-27+3T>C"]
+        cls.invalid_strings = [
+            "22g>u",
+            "48C>W",
+            "22=",
+            "122=/T>A",
+            "*24G>C",
+            "-27+3T>C",
+        ]
 
     def test_valid_strings(self):
         for s in self.valid_strings:
@@ -135,11 +142,7 @@ class TestDnaDelN(unittest.TestCase):
     def setUpClass(cls):
         cls.pattern = re.compile(dna_del_n, flags=re.ASCII)
 
-        cls.valid_strings = [
-            "44del",
-            "1_95del",
-            "78+5_78+10del",
-        ]
+        cls.valid_strings = ["44del", "1_95del", "78+5_78+10del"]
 
         cls.invalid_strings = [
             "(78+1_79-1)_(124+1_125-1)del",
@@ -234,11 +237,7 @@ class TestDnaDupN(unittest.TestCase):
     def setUpClass(cls):
         cls.pattern = re.compile(dna_dup_n, flags=re.ASCII)
 
-        cls.valid_strings = [
-            "22_24dup",
-            "77dup",
-            "101+1_101+7dup",
-        ]
+        cls.valid_strings = ["22_24dup", "77dup", "101+1_101+7dup"]
 
         cls.invalid_strings = [
             "(78+1_79-1)_(124+1_125-1)dup",
@@ -338,7 +337,12 @@ class TestDnaInsN(unittest.TestCase):
             "124+101_124-100insTTG",
         ]
 
-        cls.invalid_strings = ["84_85ins100_125", "234_235ins(10)", "234_235ins(?)",             "*84_*85insCTG",]
+        cls.invalid_strings = [
+            "84_85ins100_125",
+            "234_235ins(10)",
+            "234_235ins(?)",
+            "*84_*85insCTG",
+        ]
 
     def test_valid_strings(self):
         for s in self.valid_strings:
@@ -418,14 +422,9 @@ class TestDnaDelinsN(unittest.TestCase):
     def setUpClass(cls):
         cls.pattern = re.compile(dna_delins_n, flags=re.ASCII)
 
-        cls.valid_strings = [
-            "22delinsAACG",
-            "83_85delinsT",
-            "43-6_595+12delinsCTT",
-        ]
+        cls.valid_strings = ["22delinsAACG", "83_85delinsT", "43-6_595+12delinsCTT"]
 
-        cls.invalid_strings = ["84_85delinsAAN", "234delinsW"            "*788delinsA",
-]
+        cls.invalid_strings = ["84_85delinsAAN", "234delinsW" "*788delinsA"]
 
     def test_valid_strings(self):
         for s in self.valid_strings:
@@ -763,6 +762,7 @@ class TestDnaSingleVariant(unittest.TestCase):
                     self.assertIsNone(
                         self.pattern.fullmatch(v), msg=f'incorrectly matched "{v}"'
                     )
+
 
 class TestDnaMultiVariant(unittest.TestCase):
     @unittest.expectedFailure
