@@ -15,10 +15,3 @@ pos_intron_utr: str = rf"[*-]?{pos}(?:[+-]{pos})?"
 
 This pattern is used for sequence positions in a coding sequence.
 """
-
-pos_with_groups: str = rf"(?P<position>[*-]?{pos})(?P<position_intron>[+-]{pos})?"
-"""str: Pattern matching a position relative to a transcript with match groups.
-
-This pattern is used for sequence positions in a spliced transcript or coding sequence that are found in a UTR or
-intron. It does not match integer-only positions.
-"""
