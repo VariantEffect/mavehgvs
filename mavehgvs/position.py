@@ -1,14 +1,6 @@
 import re
 from functools import total_ordering
-from mavehgvs.patterns.shared import pos
-
-pos_extended: str = rf"(?P<position>[*-]?{pos})(?P<position_intron>[+-]{pos})?"
-"""str: Pattern matching a position relative to a transcript with match groups.
-
-This pattern is used for sequence positions in a spliced transcript or coding sequence that are found in a UTR or
-intron. It does not match integer-only positions.
-"""
-
+from mavehgvs.patterns.position import pos_with_groups
 
 @total_ordering
 class VariantPosition:
@@ -34,7 +26,7 @@ class VariantPosition:
 
      """
 
-    __fullmatch = re.compile(pos_extended, flags=re.ASCII).fullmatch
+    __fullmatch = re.compile(pos_with_groups, flags=re.ASCII).fullmatch
     """Callable[[str, int, int], Optional[Match[str]]]: fullmatch callable for parsing positions
     
     Returns an :py:obj:`re.Match` object if the full string matches one of the position groups in :py:data:`pos_extended`.
