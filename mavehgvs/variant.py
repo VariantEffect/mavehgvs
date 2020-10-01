@@ -195,13 +195,21 @@ class Variant:
             notation or None if the variant is invalid.
 
         """
-        # TODO: unpack position tuples
         if not self.is_valid():
             return None
         elif self.is_multi_variant():
-            return any(p.is_extended() for p in self.position())
+            all_positions = list()
+            for p in self.positions:
+                if isinstance(p, tuple):
+                    all_positions.extend(p)
+                else:
+                    all_positions.append(p)
+            return any(p.is_extended() for p in all_positions)
         else:
-            return self.position().is_extended()
+            if isinstance(self.positions, tuple):
+                return any(p.is_extended() for p in self.positions)
+            else:
+                return self.positions.is_extended()
 
     @property
     def positions(
