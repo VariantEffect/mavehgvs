@@ -130,10 +130,9 @@ class Variant:
         else:
             return False
 
+    @property
     def prefix(self) -> Optional[str]:
-        """Return the single-letter prefix for this variant.
-
-        # TODO: consider whether to use properties for this and similar methods
+        """The single-letter prefix for this variant.
 
         Returns
         -------
@@ -153,8 +152,9 @@ class Variant:
         else:
             return self._prefix
 
-    def variant_type(self) -> Optional[Union[str, List[str]]]:
-        """Return the type for this variant.
+    @property
+    def variant_types(self) -> Optional[Union[str, List[str]]]:
+        """The type for this variant.
 
         Valid variant types are:
 
@@ -163,8 +163,6 @@ class Variant:
         * ``'duplication'``
         * ``'insertion'``
         * ``'deletion-insertion'``
-
-        # TODO: consider whether to use properties for this and similar methods
 
         Returns
         -------
@@ -176,7 +174,7 @@ class Variant:
         if not self.is_valid():
             return None
         else:
-            pass
+            return self._variant_types
 
     def uses_extended_positions(self) -> Optional[bool]:
         """Return whether the variant uses the extended position notation to describe intronic or UTR positions.
@@ -205,17 +203,19 @@ class Variant:
         else:
             return self.position().is_extended()
 
-    def position(
+    @property
+    def positions(
         self
     ) -> Optional[
-        Union[VariantPosition, Sequence[VariantPosition]]
-    ]:  # TODO: type hints for tuple version
-        """Returns the variant position as a single position or tuple containing start and end positions.
+        Union[VariantPosition, Tuple[VariantPosition, VariantPosition], List[Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]]]
+    ]:
+        """The variant position as a single position or tuple containing start and end positions.
 
-        Each position is represented as an integer or a string (for variants using extended position notation).
+        Each position is an instance of :py:class:`mavehgvs.position.VariantPosition`.
 
         Returns
         -------
+        Union[VariantPosition, Tuple[VariantPosition, VariantPosition], List[Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]]]
             Variant position or tuple of start/end positions, or None of the variant is invalid.
             Returns a list of positions or start/end tuples for a multi-variant.
 
@@ -223,19 +223,20 @@ class Variant:
         if not self.is_valid():
             return None
         else:
-            pass
+            return self._positions
 
+    @property
     def sequence(
         self
-    ) -> Optional[Union[VariantSequence, List[Optional[VariantSequence]]]]:
-        """Returns the sequence portion of the variant.
+    ) -> Optional[Union[str, Tuple[str, str], List[Optional[Union[str, Tuple[str, str]]]]]]:
+        """The sequence portion of the variant.
 
         This can be a tuple of reference and new bases for a substitution, a single sequence for insertions or
         deletion-insertions, or the "=" character for variants that are identical to the target sequence.
 
         Returns
         -------
-        Optional[Union[VariantSequence, List[Optional[VariantSequence]]]]
+        Union[str, Tuple[str, str], List[Optional[Union[str, Tuple[str, str]]]]]]
             Tuple of ref/new bases for substitutions, string containing inserted sequence, or the "=" character.
             Returns None if the variant is invalid or does not have a sequence component (deletion or duplication).
             Returns a list for a multi-variant, which may contain None values for deletions or duplications.
@@ -244,10 +245,11 @@ class Variant:
         if not self.is_valid():
             return None
         else:
-            return self._sequence
+            return self._sequences
 
+    @property
     def reference_id(self) -> Optional[str]:
-        """Returns the reference identifier for the variant (if applicable).
+        """The reference identifier for the variant (if applicable).
 
         The reference identifier precedes the prefix and is followed by a ``:``.
         For example in ``NM_001130145.3:c.832C>T`` the reference identifier is "NM_001130145.3".
