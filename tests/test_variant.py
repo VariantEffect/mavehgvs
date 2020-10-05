@@ -111,6 +111,11 @@ class TestObjectCreation(unittest.TestCase):
         for s in variant_strings:
             with self.subTest(s=s):
                 v = Variant(s)
+                self.assertTrue(v.is_valid())
+
+        for s in variant_strings:
+            with self.subTest(s=s):
+                v = Variant(s)
                 self.assertTrue(v.is_target_identical())
 
         for s in variant_strings:
