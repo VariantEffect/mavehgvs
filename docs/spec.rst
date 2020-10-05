@@ -122,11 +122,12 @@ Examples of valid substitutions include:
 * g.48C>A
 * c.=
 * c.122-6T>A
+* c.*33G>C
 * p.Glu27Trp
 * p.Ter345Lys
 * p.Cys22=
 * r.22g>u
-* r.*33a>c
+* r.33+12a>c
 
 Examples of valid HGVS substitutions that are invalid in MAVE-HGVS:
 
