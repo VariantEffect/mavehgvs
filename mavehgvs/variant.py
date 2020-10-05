@@ -109,7 +109,7 @@ class Variant:
                             raise ValueError("unexpected prefix")
                 elif self._variant_types in ("del", "dup", "ins", "delins"):
                     # set position
-                    if self._groupdict[f"{groupdict_prefix}_pos"] is not None:
+                    if self._groupdict.get(f"{groupdict_prefix}_pos") is not None:  # use get() since ins pattern doesn't have pos
                         self._positions = VariantPosition(self._groupdict[f"{groupdict_prefix}_pos"])
                     else:
                         self._positions = (VariantPosition(self._groupdict[f"{groupdict_prefix}_start"]), VariantPosition(self._groupdict[f"{groupdict_prefix}_end"]))
@@ -164,7 +164,7 @@ class Variant:
                     return f"{pos[0]}_{pos[1]}{vtype}"
                 else:
                     return f"{pos}{vtype}"
-            elif vtype == ("ins", "delins"):
+            elif vtype in ("ins", "delins"):
                 if isinstance(pos, tuple):
                     return f"{pos[0]}_{pos[1]}{vtype}{seq}"
                 else:
