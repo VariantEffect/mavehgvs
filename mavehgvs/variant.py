@@ -1,16 +1,28 @@
-from typing import Optional, Union, List, Tuple, Sequence, TypeVar
+import re
+from typing import Optional, Union, List, Tuple
 from mavehgvs.position import VariantPosition
-
-# TODO: revisit this naming convention
-VariantSequence = TypeVar("VariantSequence", str, Tuple[str, str])
-"""Type variable for a variant sequence.
-
-The sequence can be a string or a pair of strings for reference and new bases in a substitution variant.
-"""
+from mavehgvs.patterns.combined import any_variant
 
 
 class Variant:
-    def __init__(self, s: str):
+    __variant_fullmatch = re.compile(any_variant, flags=re.ASCII).fullmatch
+    """Callable[[str, int, int], Optional[Match[str]]]: fullmatch callable for parsing a single MAVE-HGVS variant
+    
+    Returns an :py:obj:`re.Match` object if the full string defines a valid MAVE-HGVS variant.
+    Match groups in the result can be used to extract components of the variant.
+    """
+
+    __vtypes = (
+        "sub",     # substitution
+        "del",     # deletion
+        "dup",     # duplication
+        "ins",     # insertion
+        "delins",  # deletion-insertion"
+    )
+    """Tuple[str]: variant type tags used in MAVE-HGVS patterns and variant type names.
+    """
+
+    def __init__(self, s: str, targetseq: Optional[str] = None, relaxed_ordering: bool = False):
         """Convert a MAVE-HGVS variant string into a corresponding object with named fields.
 
         Parameters
@@ -18,66 +30,164 @@ class Variant:
         s : str
             MAVE-HGVS variant string to convert into an object.
 
+        targetseq : Optional[str]
+            If provided, the variant will be validated for agreement with this sequence.
+            Target sequence validation is not supported for variants using the extended position syntax.
+
+            The type of the target sequence (DNA, RNA, or amino acid) will be inferred.
+            DNA and amino acid sequences should be in uppercase, RNA in lowercase.
+
+        relaxed_ordering : bool
+            If True, variant strings that do not observe the 3-prime rule for variant position ordering are allowed.
+            The object representation will observe the 3-prime rule, so it may differ from the input string in this
+            case.
+
         """
         self.variant_string = s
-        self.matchdict = None
-        self.validation_failure_message = None
-        self.variant_count = None
-        self._position = None
-        self._prefix = None
-        self._reference_id = None
-        self._sequence = None
-        self._variant_type = None
-
-    @staticmethod
-    def _position_distance(pos1: Union[int, str], pos2: Union[int, str]) -> int:
-        """Calculate the minimum distance between two sequence positions.
-
-        Some distances between positions using the extended notation cannot be calculated exactly without knowing the
-        full target sequence.
-        In such cases this function returns the minimum possible distance.
-
-        Parameters
-        ----------
-        pos1 : Union[int, str]
-            The first position, either as an integer or a string using the extended position notation.
-        pos2 : Union[int, str]
-            The second position, either as an integer or a string using the extended position notation.
-
-        Returns
-        -------
-        int
-            The minimum distance between positions.
-
-        Raises
-        ------
-        ValueError
-            If an integer position is not a positive number.
-        ValueError
-            If a string position is not valid.
-
-        """
-        if isinstance(pos1, int) and isinstance(pos2, int):
-            return pos2 - pos1 + 1
+        variant_match = self.__variant_fullmatch(s)
+        if variant_match is None:
+            self.validation_failure_message = "failed regular expression validation"
         else:
-            return None  # TODO: implement this
+            self.validation_failure_message = None
+            self._groupdict = variant_match.groupdict()
 
-    @staticmethod
-    def _positions_are_sorted(positions: Sequence[Union[int, str]]) -> bool:
-        """Determine whether positions are in sorted order according to the 3' rule (ascending order).
+            # set reference id if present
+            if self._groupdict["reference_id"] is not None:
+                self._reference_id = self._groupdict["reference_id"]
+            else:
+                self._reference_id = None
 
-        Parameters
-        ----------
-        positions : Sequence[Union[int, str]]
-            The positions to check the order of.
+            # set prefix and determine if this is a multi-variant
+            if self._groupdict["single_variant"] is not None:
+                self.variant_count = 1
+                self._prefix = self._groupdict["single_variant"][0]
+            elif self._groupdict["multi_variant"] is not None:
+                self.variant_count = len(s.split(";"))
+                self._prefix = self._groupdict["multi_variant"][0]
+            else:  # pragma: no cover
+                raise ValueError("invalid match type")
+
+            if self.variant_count == 1:
+                # determine which named groups to check
+                if self._prefix == "p":
+                    gdict_prefixes = [(f"pro_{t}", t) for t in self.__vtypes]
+                elif self._prefix == "r":
+                    gdict_prefixes = [(f"rna_{t}", t) for t in self.__vtypes]
+                elif self._prefix in "cn":
+                    gdict_prefixes = [
+                        (f"dna_{t}_{self._prefix}", t) for t in self.__vtypes
+                    ]
+                elif self._prefix in "gmo":
+                    gdict_prefixes = [(f"dna_{t}_gmo", t) for t in self.__vtypes]
+                else:  # pragma: no cover
+                    raise ValueError("unexpected prefix")
+
+                # set the variant type
+                self._variant_types = None
+                vtype_set = False
+                groupdict_prefix = None
+                for groupname, vtype in gdict_prefixes:
+                    if self._groupdict[groupname] is not None:
+                        if vtype_set:  # pragma: no cover
+                            raise ValueError(f"ambiguous match: '{groupname}' and '{groupdict_prefix}'")
+                        self._variant_types = vtype
+                        groupdict_prefix = groupname
+
+                # set the position and sequence
+                self._positions = None
+                self._sequences = None
+                if self._variant_types == "sub":
+                    if self._groupdict[f"{groupdict_prefix}_equal"] is not None:  # special case for target identity
+                        self._sequences = self._groupdict[f"{groupdict_prefix}_equal"]
+                    else:
+                        self._positions = VariantPosition(self._groupdict[f"{groupdict_prefix}_position"])
+                        if self._prefix == "p":
+                            self._sequences = (self._positions.amino_acid, self._groupdict[f"{groupdict_prefix}_new"])
+                        elif self._prefix in "gmo" "cn" "r":
+                            self._sequences = (self._groupdict[f"{groupdict_prefix}_ref"], self._groupdict[f"{groupdict_prefix}_new"])
+                        else:  # pragma: no cover
+                            raise ValueError("unexpected prefix")
+                elif self._variant_types in ("del", "dup", "ins", "delins"):
+                    # set position
+                    if self._groupdict[f"{groupdict_prefix}_pos"] is not None:
+                        self._positions = VariantPosition(self._groupdict[f"{groupdict_prefix}_pos"])
+                    else:
+                        self._positions = (VariantPosition(self._groupdict[f"{groupdict_prefix}_start"]), VariantPosition(self._groupdict[f"{groupdict_prefix}_end"]))
+                        # extra validation on positions
+                        if self._positions[0] >= self._positions[1]:
+                            raise ValueError("start position must be before end position")
+                        if self._variant_types == "ins":
+                            if not self._positions[0].is_adjacent(self._positions[1]):
+                                raise ValueError("insertion positions must be adjacent")
+
+                    # set sequence if needed
+                    if self._variant_types in ("ins", "delins"):
+                        self._sequences = self._groupdict[f"{groupdict_prefix}_seq"]
+                else:  # pragma: no cover
+                    raise ValueError("unexpected variant type")
+
+    def __repr__(self) -> str:
+        """The object representation is equivalent to the input string.
 
         Returns
         -------
-        bool
-            True if the positions are sorted; else False.
+        str
+            The object representation.
 
         """
-        pass
+        def format_variant(vtype: str, pos: Union[VariantPosition, Tuple[VariantPosition, VariantPosition]], seq: Optional[Union[str, Tuple[str, str]]]) -> str:
+            """Helper function for building variant strings.
+
+            Parameters
+            ----------
+            vtype : str
+                The variant type, as described by :py:obj:`Variant.__vtypes`
+            pos : Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]
+                The position or pair of positions describing the variant.
+            seq : Optional[Union[str, Tuple[str, str]]]
+                The sequence or pair of sequences describing the variant.
+                Only used for substitions, insertions, and deletion-insertions.
+
+            Returns
+            -------
+            str
+                A string representing this variant element.
+
+            """
+            if vtype == "sub":
+                if self._prefix == "p":  # protein variant
+                    return f"{pos}{seq[1]}"
+                else:                    # nucleotide variant
+                    return f"{pos}{seq[0]}>{seq[1]}"
+            elif vtype in ("del", "dup"):
+                if isinstance(pos, tuple):
+                    return f"{pos[0]}_{pos[1]}{vtype}"
+                else:
+                    return f"{pos}{vtype}"
+            elif vtype == ("ins", "delins"):
+                if isinstance(pos, tuple):
+                    return f"{pos[0]}_{pos[1]}{vtype}{seq}"
+                else:
+                    return f"{pos}{vtype}{seq}"
+            else:   # pragma: no cover
+                raise ValueError("invalid variant type")
+
+        if self._reference_id is not None:
+            prefix = f"{self._reference_id}:{self._prefix}"
+        else:
+            prefix = f"{self._prefix}"
+
+        if not self.is_valid():
+            return repr(None)
+        elif self.is_target_identical():
+            return f"{prefix}.="
+        elif self.variant_count > 1:
+            elements = list()
+            for vtype, pos, seq in zip(self._variant_types, self._positions, self._sequences):
+                elements.append(format_variant(vtype, pos, seq))
+            return f"{prefix}.[{';'.join(elements)}]"
+        else:
+            return f"{prefix}.{format_variant(self._variant_types, self._positions, self._sequences)}"
 
     @staticmethod
     def _substitution_matches_reference(pos: int, ref: str, target: str) -> bool:
@@ -106,10 +216,24 @@ class Variant:
             True if the variant string is valid MAVE-HGVS; else False.
 
         """
-        if self.validation_failure_message is None:
-            return False
+        return self.validation_failure_message is None
+
+    def is_target_identical(self) -> Optional[bool]:
+        """Return whether the variant describes the "wild-type" sequence.
+
+        This is the variant described with only the equals sign (e.g. ``c.=``).
+
+        Returns
+        -------
+        Optional[bool]
+            True if this variant describes the wild-type or target sequence; else False.
+            Returns None if the variant is invalid.
+
+        """
+        if not self.is_valid():
+            return None
         else:
-            return True
+            return self._positions is None
 
     def is_multi_variant(self) -> Optional[bool]:
         """Return whether the variant is a multi-variant.
@@ -158,23 +282,26 @@ class Variant:
 
         Valid variant types are:
 
-        * ``'substitution'``
-        * ``'deletion'``
-        * ``'duplication'``
-        * ``'insertion'``
-        * ``'deletion-insertion'``
+        * ``'sub'`` for substitutions
+        * ``'del'`` for deletions
+        * ``'dup'`` for duplications
+        * ``'ins'`` for insertions
+        * ``'delins'`` for deletion-insertions
 
         Returns
         -------
         Optional[Union[str, List[str]]]
-            Single-word string containing the variant type or None of the variant is invalid.
-            Returns a list of single-word strings for a multi-variant.
+            String containing the variant type or None of the variant is invalid.
+            Returns a list of strings for a multi-variant.
 
         """
         if not self.is_valid():
             return None
         else:
-            return self._variant_types
+            if self.is_multi_variant():
+                return [self.__vtypes[t] for t in self._variant_types]
+            else:
+                return self.__vtypes[self._variant_types]
 
     def uses_extended_positions(self) -> Optional[bool]:
         """Return whether the variant uses the extended position notation to describe intronic or UTR positions.
@@ -215,7 +342,11 @@ class Variant:
     def positions(
         self
     ) -> Optional[
-        Union[VariantPosition, Tuple[VariantPosition, VariantPosition], List[Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]]]
+        Union[
+            VariantPosition,
+            Tuple[VariantPosition, VariantPosition],
+            List[Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]],
+        ]
     ]:
         """The variant position as a single position or tuple containing start and end positions.
 
@@ -236,7 +367,9 @@ class Variant:
     @property
     def sequence(
         self
-    ) -> Optional[Union[str, Tuple[str, str], List[Optional[Union[str, Tuple[str, str]]]]]]:
+    ) -> Optional[
+        Union[str, Tuple[str, str], List[Optional[Union[str, Tuple[str, str]]]]]
+    ]:
         """The sequence portion of the variant.
 
         This can be a tuple of reference and new bases for a substitution, a single sequence for insertions or
