@@ -13,16 +13,18 @@ class Variant:
     """
 
     __vtypes = (
-        "sub",     # substitution
-        "del",     # deletion
-        "dup",     # duplication
-        "ins",     # insertion
+        "sub",  # substitution
+        "del",  # deletion
+        "dup",  # duplication
+        "ins",  # insertion
         "delins",  # deletion-insertion"
     )
     """Tuple[str]: variant type tags used in MAVE-HGVS patterns and variant type names.
     """
 
-    def __init__(self, s: str, targetseq: Optional[str] = None, relaxed_ordering: bool = False):
+    def __init__(
+        self, s: str, targetseq: Optional[str] = None, relaxed_ordering: bool = False
+    ):
         """Convert a MAVE-HGVS variant string into a corresponding object with named fields.
 
         Parameters
@@ -89,7 +91,9 @@ class Variant:
                 for groupname, vtype in gdict_prefixes:
                     if self._groupdict[groupname] is not None:
                         if vtype_set:  # pragma: no cover
-                            raise ValueError(f"ambiguous match: '{groupname}' and '{groupdict_prefix}'")
+                            raise ValueError(
+                                f"ambiguous match: '{groupname}' and '{groupdict_prefix}'"
+                            )
                         self._variant_types = vtype
                         groupdict_prefix = groupname
 
@@ -97,25 +101,46 @@ class Variant:
                 self._positions = None
                 self._sequences = None
                 if self._variant_types == "sub":
-                    if self._groupdict[f"{groupdict_prefix}_equal"] is not None:  # special case for target identity
+                    if (
+                        self._groupdict[f"{groupdict_prefix}_equal"] is not None
+                    ):  # special case for target identity
                         self._sequences = self._groupdict[f"{groupdict_prefix}_equal"]
                     else:
-                        self._positions = VariantPosition(self._groupdict[f"{groupdict_prefix}_position"])
+                        self._positions = VariantPosition(
+                            self._groupdict[f"{groupdict_prefix}_position"]
+                        )
                         if self._prefix == "p":
-                            self._sequences = (self._positions.amino_acid, self._groupdict[f"{groupdict_prefix}_new"])
+                            self._sequences = (
+                                self._positions.amino_acid,
+                                self._groupdict[f"{groupdict_prefix}_new"],
+                            )
                         elif self._prefix in "gmo" "cn" "r":
-                            self._sequences = (self._groupdict[f"{groupdict_prefix}_ref"], self._groupdict[f"{groupdict_prefix}_new"])
+                            self._sequences = (
+                                self._groupdict[f"{groupdict_prefix}_ref"],
+                                self._groupdict[f"{groupdict_prefix}_new"],
+                            )
                         else:  # pragma: no cover
                             raise ValueError("unexpected prefix")
                 elif self._variant_types in ("del", "dup", "ins", "delins"):
                     # set position
-                    if self._groupdict.get(f"{groupdict_prefix}_pos") is not None:  # use get() since ins pattern doesn't have pos
-                        self._positions = VariantPosition(self._groupdict[f"{groupdict_prefix}_pos"])
+                    if (
+                        self._groupdict.get(f"{groupdict_prefix}_pos") is not None
+                    ):  # use get() since ins pattern doesn't have pos
+                        self._positions = VariantPosition(
+                            self._groupdict[f"{groupdict_prefix}_pos"]
+                        )
                     else:
-                        self._positions = (VariantPosition(self._groupdict[f"{groupdict_prefix}_start"]), VariantPosition(self._groupdict[f"{groupdict_prefix}_end"]))
+                        self._positions = (
+                            VariantPosition(
+                                self._groupdict[f"{groupdict_prefix}_start"]
+                            ),
+                            VariantPosition(self._groupdict[f"{groupdict_prefix}_end"]),
+                        )
                         # extra validation on positions
                         if self._positions[0] >= self._positions[1]:
-                            raise ValueError("start position must be before end position")
+                            raise ValueError(
+                                "start position must be before end position"
+                            )
                         if self._variant_types == "ins":
                             if not self._positions[0].is_adjacent(self._positions[1]):
                                 raise ValueError("insertion positions must be adjacent")
@@ -135,7 +160,12 @@ class Variant:
             The object representation.
 
         """
-        def format_variant(vtype: str, pos: Union[VariantPosition, Tuple[VariantPosition, VariantPosition]], seq: Optional[Union[str, Tuple[str, str]]]) -> str:
+
+        def format_variant(
+            vtype: str,
+            pos: Union[VariantPosition, Tuple[VariantPosition, VariantPosition]],
+            seq: Optional[Union[str, Tuple[str, str]]],
+        ) -> str:
             """Helper function for building variant strings.
 
             Parameters
@@ -157,7 +187,7 @@ class Variant:
             if vtype == "sub":
                 if self._prefix == "p":  # protein variant
                     return f"{pos}{seq[1]}"
-                else:                    # nucleotide variant
+                else:  # nucleotide variant
                     return f"{pos}{seq[0]}>{seq[1]}"
             elif vtype in ("del", "dup"):
                 if isinstance(pos, tuple):
@@ -169,7 +199,7 @@ class Variant:
                     return f"{pos[0]}_{pos[1]}{vtype}{seq}"
                 else:
                     return f"{pos}{vtype}{seq}"
-            else:   # pragma: no cover
+            else:  # pragma: no cover
                 raise ValueError("invalid variant type")
 
         if self._reference_id is not None:
@@ -183,7 +213,9 @@ class Variant:
             return f"{prefix}.="
         elif self.variant_count > 1:
             elements = list()
-            for vtype, pos, seq in zip(self._variant_types, self._positions, self._sequences):
+            for vtype, pos, seq in zip(
+                self._variant_types, self._positions, self._sequences
+            ):
                 elements.append(format_variant(vtype, pos, seq))
             return f"{prefix}.[{';'.join(elements)}]"
         else:
