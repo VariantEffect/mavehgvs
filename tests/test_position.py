@@ -1,7 +1,7 @@
 import unittest
 import itertools
 import random
-from mavehgvs.variant import VariantPosition
+from mavehgvs.position import VariantPosition
 
 
 class TestObjectCreation(unittest.TestCase):
@@ -32,7 +32,7 @@ class TestObjectCreation(unittest.TestCase):
         )
 
     def test_invalid_strings(self) -> None:
-        variant_strings = (
+        position_strings = (
             "08",
             "+12",
             "*-99",
@@ -50,7 +50,7 @@ class TestObjectCreation(unittest.TestCase):
             "Xyz12",
             "ALA12",
         )
-        for s in variant_strings:
+        for s in position_strings:
             with self.subTest(s=s):
                 with self.assertRaises(ValueError):
                     VariantPosition(s)
@@ -107,7 +107,7 @@ class TestObjectCreation(unittest.TestCase):
 
 class TestObjectRepresentation(unittest.TestCase):
     def test_repr(self) -> None:
-        variant_strings = (
+        position_strings = (
             "8",
             "92380",
             "*8",
@@ -121,7 +121,7 @@ class TestObjectRepresentation(unittest.TestCase):
             "Cys234",
             "Ala9",
         )
-        for s in variant_strings:
+        for s in position_strings:
             with self.subTest(s=s):
                 v = VariantPosition(s)
                 self.assertEqual(s, repr(v))
@@ -130,7 +130,7 @@ class TestObjectRepresentation(unittest.TestCase):
 # TODO: add amino acid variants
 class TestComparisons(unittest.TestCase):
     def setUp(self) -> None:
-        sorted_variant_strings = (
+        sorted_position_strings = (
             "-45-1",
             "-12",
             "8",
@@ -147,7 +147,7 @@ class TestComparisons(unittest.TestCase):
             "*73-105",
         )
 
-        self.sorted_variants = [VariantPosition(p) for p in sorted_variant_strings]
+        self.sorted_variants = [VariantPosition(p) for p in sorted_position_strings]
 
         # pairwise itertools recipe
         a, b = itertools.tee(self.sorted_variants)
@@ -204,7 +204,7 @@ class TestAdjacency(unittest.TestCase):
                 self.assertTrue(v2.is_adjacent(v1))
 
     def test_not_adjacent_to_self(self) -> None:
-        variant_strings = (
+        position_strings = (
             "-45-1",
             "-12",
             "8",
@@ -221,13 +221,13 @@ class TestAdjacency(unittest.TestCase):
             "*12",
             "*73-105",
         )
-        variants = [VariantPosition(s) for s in variant_strings]
+        variants = [VariantPosition(s) for s in position_strings]
         for v in variants:
             with self.subTest(v=v):
                 self.assertFalse(v.is_adjacent(v))
 
     def test_non_adjacent_pairs(self) -> None:
-        variant_strings = (
+        position_strings = (
             "-45-1",
             "-12",
             "8",
@@ -243,7 +243,7 @@ class TestAdjacency(unittest.TestCase):
             "*12",
             "*73-105",
         )
-        variants = [VariantPosition(s) for s in variant_strings]
+        variants = [VariantPosition(s) for s in position_strings]
 
         for v1, v2 in itertools.permutations(variants, 2):
             with self.subTest(v1=v1, v2=v2):
