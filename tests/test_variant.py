@@ -225,13 +225,40 @@ class TestMiscProperties(unittest.TestCase):
                 else:
                     self.assertEqual(p, v.positions)
 
-    @unittest.expectedFailure
     def test_sequence(self):
-        self.assertTrue(False)
+        variant_tuples = [
+            (("Glu", "Trp"), "p.Glu27Trp"),
+            (("T", "A"), "c.122-6T>A"),
+            (None, "g.44del"),
+            (None, "c.78+5_78+10del"),
+            (None, "c.77dup"),
+            (None, "p.Pro12_Gly18dup"),
+            ("GlyProCys", "p.Ala12_Pro13insGlyProCys"),
+            ("auc", "r.22_23insauc"),
+            ("CTT", "c.43-6_595+12delinsCTT"),
+            ("Ser", "p.Ile71_Cys80delinsSer"),
+            (None, "x.="),
+        ]
 
-    @unittest.expectedFailure
+        for seq, s in variant_tuples:
+            with self.subTest(seq=seq, s=s):
+                v = Variant(s)
+                self.assertEqual(seq, v.sequence)
+
     def test_target_id(self):
-        self.assertTrue(False)
+        variant_tuples = [
+            (None, "p.Glu27Trp"),
+            (None, "c.122-6T>A"),
+            ("GeneX", "GeneX:p.Glu27Trp"),
+            ("YFG1", "YFG1:c.122-6T>A"),
+            (None, "x.="),
+            (None, "GeneX:x.="),
+        ]
+
+        for t, s in variant_tuples:
+            with self.subTest(t=t, s=s):
+                v = Variant(s)
+                self.assertEqual(t, v.target_id)
 
 
 if __name__ == "__main__":
