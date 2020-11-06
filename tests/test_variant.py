@@ -2,7 +2,7 @@ import unittest
 from mavehgvs.variant import Variant
 
 
-class TestObjectCreation(unittest.TestCase):
+class TestCreateSingleVariantFromString(unittest.TestCase):
     def test_sub(self) -> None:
         variant_strings = [
             "p.Glu27Trp",
@@ -105,7 +105,7 @@ class TestObjectCreation(unittest.TestCase):
                 v = Variant(s)
                 self.assertEqual(s, str(v))
 
-    def test_target_equivalent(self) -> None:
+    def test_target_identical(self) -> None:
         variant_strings = [f"{prefix}.=" for prefix in "gmo" "cn" "r"]
 
         for s in variant_strings:
@@ -122,6 +122,22 @@ class TestObjectCreation(unittest.TestCase):
             with self.subTest(s=s):
                 v = Variant(s)
                 self.assertEqual(s, str(v))
+
+
+class TestCreateMultiVariantFromString(unittest.TestCase):
+    pass
+
+
+class TestCreateSingleVariantFromValues(unittest.TestCase):
+    pass
+
+
+class TestCreateMultiVariantFromValues(unittest.TestCase):
+    pass
+
+
+class TestTargetSequenceValidation(unittest.TestCase):
+    pass
 
 
 if __name__ == "__main__":
