@@ -194,10 +194,19 @@ class TestMiscProperties(unittest.TestCase):
             ((VariantPosition("78+5"), VariantPosition("78+10")), "c.78+5_78+10del"),
             (VariantPosition("77"), "c.77dup"),
             ((VariantPosition("Pro12"), VariantPosition("Gly18")), "p.Pro12_Gly18dup"),
-            ((VariantPosition("Ala12"), VariantPosition("Pro13")), "p.Ala12_Pro13insGlyProCys"),
+            (
+                (VariantPosition("Ala12"), VariantPosition("Pro13")),
+                "p.Ala12_Pro13insGlyProCys",
+            ),
             ((VariantPosition("22"), VariantPosition("23")), "r.22_23insauc"),
-            ((VariantPosition("43-6"), VariantPosition("595+12")), "c.43-6_595+12delinsCTT"),
-            ((VariantPosition("Ile71"), VariantPosition("Cys80")), "p.Ile71_Cys80delinsSer"),
+            (
+                (VariantPosition("43-6"), VariantPosition("595+12")),
+                "c.43-6_595+12delinsCTT",
+            ),
+            (
+                (VariantPosition("Ile71"), VariantPosition("Cys80")),
+                "p.Ile71_Cys80delinsSer",
+            ),
             (None, "x.="),
         ]
 

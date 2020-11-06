@@ -139,12 +139,19 @@ class Variant:
                         # extra validation on positions
                         if self._positions[0] >= self._positions[1]:
                             if relaxed_ordering:
-                                self._positions = (self._positions[1], self._positions[0])
+                                self._positions = (
+                                    self._positions[1],
+                                    self._positions[0],
+                                )
                             else:
-                                self.validation_failure_message = "start position must be before end position"
+                                self.validation_failure_message = (
+                                    "start position must be before end position"
+                                )
                         if self._variant_types == "ins":
                             if not self._positions[0].is_adjacent(self._positions[1]):
-                                self.validation_failure_message = "insertion positions must be adjacent"
+                                self.validation_failure_message = (
+                                    "insertion positions must be adjacent"
+                                )
 
                     # set sequence if needed
                     if self._variant_types in ("ins", "delins"):
