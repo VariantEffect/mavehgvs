@@ -142,17 +142,108 @@ class TestTargetSequenceValidation(unittest.TestCase):
 
 
 class TestMiscMethods(unittest.TestCase):
-    @unittest.expectedFailure
     def test_is_valid(self):
-        self.assertTrue(False)
+        valid_variant_strings = [
+            "p.Glu27Trp",
+            "c.122-6T>A",
+            "g.44del",
+            "c.78+5_78+10del",
+            "c.77dup",
+            "p.Pro12_Gly18dup",
+            "p.Ala12_Pro13insGlyProCys",
+            "r.22_23insauc",
+            "c.43-6_595+12delinsCTT",
+            "p.Ile71_Cys80delinsSer",
+            "p.=",
+        ]
 
-    @unittest.expectedFailure
+        invalid_variant_strings = [
+            "g.Glu27Trp",
+            "p.27Glu>Trp" "p.122-6T>A",
+            "G>A",
+            "22G>A",
+            "G.44del",
+            "a.78+5_78+10del",
+            "77dup",
+            "n.Pro12_Gly18dup",
+            "g.22_23insauc",
+            "r.43-6_595+12delinsctt",
+            "x.=",
+        ]
+
+        for s in valid_variant_strings:
+            with self.subTest(s=s):
+                v = Variant(s)
+                self.assertTrue(v.is_valid())
+
+        for s in invalid_variant_strings:
+            with self.subTest(s=s):
+                v = Variant(s)
+                self.assertFalse(v.is_valid())
+
     def test_is_multi_variant(self):
-        self.assertTrue(False)
+        single_variant_strings = [
+            "p.Glu27Trp",
+            "c.122-6T>A",
+            "g.44del",
+            "c.78+5_78+10del",
+            "c.77dup",
+            "p.Pro12_Gly18dup",
+            "p.Ala12_Pro13insGlyProCys",
+            "r.22_23insauc",
+            "c.43-6_595+12delinsCTT",
+            "p.Ile71_Cys80delinsSer",
+            "p.=",
+        ]
 
-    @unittest.expectedFailure
+        multi_variant_strings = []
+
+        for s in single_variant_strings:
+            with self.subTest(s=s):
+                v = Variant(s)
+                self.assertFalse(v.is_multi_variant())
+
+        for s in multi_variant_strings:
+            with self.subTest(s=s):
+                v = Variant(s)
+                self.assertTrue(v.is_multi_variant())
+
+        v = Variant("x.=")
+        self.assertIsNone(v.is_multi_variant())
+
     def test_uses_extended_positions(self):
-        self.assertTrue(False)
+        non_extended_variant_strings = [
+            "p.Glu27Trp",
+            "g.44del",
+            "c.77dup",
+            "p.Pro12_Gly18dup",
+            "p.Ala12_Pro13insGlyProCys",
+            "r.22_23insauc",
+            "r.22g>u",
+            "p.Ile71_Cys80delinsSer",
+            "p.=",
+        ]
+
+        extended_variant_strings = [
+            "c.122-6T>A",
+            "c.78+5_78+10del",
+            "c.43-6_595+12delinsCTT",
+            "c.*33G>C",
+            "r.33+12a>c",
+        ]
+
+        for s in non_extended_variant_strings:
+            with self.subTest(s=s):
+                v = Variant(s)
+                self.assertFalse(v.uses_extended_positions())
+
+        for s in extended_variant_strings:
+            with self.subTest(s=s):
+                v = Variant(s)
+                self.assertTrue(v.uses_extended_positions())
+
+        v = Variant("x.=")
+        self.assertIsNone(v.uses_extended_positions())
 
 
 # TODO: multi-variant test cases
