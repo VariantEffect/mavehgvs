@@ -331,10 +331,7 @@ class Variant:
         if not self.is_valid():
             return None
         else:
-            if self.is_multi_variant():
-                return [self.__vtypes[t] for t in self._variant_types]
-            else:
-                return self.__vtypes[self._variant_types]
+            return self._variant_types
 
     def uses_extended_positions(self) -> Optional[bool]:
         """Return whether the variant uses the extended position notation to describe intronic or UTR positions.
