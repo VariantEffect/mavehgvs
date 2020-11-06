@@ -310,7 +310,7 @@ class Variant:
             return self._prefix
 
     @property
-    def variant_types(self) -> Optional[Union[str, List[str]]]:
+    def variant_type(self) -> Optional[Union[str, List[str]]]:
         """The type for this variant.
 
         Valid variant types are:
