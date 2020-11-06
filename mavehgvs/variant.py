@@ -370,7 +370,9 @@ class Variant:
                     all_positions.append(p)
             return any(p.is_extended() for p in all_positions)
         else:
-            if isinstance(self.positions, tuple):
+            if self._positions is None:  # special case for target identity
+                return False
+            elif isinstance(self.positions, tuple):
                 return any(p.is_extended() for p in self.positions)
             else:
                 return self.positions.is_extended()
