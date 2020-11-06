@@ -53,11 +53,11 @@ class Variant:
             self.validation_failure_message = None
             self._groupdict = variant_match.groupdict()
 
-            # set reference id if present
-            if self._groupdict["reference_id"] is not None:
-                self._reference_id = self._groupdict["reference_id"]
+            # set target id if present
+            if self._groupdict["target_id"] is not None:
+                self._target_id = self._groupdict["target_id"]
             else:
-                self._reference_id = None
+                self._target_id = None
 
             # set prefix and determine if this is a multi-variant
             if self._groupdict["single_variant"] is not None:
@@ -138,12 +138,13 @@ class Variant:
                         )
                         # extra validation on positions
                         if self._positions[0] >= self._positions[1]:
-                            raise ValueError(
-                                "start position must be before end position"
-                            )
+                            if relaxed_ordering:
+                                self._positions = (self._positions[1], self._positions[0])
+                            else:
+                                self.validation_failure_message = "start position must be before end position"
                         if self._variant_types == "ins":
                             if not self._positions[0].is_adjacent(self._positions[1]):
-                                raise ValueError("insertion positions must be adjacent")
+                                self.validation_failure_message = "insertion positions must be adjacent"
 
                     # set sequence if needed
                     if self._variant_types in ("ins", "delins"):
@@ -202,8 +203,8 @@ class Variant:
             else:  # pragma: no cover
                 raise ValueError("invalid variant type")
 
-        if self._reference_id is not None:
-            prefix = f"{self._reference_id}:{self._prefix}"
+        if self._target_id is not None:
+            prefix = f"{self._target_id}:{self._prefix}"
         else:
             prefix = f"{self._prefix}"
 
@@ -222,10 +223,10 @@ class Variant:
             return f"{prefix}.{format_variant(self._variant_types, self._positions, self._sequences)}"
 
     @staticmethod
-    def _substitution_matches_reference(pos: int, ref: str, target: str) -> bool:
-        """Determine whether the reference portion of a substitution matches the target sequence.
+    def _substitution_matches_target(pos: int, ref: str, target: str) -> bool:
+        """Determine whether the target portion of a substitution matches the target sequence.
 
-        # TODO: this needs to be aware of protein vs nucleotide references
+        # TODO: this needs to be aware of protein vs nucleotide targets
 
         Parameters
         ----------
@@ -404,7 +405,7 @@ class Variant:
     ]:
         """The sequence portion of the variant.
 
-        This can be a tuple of reference and new bases for a substitution, a single sequence for insertions or
+        This can be a tuple of target and new bases for a substitution, a single sequence for insertions or
         deletion-insertions, or the "=" character for variants that are identical to the target sequence.
 
         Returns
@@ -421,19 +422,19 @@ class Variant:
             return self._sequences
 
     @property
-    def reference_id(self) -> Optional[str]:
-        """The reference identifier for the variant (if applicable).
+    def target_id(self) -> Optional[str]:
+        """The target identifier for the variant (if applicable).
 
-        The reference identifier precedes the prefix and is followed by a ``:``.
-        For example in ``NM_001130145.3:c.832C>T`` the reference identifier is "NM_001130145.3".
+        The target identifier precedes the prefix and is followed by a ``:``.
+        For example in ``NM_001130145.3:c.832C>T`` the target identifier is "NM_001130145.3".
 
         Returns
         -------
         Optional[str]
-            The reference identifier, or None if it is not set or the variant is invalid.
+            The target identifier, or None if it is not set or the variant is invalid.
 
         """
         if not self.is_valid():
             return None
         else:
-            return self._reference_id
+            return self._target_id

@@ -10,8 +10,8 @@ parse in general.
 
 While packages exist for parsing HGVS (most notably the
 `biocommons hgvs package <https://github.com/biocommons/hgvs/>`_), they are intended for use in human genetics and
-rely on sequence databases and reference sequence, which are not always available for or relevant to multiplexed assay
-targets.
+rely on sequence databases and reference sequence (called "target sequence" for MAVE-HGVS), which are not always
+available for or relevant for multiplexed assays.
 
 MAVE-HGVS is an attempt to define an easy-to-parse subset of the HGVS nomenclature that captures those variants that
 occur in MAVE datasets, while excluding many variant types that are unlikely to be found. Importantly, the
@@ -21,12 +21,12 @@ Key differences between HGVS and MAVE-HGVS
 ------------------------------------------
 
 Standard HGVS strings have the format :code:`reference:variant` (e.g. :code:`NM_001130145.3:c.832C>T`).
-MAVE-HGVS strings typically include the variant portion only and the reference portion is inferred based on the MAVE
-design.
+MAVE-HGVS strings typically include the variant portion only and the reference (target) portion is inferred from the
+MAVE design.
 
-Reference identifiers in MAVE-HGVS are optional, and would typically be used in cases where a mix of MAVE datasets are
+Target identifiers in MAVE-HGVS are optional, and would typically be used in cases where a mix of MAVE datasets are
 being analyzed jointly or for experimental designs that contain multiple target sequences.
-Reference identifiers in MAVE-HGVS can contain any word characters, numbers, or the underscore.
+Target identifiers in MAVE-HGVS can contain any word characters, numbers, or the underscore.
 
 MAVE-HGVS does not distinguish between variants that have been observed experimentally and the predicted consequence of
 observed variants.
@@ -92,16 +92,17 @@ Substitution
 
 MAVE-HGVS supports substitutions of a single nucleotide or amino acid.
 
-Unlike in HGVS, variants that describe identity to the reference at a single position (e.g. :code:`c.44=`) are not
-valid for nucleotide positions.
-Variants describing identity to the full reference (e.g. :code:`c.=`) are valid and are the intended way to specify
-identity to the target (wild-type) sequence.
-
-Variants that describe identity to the reference at a single amino acid position (e.g. :code:`p.Cys22=`) are valid and
-are the preferred way to describe specific synonymous variants.
+Unlike in HGVS, variants that describe identity to the reference (target) at a single position (e.g. :code:`c.44=`)
+are not valid for nucleotide positions.
+Variants describing identity to the full target sequence (e.g. :code:`c.=`) are valid and are the intended way to
+specify identity to the target (wild-type) sequence.
+This replaces the `Enrich2 <https://doi.org/10.1186/s13059-017-1272-5>`_ :code:`_wt` and :code:`_sy` variant syntax.
 
 The target-identity variants :code:`c.=` and :code:`p.=` are only valid on their own and are considered invalid as
 part of multi-variants.
+
+Variants that describe identity to the target at a single amino acid position (e.g. :code:`p.Cys22=`) are valid and
+are the preferred way to describe specific synonymous variants.
 
 .. warning:: Many variants currently in MaveDB use only '=' as part of multi-variants and are therefore invalid
    MAVE-HGVS.
@@ -200,7 +201,7 @@ Insertions of a number of unspecified bases or amino acids or insertions using a
 are not supported.
 
 Insertions must be specified by listing the complete inserted sequence.
-Referring to the sequence that is inserted based on its position in the reference sequence is not considered valid for
+Referring to the sequence that is inserted based on its position in the target sequence is not considered valid for
 MAVE-HGVS.
 
 Examples of valid insertions include:
