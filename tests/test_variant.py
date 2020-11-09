@@ -126,7 +126,23 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
 
 
 class TestCreateMultiVariantFromString(unittest.TestCase):
-    pass
+    def test_creation(self):
+        variant_strings = [
+            "p.[Glu27Trp;Ter345Lys]",
+            "p.[Gly18del;Glu27Trp;Ter345Lys]",
+            "p.[Gln7_Asn19del;Glu27Trp;Ter345Lys]",
+            "c.[1_95del;78+5_78+10del]",
+        ]
+
+        for s in variant_strings:
+            with self.subTest(s=s):
+                v = Variant(s)
+                self.assertTrue(v.is_valid())
+
+        for s in variant_strings:
+            with self.subTest(s=s):
+                v = Variant(s)
+                self.assertEqual(s, str(v))
 
 
 class TestCreateSingleVariantFromValues(unittest.TestCase):
