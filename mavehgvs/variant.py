@@ -1,5 +1,5 @@
 import re
-from typing import Optional, Union, List, Tuple
+from typing import Optional, Union, List, Tuple, Mapping, Any
 from mavehgvs.position import VariantPosition
 from mavehgvs.patterns.combined import any_variant
 
@@ -23,14 +23,18 @@ class Variant:
     """
 
     def __init__(
-        self, s: str, targetseq: Optional[str] = None, relaxed_ordering: bool = False
+        self,
+        s: Union[str, Mapping[str, Any]],
+        targetseq: Optional[str] = None,
+        relaxed_ordering: bool = False,
     ):
         """Convert a MAVE-HGVS variant string into a corresponding object with named fields.
 
         Parameters
         ----------
-        s : str
-            MAVE-HGVS variant string to convert into an object.
+        s : Union[str, Mapping[str, Any]]
+            MAVE-HGVS variant string to convert into an object or dictionary type object containing key-value pairs
+            corresponding to a MAVE-HGVS object.
 
         targetseq : Optional[str]
             If provided, the variant will be validated for agreement with this sequence.
@@ -45,119 +49,146 @@ class Variant:
             case.
 
         """
-        self.variant_string = s
-        variant_match = self.__variant_fullmatch(s)
-        if variant_match is None:
-            self.validation_failure_message = "failed regular expression validation"
-        else:
-            self.validation_failure_message = None
-            self._groupdict = variant_match.groupdict()
+        self.variant_string = None
+        self.variant_mapping = None
+        self.validation_failure_message = None
 
-            # set target id if present
-            if self._groupdict["target_id"] is not None:
-                self._target_id = self._groupdict["target_id"]
+        if isinstance(s, str):
+            self.variant_string = s
+            variant_match = self.__variant_fullmatch(self.variant_string)
+
+            if variant_match is None:
+                self.validation_failure_message = "failed regular expression validation"
             else:
-                self._target_id = None
+                self._groupdict = variant_match.groupdict()
 
-            # set prefix and determine if this is a multi-variant
-            if self._groupdict["single_variant"] is not None:
-                self.variant_count = 1
-                self._prefix = self._groupdict["single_variant"][0]
-            elif self._groupdict["multi_variant"] is not None:
-                self.variant_count = len(s.split(";"))
-                self._prefix = self._groupdict["multi_variant"][0]
-            else:  # pragma: no cover
-                raise ValueError("invalid match type")
+                # set target id if present
+                if self._groupdict["target_id"] is not None:
+                    self._target_id = self._groupdict["target_id"]
+                else:
+                    self._target_id = None
 
-            if self.variant_count == 1:
-                # determine which named groups to check
+                # set prefix and determine if this is a multi-variant
+                if self._groupdict["single_variant"] is not None:
+                    self.variant_count = 1
+                    self._prefix = self._groupdict["single_variant"][0]
+                elif self._groupdict["multi_variant"] is not None:
+                    self.variant_count = len(s.split(";"))
+                    self._prefix = self._groupdict["multi_variant"][0]
+                else:  # pragma: no cover
+                    raise ValueError("invalid match type")
+
+                if self.variant_count == 1:
+                    self._variant_types, self._positions, self._sequences = self.__process_string_variant(
+                        self._groupdict, relaxed_ordering=relaxed_ordering
+                    )
+                elif self.variant_count > 1:
+                    # TODO: validate variant ordering
+                    self._variant_types = list()
+                    self._positions = list()
+                    self._sequences = list()
+
+                    # format each individual variant event as a single variant and parse it
+                    for variant_substring in self._groupdict["multi_variant"][
+                        3:-1
+                    ].split(";"):
+                        groupdict = self.__variant_fullmatch(
+                            f"{self._prefix}.{variant_substring}"
+                        ).groupdict()
+                        vt, p, s = self.__process_string_variant(
+                            groupdict, relaxed_ordering=relaxed_ordering
+                        )
+                        self._variant_types.append(vt)
+                        self._positions.append(p)
+                        self._sequences.append(s)
+                else:  # pragma: no cover
+                    raise ValueError("invalid variant count")
+
+        elif isinstance(s, Mapping):
+            self.variant_mapping = s
+        else:
+            raise ValueError("can only create Variants from string or Mapping objects")
+
+    # TODO: type hints and docstring
+    def __process_string_variant(self, groupdict, relaxed_ordering):
+        variant_type = None
+        positions = None
+        sequences = None
+
+        # determine which named groups to check
+        if self._prefix == "p":
+            gdict_prefixes = [(f"pro_{t}", t) for t in self.__vtypes]
+        elif self._prefix == "r":
+            gdict_prefixes = [(f"rna_{t}", t) for t in self.__vtypes]
+        elif self._prefix in "cn":
+            gdict_prefixes = [(f"dna_{t}_{self._prefix}", t) for t in self.__vtypes]
+        elif self._prefix in "gmo":
+            gdict_prefixes = [(f"dna_{t}_gmo", t) for t in self.__vtypes]
+        else:  # pragma: no cover
+            raise ValueError("unexpected prefix")
+
+        # set the variant type
+        vtype_set = False
+        groupdict_prefix = None
+        for groupname, vtype in gdict_prefixes:
+            if groupdict[groupname] is not None:
+                if vtype_set:  # pragma: no cover
+                    raise ValueError(
+                        f"ambiguous match: '{groupname}' and '{groupdict_prefix}'"
+                    )
+                variant_type = vtype
+                groupdict_prefix = groupname
+
+        # set the position and sequence
+        if variant_type == "sub":
+            if (
+                groupdict[f"{groupdict_prefix}_equal"] is not None
+            ):  # special case for target identity
+                sequences = groupdict[f"{groupdict_prefix}_equal"]
+            else:
+                positions = VariantPosition(groupdict[f"{groupdict_prefix}_position"])
                 if self._prefix == "p":
-                    gdict_prefixes = [(f"pro_{t}", t) for t in self.__vtypes]
-                elif self._prefix == "r":
-                    gdict_prefixes = [(f"rna_{t}", t) for t in self.__vtypes]
-                elif self._prefix in "cn":
-                    gdict_prefixes = [
-                        (f"dna_{t}_{self._prefix}", t) for t in self.__vtypes
-                    ]
-                elif self._prefix in "gmo":
-                    gdict_prefixes = [(f"dna_{t}_gmo", t) for t in self.__vtypes]
+                    sequences = (
+                        positions.amino_acid,
+                        groupdict[f"{groupdict_prefix}_new"],
+                    )
+                elif self._prefix in "gmo" "cn" "r":
+                    sequences = (
+                        groupdict[f"{groupdict_prefix}_ref"],
+                        groupdict[f"{groupdict_prefix}_new"],
+                    )
                 else:  # pragma: no cover
                     raise ValueError("unexpected prefix")
-
-                # set the variant type
-                self._variant_types = None
-                vtype_set = False
-                groupdict_prefix = None
-                for groupname, vtype in gdict_prefixes:
-                    if self._groupdict[groupname] is not None:
-                        if vtype_set:  # pragma: no cover
-                            raise ValueError(
-                                f"ambiguous match: '{groupname}' and '{groupdict_prefix}'"
-                            )
-                        self._variant_types = vtype
-                        groupdict_prefix = groupname
-
-                # set the position and sequence
-                self._positions = None
-                self._sequences = None
-                if self._variant_types == "sub":
-                    if (
-                        self._groupdict[f"{groupdict_prefix}_equal"] is not None
-                    ):  # special case for target identity
-                        self._sequences = self._groupdict[f"{groupdict_prefix}_equal"]
+        elif variant_type in ("del", "dup", "ins", "delins"):
+            # set position
+            if (
+                groupdict.get(f"{groupdict_prefix}_pos") is not None
+            ):  # use get() since ins pattern doesn't have pos
+                positions = VariantPosition(groupdict[f"{groupdict_prefix}_pos"])
+            else:
+                positions = (
+                    VariantPosition(groupdict[f"{groupdict_prefix}_start"]),
+                    VariantPosition(groupdict[f"{groupdict_prefix}_end"]),
+                )
+                # extra validation on positions
+                if positions[0] >= positions[1]:
+                    if relaxed_ordering:
+                        positions = (positions[1], positions[0])
                     else:
-                        self._positions = VariantPosition(
-                            self._groupdict[f"{groupdict_prefix}_position"]
+                        self.validation_failure_message = (
+                            "start position must be before end position"
                         )
-                        if self._prefix == "p":
-                            self._sequences = (
-                                self._positions.amino_acid,
-                                self._groupdict[f"{groupdict_prefix}_new"],
-                            )
-                        elif self._prefix in "gmo" "cn" "r":
-                            self._sequences = (
-                                self._groupdict[f"{groupdict_prefix}_ref"],
-                                self._groupdict[f"{groupdict_prefix}_new"],
-                            )
-                        else:  # pragma: no cover
-                            raise ValueError("unexpected prefix")
-                elif self._variant_types in ("del", "dup", "ins", "delins"):
-                    # set position
-                    if (
-                        self._groupdict.get(f"{groupdict_prefix}_pos") is not None
-                    ):  # use get() since ins pattern doesn't have pos
-                        self._positions = VariantPosition(
-                            self._groupdict[f"{groupdict_prefix}_pos"]
+                if variant_type == "ins":
+                    if not positions[0].is_adjacent(positions[1]):
+                        self.validation_failure_message = (
+                            "insertion positions must be adjacent"
                         )
-                    else:
-                        self._positions = (
-                            VariantPosition(
-                                self._groupdict[f"{groupdict_prefix}_start"]
-                            ),
-                            VariantPosition(self._groupdict[f"{groupdict_prefix}_end"]),
-                        )
-                        # extra validation on positions
-                        if self._positions[0] >= self._positions[1]:
-                            if relaxed_ordering:
-                                self._positions = (
-                                    self._positions[1],
-                                    self._positions[0],
-                                )
-                            else:
-                                self.validation_failure_message = (
-                                    "start position must be before end position"
-                                )
-                        if self._variant_types == "ins":
-                            if not self._positions[0].is_adjacent(self._positions[1]):
-                                self.validation_failure_message = (
-                                    "insertion positions must be adjacent"
-                                )
 
-                    # set sequence if needed
-                    if self._variant_types in ("ins", "delins"):
-                        self._sequences = self._groupdict[f"{groupdict_prefix}_seq"]
-                else:  # pragma: no cover
-                    raise ValueError("unexpected variant type")
+            # set sequence if needed
+            if variant_type in ("ins", "delins"):
+                sequences = groupdict[f"{groupdict_prefix}_seq"]
+
+        return variant_type, positions, sequences
 
     def __repr__(self) -> str:
         """The object representation is equivalent to the input string.
