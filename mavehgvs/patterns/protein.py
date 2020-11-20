@@ -12,7 +12,7 @@ aa_pos: str = rf"(?:{amino_acid}{pos})"
 """str: Pattern matching an amino acid code followed by a position.
 """
 
-pro_sub: str = rf"(?P<pro_sub>(?:(?P<position>{aa_pos})(?P<new>{amino_acid}|=))|(?P<equal>=))"
+pro_sub: str = rf"(?P<pro_sub>(?:(?P<position>{aa_pos})(?P<new>{amino_acid}|=))|(?P<equal>=)|(?P<equal_sy>\(=\)))"
 """str: Pattern matching a protein substitution.
 """
 

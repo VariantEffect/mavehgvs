@@ -145,6 +145,8 @@ class Variant:
                 groupdict[f"{groupdict_prefix}_equal"] is not None
             ):  # special case for target identity
                 sequences = groupdict[f"{groupdict_prefix}_equal"]
+            elif groupdict[f"pro_sub_equal_sy"] is not None:
+                sequences = groupdict[f"pro_sub_equal_sy"]
             else:
                 positions = VariantPosition(groupdict[f"{groupdict_prefix}_position"])
                 if self._prefix == "p":
@@ -249,7 +251,7 @@ class Variant:
         if not self.is_valid():
             return repr(None)
         elif self.is_target_identical():
-            return f"{prefix}.="
+            return f"{prefix}.{self._sequences}"
         elif self.variant_count > 1:
             elements = list()
             for vtype, pos, seq in zip(
@@ -290,9 +292,10 @@ class Variant:
         return self.validation_failure_message is None
 
     def is_target_identical(self) -> Optional[bool]:
-        """Return whether the variant describes the "wild-type" sequence.
+        """Return whether the variant describes the "wild-type" sequence or is the special synonymous variant.
 
-        This is the variant described with only the equals sign (e.g. ``c.=``).
+        This is the variant described with only the equals sign (e.g. ``c.=``)
+        or the uncertain equals protein variant (e.g. ``p.(=)``).
 
         Returns
         -------

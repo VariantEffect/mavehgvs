@@ -30,7 +30,8 @@ Target identifiers in MAVE-HGVS can contain any word characters, numbers, or the
 
 MAVE-HGVS does not distinguish between variants that have been observed experimentally and the predicted consequence of
 observed variants.
-Therefore, variants that contain :code:`()` to denote predicted consequences are considered invalid.
+Therefore, variants that contain :code:`()` to denote predicted consequences are considered invalid with one exception
+(see `Substitution`_ below).
 
 MAVE-HGVS supports position numberings that are relative to a transcript (e.g. :code:`c.85+12G>A` or :code:`n.*22del`).
 These positions are referred to here as using the extended position notation.
@@ -96,13 +97,17 @@ Unlike in HGVS, variants that describe identity to the reference (target) at a s
 are not valid for nucleotide positions.
 Variants describing identity to the full target sequence (e.g. :code:`c.=`) are valid and are the intended way to
 specify identity to the target (wild-type) sequence.
-This replaces the `Enrich2 <https://doi.org/10.1186/s13059-017-1272-5>`_ :code:`_wt` and :code:`_sy` variant syntax.
+This replaces the `Enrich2 <https://doi.org/10.1186/s13059-017-1272-5>`_ :code:`_wt` variant syntax.
 
 The target-identity variants :code:`c.=` and :code:`p.=` are only valid on their own and are considered invalid as
 part of multi-variants.
 
 Variants that describe identity to the target at a single amino acid position (e.g. :code:`p.Cys22=`) are valid and
 are the preferred way to describe specific synonymous variants.
+
+The variant :code:`p.(=)` is used when summarizing the population of variants that are synonymous at the protein level
+but not target identical at the DNA level.
+This replaces the `Enrich2 <https://doi.org/10.1186/s13059-017-1272-5>`_  :code:`_sy` variant syntax.
 
 .. warning:: Many variants currently in MaveDB use only '=' as part of multi-variants and are therefore invalid
    MAVE-HGVS.
