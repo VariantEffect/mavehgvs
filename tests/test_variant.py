@@ -14,6 +14,9 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
             "c.*33G>C",
             "r.22g>u",
             "r.33+12a>c",
+            "p.=",
+            "p.(=)",
+            "n.=",
         ]
 
         for s in variant_strings:
@@ -171,6 +174,8 @@ class TestMiscMethods(unittest.TestCase):
             "c.43-6_595+12delinsCTT",
             "p.Ile71_Cys80delinsSer",
             "p.=",
+            "c.=",
+            "p.(=)",
         ]
 
         invalid_variant_strings = [
@@ -185,6 +190,7 @@ class TestMiscMethods(unittest.TestCase):
             "g.22_23insauc",
             "r.43-6_595+12delinsctt",
             "x.=",
+            "c.(=)",
         ]
 
         for s in valid_variant_strings:
