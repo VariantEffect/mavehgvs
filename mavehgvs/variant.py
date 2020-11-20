@@ -98,6 +98,9 @@ class Variant:
                         vt, p, s = self.__process_string_variant(
                             groupdict, relaxed_ordering=relaxed_ordering
                         )
+                        if p is None:  # only the case for target-identical variants
+                            self.validation_failure_message = "multi-variants cannot contain target-identical variants"
+                            break
                         self._variant_types.append(vt)
                         self._positions.append(p)
                         self._sequences.append(s)
