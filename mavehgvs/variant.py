@@ -119,13 +119,17 @@ class Variant:
                                 vp2, Tuple
                             ):
                                 if vp2[0] <= vp1 <= vp2[1]:
-                                    self.validation_failure_message = "multi-variant has multiple changes for the same position"
+                                    self.validation_failure_message = (
+                                        "multi-variant has overlapping changes"
+                                    )
                                     break
                             elif isinstance(vp1, Tuple) and isinstance(
                                 vp2, VariantPosition
                             ):
                                 if vp1[0] <= vp2 <= vp1[1]:
-                                    self.validation_failure_message = "multi-variant has multiple changes for the same position"
+                                    self.validation_failure_message = (
+                                        "multi-variant has overlapping changes"
+                                    )
                                     break
                             elif isinstance(vp1, Tuple) and isinstance(vp2, Tuple):
                                 if (
@@ -134,14 +138,37 @@ class Variant:
                                     or vp2[0] <= vp1[0] <= vp2[1]
                                     or vp2[0] <= vp1[1] <= vp2[1]
                                 ):
-                                    self.validation_failure_message = "multi-variant has multiple changes for the same position"
+                                    self.validation_failure_message = (
+                                        "multi-variant has overlapping changes"
+                                    )
                                     break
                             else:  # pragma: no cover
-                                raise ValueError("invalid positions")
+                                raise ValueError("invalid position type")
 
-                    # validate variant ordering
+                    # re-order variants and validate
                     if self.validation_failure_message is None:
-                        pass
+
+                        def sort_key(x):
+                            if isinstance(x[1], VariantPosition):
+                                return x[1]
+                            elif isinstance(x[1], Tuple):
+                                return x[1][0]
+                            else:
+                                raise ValueError("invalid position type")
+
+                        variant_tuples = list(
+                            zip(self._variant_types, self._positions, self._sequences)
+                        )
+                        ordered_tuples = sorted(variant_tuples, key=sort_key)
+                        if variant_tuples != ordered_tuples:
+                            if relaxed_ordering:
+                                self._variant_types = [x[0] for x in ordered_tuples]
+                                self._positions = [x[1] for x in ordered_tuples]
+                                self._sequences = [x[2] for x in ordered_tuples]
+                            else:
+                                self.validation_failure_message = (
+                                    "multi-variants not in sorted order"
+                                )
 
                 else:  # pragma: no cover
                     raise ValueError("invalid variant count")
