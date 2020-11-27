@@ -144,6 +144,8 @@ class VariantPosition:
     def __eq__(self, other: "VariantPosition") -> bool:
         """Equality comparison operator.
 
+        Note that the amino acid portion of a protein position is not used in this comparison.
+
         Other comparison operators will be filled in using :py:func:`functools.total_ordering`.
 
         Parameters
@@ -157,15 +159,16 @@ class VariantPosition:
             True if this position is the same as the other position; else False.
 
         """
-        return (self.position, self.amino_acid, self.intronic_position, self.utr) == (
+        return (self.position, self.intronic_position, self.utr) == (
             other.position,
-            other.amino_acid,
             other.intronic_position,
             other.utr,
         )
 
     def __ne__(self, other: "VariantPosition") -> bool:
         """Not equal comparison operator.
+
+        Note that the amino acid portion of a protein position is not used in this comparison.
 
         Other comparison operators will be filled in using :py:func:`functools.total_ordering`.
 
@@ -180,9 +183,8 @@ class VariantPosition:
             True if this position is not the same as the other position; else False.
 
         """
-        return (self.position, self.amino_acid, self.intronic_position, self.utr) != (
+        return (self.position, self.intronic_position, self.utr) != (
             other.position,
-            other.amino_acid,
             other.intronic_position,
             other.utr,
         )
