@@ -134,7 +134,7 @@ class TestCreateMultiVariantFromString(unittest.TestCase):
             "p.[Glu27Trp;Ter345Lys]",
             "p.[Gly18del;Glu27Trp;Ter345Lys]",
             "p.[Gln7_Asn19del;Glu27Trp;Ter345Lys]",
-            "c.[1_95del;78+5_78+10del;122T>A]",
+            "c.[1_35del;78+5_78+10del;122T>A]",
         ]
 
         invalid_variant_strings = [
@@ -152,6 +152,46 @@ class TestCreateMultiVariantFromString(unittest.TestCase):
             with self.subTest(s=s):
                 v = Variant(s)
                 self.assertEqual(s, str(v))
+
+        for s in invalid_variant_strings:
+            with self.subTest(s=s):
+                v = Variant(s)
+                self.assertFalse(v.is_valid())
+
+    def test_ordering(self):
+        variant_string_tuples = [
+            ("p.[Gly345Lys;Glu27Trp]", "p.[Glu27Trp;Gly345Lys]"),
+            ("p.[Glu27Trp;Gly18del;Ter345Lys]", "p.[Gly18del;Glu27Trp;Ter345Lys]"),
+            ("c.[122T>A;1_35del;78+5_78+10del]", "c.[1_35del;78+5_78+10del;122T>A]"),
+        ]
+
+        for s, _ in variant_string_tuples:
+            with self.subTest(s=s):
+                v = Variant(s, relaxed_ordering=False)
+                self.assertFalse(v.is_valid())
+
+        for s, s_ordered in variant_string_tuples:
+            with self.subTest(s=s):
+                v = Variant(s, relaxed_ordering=True)
+                self.assertTrue(v.is_valid())
+
+        for s, s_ordered in variant_string_tuples:
+            with self.subTest(s=s):
+                v = Variant(s, relaxed_ordering=True)
+                self.assertEqual(s_ordered, str(v))
+
+    def test_overlaps(self):
+        invalid_variant_strings = [
+            "p.[Glu27Trp;Glu27Trp]",
+            "p.[Glu27Trp;Glu27Tyr]",
+            "p.[Pro27Trp;Glu27Tyr]",
+            "p.[Gly18del;Gly18Tyr]",
+            "p.[Gln7_Asn19del;Glu13Trp]",
+            "p.[Gln7_Asn19del;Glu13Trp;Ter345Lys]",
+            "c.[1_95del;78+5_78+10del;122T>A]",
+            "c.[1_95del;22T>A]",
+            "n.[22G>A;22G>T]",
+        ]
 
         for s in invalid_variant_strings:
             with self.subTest(s=s):
