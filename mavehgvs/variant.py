@@ -1,4 +1,5 @@
 import re
+import itertools
 from typing import Optional, Union, List, Tuple, Mapping, Any
 from mavehgvs.position import VariantPosition
 from mavehgvs.patterns.combined import any_variant
@@ -104,6 +105,44 @@ class Variant:
                         self._variant_types.append(vt)
                         self._positions.append(p)
                         self._sequences.append(s)
+
+                    # ensure that multiple variants aren't defined for the same positions
+                    if self.validation_failure_message is None:
+                        for vp1, vp2 in itertools.combinations(self._positions, 2):
+                            if isinstance(vp1, VariantPosition) and isinstance(
+                                vp2, VariantPosition
+                            ):  # both single position
+                                if vp1 == vp2:
+                                    self.validation_failure_message = "multi-variant has multiple changes for the same position"
+                                    break
+                            elif isinstance(vp1, VariantPosition) and isinstance(
+                                vp2, Tuple
+                            ):
+                                if vp2[0] <= vp1 <= vp2[1]:
+                                    self.validation_failure_message = "multi-variant has multiple changes for the same position"
+                                    break
+                            elif isinstance(vp1, Tuple) and isinstance(
+                                vp2, VariantPosition
+                            ):
+                                if vp1[0] <= vp2 <= vp1[1]:
+                                    self.validation_failure_message = "multi-variant has multiple changes for the same position"
+                                    break
+                            elif isinstance(vp1, Tuple) and isinstance(vp2, Tuple):
+                                if (
+                                    vp1[0] <= vp2[0] <= vp1[1]
+                                    or vp1[0] <= vp2[1] <= vp1[1]
+                                    or vp2[0] <= vp1[0] <= vp2[1]
+                                    or vp2[0] <= vp1[1] <= vp2[1]
+                                ):
+                                    self.validation_failure_message = "multi-variant has multiple changes for the same position"
+                                    break
+                            else:  # pragma: no cover
+                                raise ValueError("invalid positions")
+
+                    # validate variant ordering
+                    if self.validation_failure_message is None:
+                        pass
+
                 else:  # pragma: no cover
                     raise ValueError("invalid variant count")
 
