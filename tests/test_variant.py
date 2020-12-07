@@ -415,6 +415,8 @@ class TestMiscProperties(unittest.TestCase):
             (None, "c.122-6T>A"),
             ("GeneX", "GeneX:p.Glu27Trp"),
             ("YFG1", "YFG1:c.122-6T>A"),
+            ("ENST00000471181.7", "ENST00000471181.7:c.122-6T>A"),
+            ("NM_007294.4", "NM_007294.4:c.122-6T>A"),
             (None, "x.="),
             (None, "GeneX:x.="),
         ]
