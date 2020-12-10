@@ -1,8 +1,12 @@
 import re
 import itertools
 from typing import Optional, Union, List, Tuple, Mapping, Any
+
 from mavehgvs.position import VariantPosition
 from mavehgvs.patterns.combined import any_variant
+from mavehgvs.exceptions import MaveHGVSParseError
+
+__all__ = ["Variant"]
 
 
 class Variant:
@@ -52,14 +56,13 @@ class Variant:
         """
         self.variant_string = None
         self.variant_mapping = None
-        self.validation_failure_message = None
 
         if isinstance(s, str):
             self.variant_string = s
             variant_match = self.__variant_fullmatch(self.variant_string)
 
             if variant_match is None:
-                self.validation_failure_message = "failed regular expression validation"
+                raise MaveHGVSParseError("failed regular expression validation")
             else:
                 self._groupdict = variant_match.groupdict()
 
@@ -77,7 +80,7 @@ class Variant:
                     self.variant_count = len(s.split(";"))
                     self._prefix = self._groupdict["multi_variant"][0]
                 else:  # pragma: no cover
-                    raise ValueError("invalid match type")
+                    raise MaveHGVSParseError("invalid match type")
 
                 if self.variant_count == 1:
                     self._variant_types, self._positions, self._sequences = self.__process_string_variant(
@@ -100,78 +103,63 @@ class Variant:
                             groupdict, relaxed_ordering=relaxed_ordering
                         )
                         if p is None:  # only the case for target-identical variants
-                            self.validation_failure_message = "multi-variants cannot contain target-identical variants"
-                            break
+                            raise MaveHGVSParseError("multi-variants cannot contain target-identical variants")
+
                         self._variant_types.append(vt)
                         self._positions.append(p)
                         self._sequences.append(s)
 
                     # ensure that multiple variants aren't defined for the same positions
-                    if self.validation_failure_message is None:
-                        for vp1, vp2 in itertools.combinations(self._positions, 2):
-                            if isinstance(vp1, VariantPosition) and isinstance(
-                                vp2, VariantPosition
-                            ):  # both single position
-                                if vp1 == vp2:
-                                    self.validation_failure_message = "multi-variant has multiple changes for the same position"
-                                    break
-                            elif isinstance(vp1, VariantPosition) and isinstance(
-                                vp2, Tuple
+                    for vp1, vp2 in itertools.combinations(self._positions, 2):
+                        if isinstance(vp1, VariantPosition) and isinstance(
+                            vp2, VariantPosition
+                        ):  # both single position
+                            if vp1 == vp2:
+                                raise MaveHGVSParseError("multi-variant has multiple changes for the same position")
+                        elif isinstance(vp1, VariantPosition) and isinstance(
+                            vp2, Tuple
+                        ):
+                            if vp2[0] <= vp1 <= vp2[1]:
+                                raise MaveHGVSParseError("multi-variant has overlapping changes")
+                        elif isinstance(vp1, Tuple) and isinstance(
+                            vp2, VariantPosition
+                        ):
+                            if vp1[0] <= vp2 <= vp1[1]:
+                                raise MaveHGVSParseError("multi-variant has overlapping changes")
+                        elif isinstance(vp1, Tuple) and isinstance(vp2, Tuple):
+                            if (
+                                vp1[0] <= vp2[0] <= vp1[1]
+                                or vp1[0] <= vp2[1] <= vp1[1]
+                                or vp2[0] <= vp1[0] <= vp2[1]
+                                or vp2[0] <= vp1[1] <= vp2[1]
                             ):
-                                if vp2[0] <= vp1 <= vp2[1]:
-                                    self.validation_failure_message = (
-                                        "multi-variant has overlapping changes"
-                                    )
-                                    break
-                            elif isinstance(vp1, Tuple) and isinstance(
-                                vp2, VariantPosition
-                            ):
-                                if vp1[0] <= vp2 <= vp1[1]:
-                                    self.validation_failure_message = (
-                                        "multi-variant has overlapping changes"
-                                    )
-                                    break
-                            elif isinstance(vp1, Tuple) and isinstance(vp2, Tuple):
-                                if (
-                                    vp1[0] <= vp2[0] <= vp1[1]
-                                    or vp1[0] <= vp2[1] <= vp1[1]
-                                    or vp2[0] <= vp1[0] <= vp2[1]
-                                    or vp2[0] <= vp1[1] <= vp2[1]
-                                ):
-                                    self.validation_failure_message = (
-                                        "multi-variant has overlapping changes"
-                                    )
-                                    break
-                            else:  # pragma: no cover
-                                raise ValueError("invalid position type")
+                                raise MaveHGVSParseError("multi-variant has overlapping changes")
+                        else:  # pragma: no cover
+                            raise ValueError("invalid position type")
 
                     # re-order variants and validate
-                    if self.validation_failure_message is None:
+                    def sort_key(x):
+                        if isinstance(x[1], VariantPosition):
+                            return x[1]
+                        elif isinstance(x[1], Tuple):
+                            return x[1][0]
+                        else:
+                            raise ValueError("invalid position type")
 
-                        def sort_key(x):
-                            if isinstance(x[1], VariantPosition):
-                                return x[1]
-                            elif isinstance(x[1], Tuple):
-                                return x[1][0]
-                            else:
-                                raise ValueError("invalid position type")
-
-                        variant_tuples = list(
-                            zip(self._variant_types, self._positions, self._sequences)
-                        )
-                        ordered_tuples = sorted(variant_tuples, key=sort_key)
-                        if variant_tuples != ordered_tuples:
-                            if relaxed_ordering:
-                                self._variant_types = [x[0] for x in ordered_tuples]
-                                self._positions = [x[1] for x in ordered_tuples]
-                                self._sequences = [x[2] for x in ordered_tuples]
-                            else:
-                                self.validation_failure_message = (
-                                    "multi-variants not in sorted order"
-                                )
+                    variant_tuples = list(
+                        zip(self._variant_types, self._positions, self._sequences)
+                    )
+                    ordered_tuples = sorted(variant_tuples, key=sort_key)
+                    if variant_tuples != ordered_tuples:
+                        if relaxed_ordering:
+                            self._variant_types = [x[0] for x in ordered_tuples]
+                            self._positions = [x[1] for x in ordered_tuples]
+                            self._sequences = [x[2] for x in ordered_tuples]
+                        else:
+                            raise MaveHGVSParseError("multi-variants not in sorted order")
 
                 else:  # pragma: no cover
-                    raise ValueError("invalid variant count")
+                    raise MaveHGVSParseError("invalid variant count")
 
         elif isinstance(s, Mapping):
             self.variant_mapping = s
@@ -194,7 +182,7 @@ class Variant:
         elif self._prefix in "gmo":
             gdict_prefixes = [(f"dna_{t}_gmo", t) for t in self.__vtypes]
         else:  # pragma: no cover
-            raise ValueError("unexpected prefix")
+            raise MaveHGVSParseError("unexpected prefix")
 
         # set the variant type
         vtype_set = False
@@ -202,7 +190,7 @@ class Variant:
         for groupname, vtype in gdict_prefixes:
             if groupdict[groupname] is not None:
                 if vtype_set:  # pragma: no cover
-                    raise ValueError(
+                    raise MaveHGVSParseError(
                         f"ambiguous match: '{groupname}' and '{groupdict_prefix}'"
                     )
                 variant_type = vtype
@@ -229,7 +217,7 @@ class Variant:
                         groupdict[f"{groupdict_prefix}_new"],
                     )
                 else:  # pragma: no cover
-                    raise ValueError("unexpected prefix")
+                    raise MaveHGVSParseError("unexpected prefix")
         elif variant_type in ("del", "dup", "ins", "delins"):
             # set position
             if (
@@ -246,14 +234,10 @@ class Variant:
                     if relaxed_ordering:
                         positions = (positions[1], positions[0])
                     else:
-                        self.validation_failure_message = (
-                            "start position must be before end position"
-                        )
+                        raise MaveHGVSParseError("start position must be before end position")
                 if variant_type == "ins":
                     if not positions[0].is_adjacent(positions[1]):
-                        self.validation_failure_message = (
-                            "insertion positions must be adjacent"
-                        )
+                        raise MaveHGVSParseError("insertion positions must be adjacent")
 
             # set sequence if needed
             if variant_type in ("ins", "delins"):
@@ -310,16 +294,14 @@ class Variant:
                 else:
                     return f"{pos}{vtype}{seq}"
             else:  # pragma: no cover
-                raise ValueError("invalid variant type")
+                raise MaveHGVSParseError("invalid variant type")
 
         if self._target_id is not None:
             prefix = f"{self._target_id}:{self._prefix}"
         else:
             prefix = f"{self._prefix}"
 
-        if not self.is_valid():
-            return repr(None)
-        elif self.is_target_identical():
+        if self.is_target_identical():
             return f"{prefix}.{self._sequences}"
         elif self.variant_count > 1:
             elements = list()
@@ -349,18 +331,7 @@ class Variant:
         """
         pass
 
-    def is_valid(self) -> bool:
-        """Return whether the variant is considered valid MAVE-HGVS.
-
-        Returns
-        -------
-        bool
-            True if the variant string is valid MAVE-HGVS; else False.
-
-        """
-        return self.validation_failure_message is None
-
-    def is_target_identical(self) -> Optional[bool]:
+    def is_target_identical(self) -> bool:
         """Return whether the variant describes the "wild-type" sequence or is the special synonymous variant.
 
         This is the variant described with only the equals sign (e.g. ``c.=``)
@@ -368,17 +339,13 @@ class Variant:
 
         Returns
         -------
-        Optional[bool]
+        bool
             True if this variant describes the wild-type or target sequence; else False.
-            Returns None if the variant is invalid.
 
         """
-        if not self.is_valid():
-            return None
-        else:
-            return self._positions is None
+        return self._positions is None
 
-    def is_multi_variant(self) -> Optional[bool]:
+    def is_multi_variant(self) -> bool:
         """Return whether the variant is a multi-variant.
 
         A multi-variant is a single variant describing multiple events enclosed in '[]'.
@@ -386,25 +353,20 @@ class Variant:
 
         Returns
         -------
-        Optional[bool]
-            True if the variant is a multi-variant; else False. Returns None if the variant is invalid.
+        bool
+            True if the variant is a multi-variant; else False.
 
         """
-        if not self.is_valid():
-            return None
-        elif self.variant_count > 1:
-            return True
-        else:
-            return False
+        return self.variant_count > 1
 
     @property
-    def prefix(self) -> Optional[str]:
+    def prefix(self) -> str:
         """The single-letter prefix for this variant.
 
         Returns
         -------
-        Optional[str]
-            Single-letter prefix corresponding to the sequence type or None of the variant is invalid.
+        str
+            Single-letter prefix corresponding to the sequence type.
 
             See the following table for sequence type prefixes and their meanings:
 
@@ -414,13 +376,10 @@ class Variant:
                :widths: 5, 20
 
         """
-        if not self.is_valid():
-            return None
-        else:
-            return self._prefix
+        return self._prefix
 
     @property
-    def variant_type(self) -> Optional[Union[str, List[str]]]:
+    def variant_type(self) -> Union[str, List[str]]:
         """The type for this variant.
 
         Valid variant types are:
@@ -433,17 +392,13 @@ class Variant:
 
         Returns
         -------
-        Optional[Union[str, List[str]]]
-            String containing the variant type or None of the variant is invalid.
-            Returns a list of strings for a multi-variant.
+        Union[str, List[str]]
+            String containing the variant type. Returns a list of strings for a multi-variant.
 
         """
-        if not self.is_valid():
-            return None
-        else:
-            return self._variant_types
+        return self._variant_types
 
-    def uses_extended_positions(self) -> Optional[bool]:
+    def uses_extended_positions(self) -> bool:
         """Return whether the variant uses the extended position notation to describe intronic or UTR positions.
 
         Examples of variants using the extended position notation include:
@@ -457,14 +412,12 @@ class Variant:
 
         Returns
         -------
-        Optional[bool]
+        bool
             True if the variant (or any of the individual variants for a multi-variant) uses the extended position
-            notation or None if the variant is invalid.
+            notation.
 
         """
-        if not self.is_valid():
-            return None
-        elif self.is_multi_variant():
+        if self.is_multi_variant():
             all_positions = list()
             for p in self.positions:
                 if isinstance(p, tuple):
@@ -497,14 +450,11 @@ class Variant:
         Returns
         -------
         Union[VariantPosition, Tuple[VariantPosition, VariantPosition], List[Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]]]
-            Variant position or tuple of start/end positions, or None of the variant is invalid.
+            Variant position or tuple of start/end positions.
             Returns a list of positions or start/end tuples for a multi-variant.
 
         """
-        if not self.is_valid():
-            return None
-        else:
-            return self._positions
+        return self._positions
 
     @property
     def sequence(
@@ -521,14 +471,11 @@ class Variant:
         -------
         Union[str, Tuple[str, str], List[Optional[Union[str, Tuple[str, str]]]]]]
             Tuple of ref/new bases for substitutions, string containing inserted sequence, or the "=" character.
-            Returns None if the variant is invalid or does not have a sequence component (deletion or duplication).
+            Returns None if the variant does not have a sequence component (deletion or duplication).
             Returns a list for a multi-variant, which may contain None values for deletions or duplications.
 
         """
-        if not self.is_valid():
-            return None
-        else:
-            return self._sequences
+        return self._sequences
 
     @property
     def target_id(self) -> Optional[str]:
@@ -540,10 +487,7 @@ class Variant:
         Returns
         -------
         Optional[str]
-            The target identifier, or None if it is not set or the variant is invalid.
+            The target identifier, or None if it is not set.
 
         """
-        if not self.is_valid():
-            return None
-        else:
-            return self._target_id
+        return self._target_id
