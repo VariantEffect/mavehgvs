@@ -1,9 +1,55 @@
 import unittest
+
+from mavehgvs.exceptions import MaveHGVSParseError
 from mavehgvs.variant import Variant
 from mavehgvs.position import VariantPosition
 
 
 class TestCreateSingleVariantFromString(unittest.TestCase):
+    def test_invalid_raises_error(self) -> None:
+        valid_variant_strings = [
+            "p.Glu27Trp",
+            "c.122-6T>A",
+            "g.44del",
+            "c.78+5_78+10del",
+            "c.77dup",
+            "p.Pro12_Gly18dup",
+            "p.Ala12_Pro13insGlyProCys",
+            "r.22_23insauc",
+            "c.43-6_595+12delinsCTT",
+            "p.Ile71_Cys80delinsSer",
+            "p.=",
+            "c.=",
+            "p.(=)",
+        ]
+
+        invalid_variant_strings = [
+            "g.Glu27Trp",
+            "p.27Glu>Trp",
+            "p.122-6T>A",
+            "G>A",
+            "22G>A",
+            "G.44del",
+            "a.78+5_78+10del",
+            "77dup",
+            "n.Pro12_Gly18dup",
+            "g.22_23insauc",
+            "g.25_24del",
+            "g.25_24ins",
+            "r.43-6_595+12delinsctt",
+            "x.=",
+            "c.(=)",
+        ]
+
+        for s in valid_variant_strings:
+            with self.subTest(s=s):
+                Variant(s)  # should pass
+
+        for s in invalid_variant_strings:
+            with self.subTest(s=s):
+                with self.assertRaises(MaveHGVSParseError):
+                    Variant(s)
+
     def test_sub(self) -> None:
         variant_strings = [
             "p.Glu27Trp",
@@ -18,11 +64,6 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
             "p.(=)",
             "n.=",
         ]
-
-        for s in variant_strings:
-            with self.subTest(s=s):
-                v = Variant(s)
-                self.assertTrue(v.is_valid())
 
         for s in variant_strings:
             with self.subTest(s=s):
@@ -42,11 +83,6 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
         for s in variant_strings:
             with self.subTest(s=s):
                 v = Variant(s)
-                self.assertTrue(v.is_valid())
-
-        for s in variant_strings:
-            with self.subTest(s=s):
-                v = Variant(s)
                 self.assertEqual(s, str(v))
 
     def test_dup(self) -> None:
@@ -58,11 +94,6 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
             "p.Cys5dup",
             "r.12dup",
         ]
-
-        for s in variant_strings:
-            with self.subTest(s=s):
-                v = Variant(s)
-                self.assertTrue(v.is_valid())
 
         for s in variant_strings:
             with self.subTest(s=s):
@@ -82,11 +113,6 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
         for s in variant_strings:
             with self.subTest(s=s):
                 v = Variant(s)
-                self.assertTrue(v.is_valid())
-
-        for s in variant_strings:
-            with self.subTest(s=s):
-                v = Variant(s)
                 self.assertEqual(s, str(v))
 
     def test_delins(self) -> None:
@@ -102,20 +128,10 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
         for s in variant_strings:
             with self.subTest(s=s):
                 v = Variant(s)
-                self.assertTrue(v.is_valid())
-
-        for s in variant_strings:
-            with self.subTest(s=s):
-                v = Variant(s)
                 self.assertEqual(s, str(v))
 
     def test_target_identical(self) -> None:
         variant_strings = [f"{prefix}.=" for prefix in "gmo" "cn" "r"]
-
-        for s in variant_strings:
-            with self.subTest(s=s):
-                v = Variant(s)
-                self.assertTrue(v.is_valid())
 
         for s in variant_strings:
             with self.subTest(s=s):
@@ -146,17 +162,12 @@ class TestCreateMultiVariantFromString(unittest.TestCase):
         for s in variant_strings:
             with self.subTest(s=s):
                 v = Variant(s)
-                self.assertTrue(v.is_valid())
-
-        for s in variant_strings:
-            with self.subTest(s=s):
-                v = Variant(s)
                 self.assertEqual(s, str(v))
 
         for s in invalid_variant_strings:
             with self.subTest(s=s):
-                v = Variant(s)
-                self.assertFalse(v.is_valid())
+                with self.assertRaises(MaveHGVSParseError):
+                    v = Variant(s)
 
     def test_ordering(self):
         variant_string_tuples = [
@@ -167,13 +178,13 @@ class TestCreateMultiVariantFromString(unittest.TestCase):
 
         for s, _ in variant_string_tuples:
             with self.subTest(s=s):
-                v = Variant(s, relaxed_ordering=False)
-                self.assertFalse(v.is_valid())
+                with self.assertRaises(MaveHGVSParseError):
+                    Variant(s, relaxed_ordering=False)
 
         for s, s_ordered in variant_string_tuples:
             with self.subTest(s=s):
-                v = Variant(s, relaxed_ordering=True)
-                self.assertTrue(v.is_valid())
+                # Should pass creation
+                Variant(s, relaxed_ordering=True)
 
         for s, s_ordered in variant_string_tuples:
             with self.subTest(s=s):
@@ -195,8 +206,8 @@ class TestCreateMultiVariantFromString(unittest.TestCase):
 
         for s in invalid_variant_strings:
             with self.subTest(s=s):
-                v = Variant(s)
-                self.assertFalse(v.is_valid())
+                with self.assertRaises(MaveHGVSParseError):
+                    Variant(s)
 
 
 class TestCreateSingleVariantFromValues(unittest.TestCase):
@@ -212,48 +223,6 @@ class TestTargetSequenceValidation(unittest.TestCase):
 
 
 class TestMiscMethods(unittest.TestCase):
-    def test_is_valid(self):
-        valid_variant_strings = [
-            "p.Glu27Trp",
-            "c.122-6T>A",
-            "g.44del",
-            "c.78+5_78+10del",
-            "c.77dup",
-            "p.Pro12_Gly18dup",
-            "p.Ala12_Pro13insGlyProCys",
-            "r.22_23insauc",
-            "c.43-6_595+12delinsCTT",
-            "p.Ile71_Cys80delinsSer",
-            "p.=",
-            "c.=",
-            "p.(=)",
-        ]
-
-        invalid_variant_strings = [
-            "g.Glu27Trp",
-            "p.27Glu>Trp" "p.122-6T>A",
-            "G>A",
-            "22G>A",
-            "G.44del",
-            "a.78+5_78+10del",
-            "77dup",
-            "n.Pro12_Gly18dup",
-            "g.22_23insauc",
-            "r.43-6_595+12delinsctt",
-            "x.=",
-            "c.(=)",
-        ]
-
-        for s in valid_variant_strings:
-            with self.subTest(s=s):
-                v = Variant(s)
-                self.assertTrue(v.is_valid())
-
-        for s in invalid_variant_strings:
-            with self.subTest(s=s):
-                v = Variant(s)
-                self.assertFalse(v.is_valid())
-
     def test_is_multi_variant(self):
         single_variant_strings = [
             "p.Glu27Trp",
@@ -280,9 +249,6 @@ class TestMiscMethods(unittest.TestCase):
             with self.subTest(s=s):
                 v = Variant(s)
                 self.assertTrue(v.is_multi_variant())
-
-        v = Variant("x.=")
-        self.assertIsNone(v.is_multi_variant())
 
     def test_uses_extended_positions(self):
         non_extended_variant_strings = [
@@ -315,15 +281,11 @@ class TestMiscMethods(unittest.TestCase):
                 v = Variant(s)
                 self.assertTrue(v.uses_extended_positions())
 
-        v = Variant("x.=")
-        self.assertIsNone(v.uses_extended_positions())
-
 
 # TODO: multi-variant test cases
 class TestMiscProperties(unittest.TestCase):
     def test_prefix(self):
         variant_tuples = [(prefix, f"{prefix}.=") for prefix in "gmo" "cn" "r"]
-        variant_tuples.append((None, "x.="))  # invalid variant
 
         for p, s in variant_tuples:
             with self.subTest(p=p, s=s):
@@ -342,7 +304,6 @@ class TestMiscProperties(unittest.TestCase):
             ("ins", "r.22_23insauc"),
             ("delins", "c.43-6_595+12delinsCTT"),
             ("delins", "p.Ile71_Cys80delinsSer"),
-            (None, "x.="),
         ]
 
         for t, s in variant_tuples:
@@ -371,7 +332,6 @@ class TestMiscProperties(unittest.TestCase):
                 (VariantPosition("Ile71"), VariantPosition("Cys80")),
                 "p.Ile71_Cys80delinsSer",
             ),
-            (None, "x.="),
         ]
 
         for p, s in variant_tuples:
@@ -401,7 +361,6 @@ class TestMiscProperties(unittest.TestCase):
             ("auc", "r.22_23insauc"),
             ("CTT", "c.43-6_595+12delinsCTT"),
             ("Ser", "p.Ile71_Cys80delinsSer"),
-            (None, "x.="),
         ]
 
         for seq, s in variant_tuples:
@@ -417,8 +376,6 @@ class TestMiscProperties(unittest.TestCase):
             ("YFG1", "YFG1:c.122-6T>A"),
             ("ENST00000471181.7", "ENST00000471181.7:c.122-6T>A"),
             ("NM_007294.4", "NM_007294.4:c.122-6T>A"),
-            (None, "x.="),
-            (None, "GeneX:x.="),
         ]
 
         for t, s in variant_tuples:
