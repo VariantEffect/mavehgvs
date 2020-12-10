@@ -1,7 +1,11 @@
 import re
 from functools import total_ordering
+
+from mavehgvs.exceptions import MaveHGVSParseError
 from mavehgvs.patterns.position import pos
 from mavehgvs.patterns.protein import amino_acid
+
+__all__ = ["VariantPosition"]
 
 pos_with_groups: str = rf"(?P<position_aa>{amino_acid})?(?P<position>[*-]?{pos})(?P<position_intron>[+-]{pos})?"
 """str: Pattern matching a position with match groups for parsing into a :py:class:`VariantPosition`.
@@ -51,7 +55,7 @@ class VariantPosition:
         try:
             gdict = VariantPosition.__fullmatch(pos_str).groupdict()
         except AttributeError:
-            raise ValueError(f"invalid variant position string '{pos_str}'")
+            raise MaveHGVSParseError(f"invalid variant position string '{pos_str}'")
 
         self.position = None
         self.amino_acid = None
@@ -75,7 +79,7 @@ class VariantPosition:
         if self.amino_acid is not None and (
             self.intronic_position is not None or self.utr is not None
         ):
-            raise ValueError("invalid variant")
+            raise MaveHGVSParseError("invalid variant")
 
     def __repr__(self) -> str:
         """The object representation is equivalent to the input string.
