@@ -4,7 +4,7 @@ from typing import Optional, Union, List, Tuple, Mapping, Any
 
 from mavehgvs.position import VariantPosition
 from mavehgvs.patterns.combined import any_variant
-from mavehgvs.exceptions import MaveHGVSParseError
+from mavehgvs.exceptions import MaveHgvsParseError
 
 __all__ = ["Variant"]
 
@@ -62,7 +62,7 @@ class Variant:
             variant_match = self.__variant_fullmatch(self.variant_string)
 
             if variant_match is None:
-                raise MaveHGVSParseError("failed regular expression validation")
+                raise MaveHgvsParseError("failed regular expression validation")
             else:
                 self._groupdict = variant_match.groupdict()
 
@@ -80,7 +80,7 @@ class Variant:
                     self.variant_count = len(s.split(";"))
                     self._prefix = self._groupdict["multi_variant"][0]
                 else:  # pragma: no cover
-                    raise MaveHGVSParseError("invalid match type")
+                    raise ValueError("invalid match type")
 
                 if self.variant_count == 1:
                     self._variant_types, self._positions, self._sequences = self.__process_string_variant(
@@ -103,7 +103,7 @@ class Variant:
                             groupdict, relaxed_ordering=relaxed_ordering
                         )
                         if p is None:  # only the case for target-identical variants
-                            raise MaveHGVSParseError("multi-variants cannot contain target-identical variants")
+                            raise MaveHgvsParseError("multi-variants cannot contain target-identical variants")
 
                         self._variant_types.append(vt)
                         self._positions.append(p)
@@ -115,17 +115,17 @@ class Variant:
                             vp2, VariantPosition
                         ):  # both single position
                             if vp1 == vp2:
-                                raise MaveHGVSParseError("multi-variant has multiple changes for the same position")
+                                raise MaveHgvsParseError("multi-variant has multiple changes for the same position")
                         elif isinstance(vp1, VariantPosition) and isinstance(
                             vp2, Tuple
                         ):
                             if vp2[0] <= vp1 <= vp2[1]:
-                                raise MaveHGVSParseError("multi-variant has overlapping changes")
+                                raise MaveHgvsParseError("multi-variant has overlapping changes")
                         elif isinstance(vp1, Tuple) and isinstance(
                             vp2, VariantPosition
                         ):
                             if vp1[0] <= vp2 <= vp1[1]:
-                                raise MaveHGVSParseError("multi-variant has overlapping changes")
+                                raise MaveHgvsParseError("multi-variant has overlapping changes")
                         elif isinstance(vp1, Tuple) and isinstance(vp2, Tuple):
                             if (
                                 vp1[0] <= vp2[0] <= vp1[1]
@@ -133,7 +133,7 @@ class Variant:
                                 or vp2[0] <= vp1[0] <= vp2[1]
                                 or vp2[0] <= vp1[1] <= vp2[1]
                             ):
-                                raise MaveHGVSParseError("multi-variant has overlapping changes")
+                                raise MaveHgvsParseError("multi-variant has overlapping changes")
                         else:  # pragma: no cover
                             raise ValueError("invalid position type")
 
@@ -156,10 +156,10 @@ class Variant:
                             self._positions = [x[1] for x in ordered_tuples]
                             self._sequences = [x[2] for x in ordered_tuples]
                         else:
-                            raise MaveHGVSParseError("multi-variants not in sorted order")
+                            raise MaveHgvsParseError("multi-variants not in sorted order")
 
                 else:  # pragma: no cover
-                    raise MaveHGVSParseError("invalid variant count")
+                    raise ValueError("invalid variant count")
 
         elif isinstance(s, Mapping):
             self.variant_mapping = s
@@ -182,7 +182,7 @@ class Variant:
         elif self._prefix in "gmo":
             gdict_prefixes = [(f"dna_{t}_gmo", t) for t in self.__vtypes]
         else:  # pragma: no cover
-            raise MaveHGVSParseError("unexpected prefix")
+            raise ValueError("unexpected prefix")
 
         # set the variant type
         vtype_set = False
@@ -190,7 +190,7 @@ class Variant:
         for groupname, vtype in gdict_prefixes:
             if groupdict[groupname] is not None:
                 if vtype_set:  # pragma: no cover
-                    raise MaveHGVSParseError(
+                    raise ValueError(
                         f"ambiguous match: '{groupname}' and '{groupdict_prefix}'"
                     )
                 variant_type = vtype
@@ -217,7 +217,7 @@ class Variant:
                         groupdict[f"{groupdict_prefix}_new"],
                     )
                 else:  # pragma: no cover
-                    raise MaveHGVSParseError("unexpected prefix")
+                    raise ValueError("unexpected prefix")
         elif variant_type in ("del", "dup", "ins", "delins"):
             # set position
             if (
@@ -234,10 +234,10 @@ class Variant:
                     if relaxed_ordering:
                         positions = (positions[1], positions[0])
                     else:
-                        raise MaveHGVSParseError("start position must be before end position")
+                        raise MaveHgvsParseError("start position must be before end position")
                 if variant_type == "ins":
                     if not positions[0].is_adjacent(positions[1]):
-                        raise MaveHGVSParseError("insertion positions must be adjacent")
+                        raise MaveHgvsParseError("insertion positions must be adjacent")
 
             # set sequence if needed
             if variant_type in ("ins", "delins"):
@@ -294,7 +294,7 @@ class Variant:
                 else:
                     return f"{pos}{vtype}{seq}"
             else:  # pragma: no cover
-                raise MaveHGVSParseError("invalid variant type")
+                raise ValueError("invalid variant type")
 
         if self._target_id is not None:
             prefix = f"{self._target_id}:{self._prefix}"
