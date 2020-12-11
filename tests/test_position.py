@@ -2,7 +2,7 @@ import unittest
 import itertools
 import random
 from mavehgvs.position import VariantPosition
-from mavehgvs.exceptions import MaveHGVSParseError
+from mavehgvs.exceptions import MaveHgvsParseError
 
 
 class TestObjectCreation(unittest.TestCase):
@@ -53,7 +53,7 @@ class TestObjectCreation(unittest.TestCase):
         )
         for s in position_strings:
             with self.subTest(s=s):
-                with self.assertRaises(MaveHGVSParseError):
+                with self.assertRaises(MaveHgvsParseError):
                     VariantPosition(s)
 
     def test_utr(self) -> None:
