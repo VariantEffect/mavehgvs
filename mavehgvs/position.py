@@ -1,7 +1,7 @@
 import re
 from functools import total_ordering
 
-from mavehgvs.exceptions import MaveHGVSParseError
+from mavehgvs.exceptions import MaveHgvsParseError
 from mavehgvs.patterns.position import pos
 from mavehgvs.patterns.protein import amino_acid
 
@@ -55,7 +55,7 @@ class VariantPosition:
         try:
             gdict = VariantPosition.__fullmatch(pos_str).groupdict()
         except AttributeError:
-            raise MaveHGVSParseError(f"invalid variant position string '{pos_str}'")
+            raise MaveHgvsParseError(f"invalid variant position string '{pos_str}'")
 
         self.position = None
         self.amino_acid = None
@@ -79,7 +79,7 @@ class VariantPosition:
         if self.amino_acid is not None and (
             self.intronic_position is not None or self.utr is not None
         ):
-            raise MaveHGVSParseError("invalid variant")
+            raise MaveHgvsParseError("invalid variant")
 
     def __repr__(self) -> str:
         """The object representation is equivalent to the input string.

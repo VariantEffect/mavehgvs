@@ -1,6 +1,6 @@
 import unittest
 
-from mavehgvs.exceptions import MaveHGVSParseError
+from mavehgvs.exceptions import MaveHgvsParseError
 from mavehgvs.variant import Variant
 from mavehgvs.position import VariantPosition
 
@@ -47,7 +47,7 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
 
         for s in invalid_variant_strings:
             with self.subTest(s=s):
-                with self.assertRaises(MaveHGVSParseError):
+                with self.assertRaises(MaveHgvsParseError):
                     Variant(s)
 
     def test_sub(self) -> None:
@@ -166,7 +166,7 @@ class TestCreateMultiVariantFromString(unittest.TestCase):
 
         for s in invalid_variant_strings:
             with self.subTest(s=s):
-                with self.assertRaises(MaveHGVSParseError):
+                with self.assertRaises(MaveHgvsParseError):
                     v = Variant(s)
 
     def test_ordering(self):
@@ -178,7 +178,7 @@ class TestCreateMultiVariantFromString(unittest.TestCase):
 
         for s, _ in variant_string_tuples:
             with self.subTest(s=s):
-                with self.assertRaises(MaveHGVSParseError):
+                with self.assertRaises(MaveHgvsParseError):
                     Variant(s, relaxed_ordering=False)
 
         for s, s_ordered in variant_string_tuples:
@@ -206,7 +206,7 @@ class TestCreateMultiVariantFromString(unittest.TestCase):
 
         for s in invalid_variant_strings:
             with self.subTest(s=s):
-                with self.assertRaises(MaveHGVSParseError):
+                with self.assertRaises(MaveHgvsParseError):
                     Variant(s)
 
 

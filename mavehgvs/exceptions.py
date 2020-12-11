@@ -1,7 +1,7 @@
-__all__ = ["MaveHGVSParseError"]
+__all__ = ["MaveHgvsParseError"]
 
 
-class MaveHGVSParseError(Exception):
+class MaveHgvsParseError(Exception):
     """
     Base exception to use when a HGVS string cannot be parsed.
     """
