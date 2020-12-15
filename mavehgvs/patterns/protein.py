@@ -1,4 +1,4 @@
-from fqfa.constants.iupac.protein import AA_CODES
+from fqfa.constants import AA_CODES
 from mavehgvs.patterns.util import combine_patterns, remove_named_groups
 from mavehgvs.patterns.position import pos
 
