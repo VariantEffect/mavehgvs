@@ -3,10 +3,10 @@ from typing import List, Tuple, Optional
 from mavehgvs.variant import Variant
 from mavehgvs.exceptions import MaveHgvsParseError
 
-__all__ = ["parse_variants"]
+__all__ = ["parse_variant_strings"]
 
 
-def parse_variants(
+def parse_variant_strings(
     variants: List[str]
 ) -> Tuple[List[Optional[Variant]], List[Optional[str]]]:
     valid, invalid = [], []
