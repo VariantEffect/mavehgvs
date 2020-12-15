@@ -6,7 +6,9 @@ from mavehgvs.exceptions import MaveHgvsParseError
 __all__ = ["parse_variants"]
 
 
-def parse_variants(variants: List[str]) -> Tuple[List[Optional[Variant]], List[Optional[str]]]:
+def parse_variants(
+    variants: List[str]
+) -> Tuple[List[Optional[Variant]], List[Optional[str]]]:
     valid, invalid = [], []
 
     for variant in variants:
