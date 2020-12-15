@@ -1,4 +1,4 @@
-from fqfa.constants.iupac.rna import RNA_BASES
+from fqfa.constants import RNA_BASES
 from mavehgvs.patterns.util import combine_patterns, remove_named_groups
 from mavehgvs.patterns.position import pos_intron
 
