@@ -219,7 +219,41 @@ class TestCreateMultiVariantFromValues(unittest.TestCase):
 
 
 class TestTargetSequenceValidation(unittest.TestCase):
-    pass
+    def test_matching_dna_substitution(self):
+        variant_tuples = [("ACGT", "c.1A>T"), ("ACGT", "c.3G>C")]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                v = Variant(s, targetseq=target)
+                self.assertEqual(s, str(v))
+
+    def test_nonmatching_dna_substitution(self):
+        variant_tuples = [("ACGT", "c.1C>T"), ("ACGT", "c.3T>C")]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                with self.assertRaises(MaveHgvsParseError):
+                    Variant(s, targetseq=target)
+
+    def test_valid_dna_del(self):
+        variant_tuples = [("ACGT", "c.1_3del"), ("ACGT", "c.4del")]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                v = Variant(s, targetseq=target)
+                self.assertEqual(s, str(v))
+
+    def test_invalid_dna_del(self):
+        variant_tuples = [
+            ("ACGT", "c.1_5del"),
+            ("ACGT", "c.6_8del"),
+            ("ACGT", "c.7del"),
+        ]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                with self.assertRaises(MaveHgvsParseError):
+                    Variant(s, targetseq=target)
 
 
 class TestMiscMethods(unittest.TestCase):
