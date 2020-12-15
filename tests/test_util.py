@@ -1,6 +1,6 @@
 import unittest
 
-from mavehgvs.utilities import parse_variant_strings
+from mavehgvs.util import parse_variant_strings
 from mavehgvs.variant import Variant
 
 
