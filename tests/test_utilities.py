@@ -1,10 +1,10 @@
 import unittest
 
-from mavehgvs.utilities import parse_variants
+from mavehgvs.utilities import parse_variant_strings
 from mavehgvs.variant import Variant
 
 
-class TestParseVariants(unittest.TestCase):
+class TestParseVariantStrings(unittest.TestCase):
     def test_sets_error_strings_for_invalid_items(self) -> None:
         invalid_variant_strings = [
             "g.Glu27Trp",
@@ -26,7 +26,7 @@ class TestParseVariants(unittest.TestCase):
 
         for s in invalid_variant_strings:
             with self.subTest(s=s):
-                valid, invalid = parse_variants([s])
+                valid, invalid = parse_variant_strings([s])
                 self.assertIsNone(valid[0])
                 self.assertIsInstance(invalid[0], str)
 
@@ -49,6 +49,6 @@ class TestParseVariants(unittest.TestCase):
 
         for s in valid_variant_strings:
             with self.subTest(s=s):
-                valid, invalid = parse_variants([s])
+                valid, invalid = parse_variant_strings([s])
                 self.assertIsInstance(valid[0], Variant)
                 self.assertIsNone(invalid[0])
