@@ -2,8 +2,8 @@ __all__ = ["MaveHgvsParseError"]
 
 
 class MaveHgvsParseError(Exception):
-    """
-    Base exception to use when a HGVS string cannot be parsed.
+    """Exception to use when a MAVE-HGVS string is not valid.
+
     """
 
     pass

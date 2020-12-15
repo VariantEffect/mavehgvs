@@ -19,6 +19,15 @@ fields for each piece of the variant string.
    :private-members:
    :special-members:
 
+.. automodule:: mavehgvs.exceptions
+   :members:
+
+Utility functions for handling variants
+---------------------------------------
+
+.. automodule:: mavehgvs.util
+   :members:
+
 Utility functions for regular expression patterns
 -------------------------------------------------
 
