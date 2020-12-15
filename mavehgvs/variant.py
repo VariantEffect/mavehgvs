@@ -103,7 +103,9 @@ class Variant:
                             groupdict, relaxed_ordering=relaxed_ordering
                         )
                         if p is None:  # only the case for target-identical variants
-                            raise MaveHgvsParseError("multi-variants cannot contain target-identical variants")
+                            raise MaveHgvsParseError(
+                                "multi-variants cannot contain target-identical variants"
+                            )
 
                         self._variant_types.append(vt)
                         self._positions.append(p)
@@ -115,17 +117,23 @@ class Variant:
                             vp2, VariantPosition
                         ):  # both single position
                             if vp1 == vp2:
-                                raise MaveHgvsParseError("multi-variant has multiple changes for the same position")
+                                raise MaveHgvsParseError(
+                                    "multi-variant has multiple changes for the same position"
+                                )
                         elif isinstance(vp1, VariantPosition) and isinstance(
                             vp2, Tuple
                         ):
                             if vp2[0] <= vp1 <= vp2[1]:
-                                raise MaveHgvsParseError("multi-variant has overlapping changes")
+                                raise MaveHgvsParseError(
+                                    "multi-variant has overlapping changes"
+                                )
                         elif isinstance(vp1, Tuple) and isinstance(
                             vp2, VariantPosition
                         ):
                             if vp1[0] <= vp2 <= vp1[1]:
-                                raise MaveHgvsParseError("multi-variant has overlapping changes")
+                                raise MaveHgvsParseError(
+                                    "multi-variant has overlapping changes"
+                                )
                         elif isinstance(vp1, Tuple) and isinstance(vp2, Tuple):
                             if (
                                 vp1[0] <= vp2[0] <= vp1[1]
@@ -133,7 +141,9 @@ class Variant:
                                 or vp2[0] <= vp1[0] <= vp2[1]
                                 or vp2[0] <= vp1[1] <= vp2[1]
                             ):
-                                raise MaveHgvsParseError("multi-variant has overlapping changes")
+                                raise MaveHgvsParseError(
+                                    "multi-variant has overlapping changes"
+                                )
                         else:  # pragma: no cover
                             raise ValueError("invalid position type")
 
@@ -156,7 +166,9 @@ class Variant:
                             self._positions = [x[1] for x in ordered_tuples]
                             self._sequences = [x[2] for x in ordered_tuples]
                         else:
-                            raise MaveHgvsParseError("multi-variants not in sorted order")
+                            raise MaveHgvsParseError(
+                                "multi-variants not in sorted order"
+                            )
 
                 else:  # pragma: no cover
                     raise ValueError("invalid variant count")
@@ -234,7 +246,9 @@ class Variant:
                     if relaxed_ordering:
                         positions = (positions[1], positions[0])
                     else:
-                        raise MaveHgvsParseError("start position must be before end position")
+                        raise MaveHgvsParseError(
+                            "start position must be before end position"
+                        )
                 if variant_type == "ins":
                     if not positions[0].is_adjacent(positions[1]):
                         raise MaveHgvsParseError("insertion positions must be adjacent")
