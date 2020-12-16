@@ -1,72 +1,58 @@
-[![Build Status](https://travis-ci.com/VariantEffect/hgvs-patterns.svg?branch=dev)](https://travis-ci.com/VariantEffect/hgvs-patterns)
-[![Coverage Status](https://coveralls.io/repos/github/VariantEffect/hgvs-patterns/badge.svg?branch=dev)](https://coveralls.io/github/VariantEffect/hgvs-patterns?branch=dev)
+[![Build Status](https://travis-ci.com/VariantEffect/mavehgvs.svg?branch=main)](https://travis-ci.com/VariantEffect/mavehgvs)
+[![Coverage Status](https://coveralls.io/repos/github/VariantEffect/mavehgvs/badge.svg?branch=main)](https://coveralls.io/github/VariantEffect/mavehgvs?branch=main)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-# hgvs-patterns
-A python utility containing HGVS Regex patterns to match a subset of the 
-[HGVS](http://varnomen.hgvs.org/) standard. 
+# mavehgvs
+mavehgvs is the Python reference implementation of the MAVE-HGVS variant representation standard,
+a strict subset of [HGVS](http://varnomen.hgvs.org/), used primarily for clinical genomics.
 
-# Supported Syntax
-Regex patterns have been implemented for DNA, RNA and Protein **substitutions**, **deletions**, **insertions**, 
-**deletion-insertions** and **frame-shifts**. Support for all syntax in the HGVS guidelines
-within these events is not currently implemented. In general, patterns matching 
-the [examples](http://varnomen.hgvs.org/recommendations/DNA/variant/substitution/) given on each
-event page are matchable.
+## The MAVE-HGVS Standard
+MAVE-HGVS is a strict subset of the [HGVS Sequence Variant Nomenclature](https://varnomen.hgvs.org/), version 20.05.
+HGVS nomenclature is comprehensive and very expressive and consequently includes a lot of syntax that is not needed to
+represent variants from Multiplexed Assay of Variant Effect (MAVE) data and makes the variant strings more challenging 
+to parse.
+
+While packages exist for parsing HGVS (most notably the
+[biocommons hgvs package](https://github.com/biocommons/hgvs/), they are intended for use in human genetics and
+rely on sequence databases and reference sequence (called "target sequence" for MAVE-HGVS), which are not always
+available for or relevant for multiplexed assays.
+
+MAVE-HGVS is an attempt to define an easy-to-parse subset of the HGVS nomenclature that captures those variants that
+occur in MAVE datasets, while excluding many variant types that are unlikely to be found. Importantly, the
+mavehgvs implementation does not rely on external sequence databases or identifiers.
+
+## Supported Variants
+MAVE-HGVS supports DNA, RNA, and protein variants.
+MAVE-HGVS supports a subset of HGVS variants including:
+
+* substitutions
+* deletions
+* duplications
+* insertions
+* frame shifts
+
+Many HGVS variants are unsupported including:
+
+* inversions
+* conversions
+* extensions
+* changes in methylation state
+* RNA fusion transcripts
+* mosaicism
+* chimerism
+* variants with uncertain consequence
+* variants in trans or unknown phase
+* complex variants (e.g. translocations)
+
+For further details, including example variants, see the specification in the package documentation.
 
 # Installation
-To install `hgvs-patterns` use either of the commands below
+Install mavehgvs from pip using:
 
 ```bash
-pip install git+https://github.com/VariantEffect/hgvs-patterns.git
+pip3 install mavehgvs
 ```
 
-Or
-
-```bash
-git clone https://github.com/VariantEffect/hgvs-patterns
-cd hgvs-patterns
-python setup.py install
-```
-
-# Getting Started
-To use hgvs-patterns in your project you can import regex patterns from
-the top level to match any type of variant.
-
-```
->>> from hgvsp import single_variant_re, multi_variant_re
-
->>> single_variant_re.fullmatch('p.Arg78_Gly79ins23')
-<_sre.SRE_Match object; span=(0, 18), match='p.Arg78_Gly79ins23'>
-
->>> multi_variant_re.fullmatch('c.[123A>G;125G>T]')
-<_sre.SRE_Match object; span=(0, 17), match='c.[123A>G;125G>T]'>
-``` 
-
-Alternatively, you can match specific events using the `dna`, `rna` and `protein`
-modules. Each of the modules `dna`, `rna` and `protein` follow the same import patterns
-and define regex expressions using the same variable names. Patterns containing
-`_variant_` in their name will only match mutation events prefixed with a HGVS prefix such
-as those from `cnpmgr`. Those with `_event_` in their name will only match specific
-events without prefixes. All other regex patterns will match events with or without
-prefixes.
-
-```
->>> from hgvsp.dna import deletion_re, insertion_re, single_variant_re, any_event_re
-
->>> single_variant_re.fullmatch('123_124delinsAAA')
-None
->>> single_variant_re.fullmatch('n.123_124delinsAAA')
-<_sre.SRE_Match object; span=(0, 18), match='n.123_124delinsAAA'>
-
->>> deletion_re.fullmatch('c.123del')
-<_sre.SRE_Match object; span=(0, 17), match='c.123del'>
-
->>> insertion_re.fullmatch('123_124insGATTACA')
-<_sre.SRE_Match object; span=(0, 17), match='123_124insGATTACA'>
-
->>> any_event_re.fullmatch('c.123_124insGATTACA')
-None
->>> any_event_re.fullmatch('123_124insGATTACA')
-<_sre.SRE_Match object; span=(0, 17), match='123_124insGATTACA'>
-``` 
-
+# Feedback
+To report a problem or request a new feature with either the mavehgvs package or the MAVE-HGVS standard,
+please use the GitHub issue tracker.

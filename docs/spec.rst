@@ -5,8 +5,8 @@ MAVE-HGVS specification
 
 MAVE-HGVS is a strict subset of the `HGVS Sequence Variant Nomenclature <https://varnomen.hgvs.org/>`_, version 20.05.
 HGVS nomenclature is comprehensive and very expressive and consequently includes a lot of syntax that is not needed to
-represent variants from Multiplexed Assay of Variant Effect (MAVE) data and makes the variant strings challenging to
-parse in general.
+represent variants from Multiplexed Assay of Variant Effect (MAVE) data and makes the variant strings more challenging
+to parse.
 
 While packages exist for parsing HGVS (most notably the
 `biocommons hgvs package <https://github.com/biocommons/hgvs/>`_), they are intended for use in human genetics and
