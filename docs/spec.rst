@@ -209,6 +209,9 @@ Insertions must be specified by listing the complete inserted sequence.
 Referring to the sequence that is inserted based on its position in the target sequence is not considered valid for
 MAVE-HGVS.
 
+To describe an insertion at the end of the target sequence, use a :ref:`Deletion-Insertion` variant that deletes
+the last base or amino acid in the target and inserts the deleted symbol plus the insertion.
+
 Examples of valid insertions include:
 
 * g.234_235insT
