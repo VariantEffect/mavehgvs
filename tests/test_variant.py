@@ -255,6 +255,64 @@ class TestTargetSequenceValidation(unittest.TestCase):
                 with self.assertRaises(MaveHgvsParseError):
                     Variant(s, targetseq=target)
 
+    def test_valid_dna_dup(self):
+        variant_tuples = [("ACGT", "c.1_3dup"), ("ACGT", "c.4dup")]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                v = Variant(s, targetseq=target)
+                self.assertEqual(s, str(v))
+
+    def test_invalid_dna_dup(self):
+        variant_tuples = [
+            ("ACGT", "c.1_5dup"),
+            ("ACGT", "c.6_8dup"),
+            ("ACGT", "c.7dup"),
+        ]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                with self.assertRaises(MaveHgvsParseError):
+                    Variant(s, targetseq=target)
+
+    def test_valid_dna_ins(self):
+        variant_tuples = [("ACGT", "c.1_2insAAA"), ("ACGT", "c.3_4insT")]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                v = Variant(s, targetseq=target)
+                self.assertEqual(s, str(v))
+
+    def test_invalid_dna_ins(self):
+        variant_tuples = [
+            ("ACGT", "c.4_5insA"),
+            ("ACGT", "c.10_11insTCG"),
+        ]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                with self.assertRaises(MaveHgvsParseError):
+                    Variant(s, targetseq=target)
+
+    def test_valid_dna_delins(self):
+        variant_tuples = [("ACGT", "c.1_2delinsA"), ("ACGT", "c.4delinsTAAGC")]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                v = Variant(s, targetseq=target)
+                self.assertEqual(s, str(v))
+
+    def test_invalid_dna_delins(self):
+        variant_tuples = [
+            ("ACGT", "c.4_5delinsA"),
+            ("ACGT", "c.10_delinsTCG"),
+        ]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                with self.assertRaises(MaveHgvsParseError):
+                    Variant(s, targetseq=target)
+
 
 class TestMiscMethods(unittest.TestCase):
     def test_is_multi_variant(self):
