@@ -11,7 +11,7 @@ if sys.version_info.major == 3 and sys.version_info.minor == 6:
 
 setuptools.setup(
     name="mavehgvs",
-    version="0.4",
+    version="0.0.1",
     author="Daniel Esposito and Alan F Rubin",
     author_email="alan.rubin@wehi.edu.au",
     description=(
@@ -22,7 +22,7 @@ setuptools.setup(
     url="https://github.com/VariantEffect/hgvs-patterns",
     packages=setuptools.find_packages(),
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 3 - Alpha",
         "Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
         "License :: OSI Approved :: BSD License",
