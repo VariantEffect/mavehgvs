@@ -19,7 +19,7 @@ setuptools.setup(
     ),
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/VariantEffect/hgvs-patterns",
+    url="https://github.com/VariantEffect/mavehgvs",
     packages=setuptools.find_packages(),
     classifiers=[
         "Development Status :: 3 - Alpha",
