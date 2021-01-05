@@ -45,7 +45,8 @@ class Variant:
             If provided, the variant will be validated for agreement with this sequence.
             Target sequence validation is not supported for variants using the extended position syntax.
 
-            The type of the target sequence (DNA, RNA, or amino acid) will be inferred.
+            This must be an amino acid sequence for protein variants or a nucleotide sequence for
+            coding/noncoding/genomic variants.
             DNA and amino acid sequences should be in uppercase, RNA in lowercase.
 
         relaxed_ordering : bool
@@ -188,6 +189,7 @@ class Variant:
                 elif self._variant_types in ("ins", "del", "dup", "delins"):
                     self._target_validate_indel(self._positions, targetseq)
             elif self.variant_count > 1:
+                # TODO
                 pass
 
     # TODO: type hints and docstring
@@ -348,16 +350,16 @@ class Variant:
         Note that variants using extended syntax cannot be validated with this method.
         If an extended syntax variant is encountered, it will be interpreted as valid/matching.
 
-        # TODO: this needs to be aware of protein vs nucleotide targets
-
         Parameters
         ----------
         pos : VariantPosition
             Position of the substitution.
         ref : str
-            Reference base or amino acid.
+            Reference base or amino acid from the variant.
         target : str
-            Target sequence.
+            Target sequence. This must be an amino acid sequence for protein variants or a nucleotide sequence
+            for coding/noncoding/genomic variants.
+            RNA sequences should be in lowercase, DNA sequences should be in uppercase.
 
         Returns
         -------
@@ -390,14 +392,13 @@ class Variant:
         Note that variants using extended syntax cannot be validated with this method.
         If an extended syntax variant is encountered, it will be interpreted as valid/matching.
 
-        # TODO: this needs to be aware of protein vs nucleotide targets
-
         Parameters
         ----------
         pos : Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]
             Single variant position or start/end tuple for the indel.
         target : str
-            Target sequence.
+            Target sequence. This must be an amino acid sequence for protein variants or a nucleotide sequence
+            for coding/noncoding/genomic variants.
 
         Returns
         -------
