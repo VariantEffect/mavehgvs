@@ -1,6 +1,6 @@
 import re
 import itertools
-from typing import Optional, Union, List, Tuple, Mapping, Any
+from typing import Optional, Union, List, Tuple, Mapping, Any, Sequence, Dict
 
 from mavehgvs.position import VariantPosition
 from mavehgvs.patterns.combined import any_variant
@@ -190,8 +190,29 @@ class Variant:
             elif self.variant_count > 1:
                 pass
 
-    # TODO: type hints and docstring
-    def __process_string_variant(self, groupdict, relaxed_ordering):
+    def __process_string_variant(
+        self, groupdict: Dict[str, str], relaxed_ordering: bool
+    ) -> Tuple[
+        str,
+        Optional[Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]],
+        Optional[Union[str, Tuple[str, str]]],
+    ]:
+        """Process the match dictionary from a single variant into its components.
+
+        Parameters
+        ----------
+        groupdict : Dict[str, str]
+            Match dictionary from the MAVE-HGVS regular expression.
+        relaxed_ordering : bool
+            If True, variant strings that do not observe the 3-prime rule for variant position ordering are allowed.
+
+        Returns
+        -------
+        Tuple[str, Optional[Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]], Optional[Union[str, Tuple[str, str]]]]
+            Returns a 3-tuple containing the variant type, optional position (or start/end positions),
+            and optional before/after substitution sequences or inserted sequence.
+
+        """
         variant_type = None
         positions = None
         sequences = None
