@@ -88,7 +88,6 @@ class Variant:
                         self._groupdict, relaxed_ordering=relaxed_ordering
                     )
                 elif self.variant_count > 1:
-                    # TODO: validate variant ordering
                     self._variant_types = list()
                     self._positions = list()
                     self._sequences = list()
@@ -189,8 +188,15 @@ class Variant:
                 elif self._variant_types in ("ins", "del", "dup", "delins"):
                     self._target_validate_indel(self._positions, targetseq)
             elif self.variant_count > 1:
-                # TODO
-                pass
+                for vtype, pos, seq in zip(
+                        self._variant_types, self._positions, self._sequences
+                ):
+                    if self._variant_types == "sub":
+                        self._target_validate_substitution(
+                            pos, seq[0], targetseq
+                        )
+                    elif self._variant_types in ("ins", "del", "dup", "delins"):
+                        self._target_validate_indel(pos, targetseq)
 
     # TODO: type hints and docstring
     def __process_string_variant(self, groupdict, relaxed_ordering):
