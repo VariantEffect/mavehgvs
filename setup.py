@@ -15,7 +15,7 @@ setuptools.setup(
     author="Daniel Esposito and Alan F Rubin",
     author_email="alan.rubin@wehi.edu.au",
     description=(
-        "Regular expression-based validation of HGVS variant strings for clinical genetics and genomics applications."
+        "Regular expression-based validation of HGVS-style variant strings for Multiplexed Assays of Variant Effect."
     ),
     long_description=long_description,
     long_description_content_type="text/markdown",
