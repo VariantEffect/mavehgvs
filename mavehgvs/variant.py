@@ -243,9 +243,7 @@ class Variant:
         elif self._prefix == "r":
             pattern_group_tuples = [(f"rna_{t}", t) for t in self.VTYPES]
         elif self._prefix in "cn":
-            pattern_group_tuples = [
-                (f"dna_{t}_{self._prefix}", t) for t in self.VTYPES
-            ]
+            pattern_group_tuples = [(f"dna_{t}_{self._prefix}", t) for t in self.VTYPES]
         elif self._prefix in "gmo":
             pattern_group_tuples = [(f"dna_{t}_gmo", t) for t in self.VTYPES]
         else:  # pragma: no cover
