@@ -57,10 +57,9 @@ class Variant:
 
         """
         if isinstance(s, str):  # variant string to parse
-            variant_match = self.fullmatch(s)
+            variant_string = s
         elif isinstance(s, Mapping):  # dictionary-style single variant
             variant_string = self._variant_dictionary_to_string(s, include_prefix=True)
-            variant_match = self.fullmatch(variant_string)
         elif isinstance(s, Sequence):  # dictionary-style multi-variant
             try:
                 all_prefixes = [v["prefix"] for v in s]
@@ -71,10 +70,10 @@ class Variant:
                     "cannot combine variants with different prefixes"
                 )
             variant_string = f"{s[0]['prefix']}.[{';'.join(self._variant_dictionary_to_string(v, include_prefix=False) for v in s)}]"
-            variant_match = self.fullmatch(variant_string)
         else:
             raise ValueError("can only create Variants from string or Mapping objects")
 
+        variant_match = self.fullmatch(variant_string)
         if variant_match is None:
             raise MaveHgvsParseError("failed regular expression validation")
         else:
@@ -91,7 +90,7 @@ class Variant:
                 self.variant_count = 1
                 self._prefix = match_dict["single_variant"][0]
             elif match_dict["multi_variant"] is not None:
-                self.variant_count = len(s.split(";"))
+                self.variant_count = len(variant_string.split(";"))
                 self._prefix = match_dict["multi_variant"][0]
             else:  # pragma: no cover
                 raise ValueError("invalid match type")

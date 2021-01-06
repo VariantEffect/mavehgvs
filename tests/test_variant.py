@@ -354,7 +354,50 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
 
 
 class TestCreateMultiVariantFromValues(unittest.TestCase):
-    pass
+    def test_create_multivariant(self):
+        valid_dict_tuples = [
+            (
+                [
+                    {
+                        "variant_type": "sub",
+                        "prefix": "p",
+                        "position": 27,
+                        "target": "Glu",
+                        "variant": "Trp",
+                    },
+                    {
+                        "variant_type": "delins",
+                        "prefix": "p",
+                        "start_position": "Ile71",
+                        "end_position": "Cys80",
+                        "sequence": "Ser",
+                    }
+                ],
+                "p.[Glu27Trp;Ile71_Cys80delinsSer]",
+            ),
+            (
+                [
+                    {
+                        "variant_type": "dup",
+                        "prefix": "c",
+                        "start_position": 77,
+                        "end_position": 77,
+                    },
+                    {
+                        "variant_type": "sub",
+                        "prefix": "c",
+                        "position": "122-6",
+                        "target": "T",
+                        "variant": "A",
+                    }
+                ],
+                "c.[77dup;122-6T>A]",
+            ),
+        ]
+        for d, s in valid_dict_tuples:
+            with self.subTest(d=d, s=s):
+                v = Variant(d)
+                self.assertEqual(s, str(v))
 
 
 class TestTargetSequenceValidation(unittest.TestCase):
