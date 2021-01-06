@@ -1,6 +1,6 @@
 import re
 import itertools
-from typing import Optional, Union, List, Tuple, Mapping, Any
+from typing import Optional, Union, List, Tuple, Mapping, Any, Generator
 
 from mavehgvs.position import VariantPosition
 from mavehgvs.patterns.combined import any_variant
@@ -156,15 +156,13 @@ class Variant:
                         else:
                             raise ValueError("invalid position type")
 
-                    variant_tuples = list(
-                        zip(self._variant_types, self._positions, self._sequences)
-                    )
-                    ordered_tuples = sorted(variant_tuples, key=sort_key)
-                    if variant_tuples != ordered_tuples:
-                        if relaxed_ordering:
-                            self._variant_types = [x[0] for x in ordered_tuples]
-                            self._positions = [x[1] for x in ordered_tuples]
-                            self._sequences = [x[2] for x in ordered_tuples]
+                    variant_list = list(self.variant_tuples())
+                    ordered_list = sorted(variant_list, key=sort_key)
+                    if variant_list != ordered_list:
+                        if relaxed_ordering:  # re-sort the variants
+                            self._variant_types = [x[0] for x in ordered_list]
+                            self._positions = [x[1] for x in ordered_list]
+                            self._sequences = [x[2] for x in ordered_list]
                         else:
                             raise MaveHgvsParseError(
                                 "multi-variants not in sorted order"
@@ -180,23 +178,38 @@ class Variant:
             raise ValueError("can only create Variants from string or Mapping objects")
 
         if targetseq is not None:
-            if self.variant_count == 1:
+            for vtype, pos, seq in self.variant_tuples():
                 if self._variant_types == "sub":
-                    self._target_validate_substitution(
-                        self._positions, self._sequences[0], targetseq
-                    )
+                    self._target_validate_substitution(pos, seq[0], targetseq)
                 elif self._variant_types in ("ins", "del", "dup", "delins"):
-                    self._target_validate_indel(self._positions, targetseq)
-            elif self.variant_count > 1:
-                for vtype, pos, seq in zip(
-                        self._variant_types, self._positions, self._sequences
-                ):
-                    if self._variant_types == "sub":
-                        self._target_validate_substitution(
-                            pos, seq[0], targetseq
-                        )
-                    elif self._variant_types in ("ins", "del", "dup", "delins"):
-                        self._target_validate_indel(pos, targetseq)
+                    self._target_validate_indel(pos, targetseq)
+
+    def variant_tuples(
+        self
+    ) -> Generator[
+        Tuple[
+            str,
+            Optional[Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]],
+            Optional[Union[str, Tuple[str, str]]],
+        ],
+        None,
+        None,
+    ]:
+        """Generator that yields tuples containing the variant components.
+
+        Yields
+        ------
+        Tuple
+            Tuple of the variant type, position(s), and sequence(s) for each element in the variant.
+
+        """
+        if self.is_multi_variant():
+            for vtype, pos, seq in zip(
+                self._variant_types, self._positions, self._sequences
+            ):
+                yield vtype, pos, seq
+        else:
+            yield self._variant_types, self._positions, self._sequences
 
     # TODO: type hints and docstring
     def __process_string_variant(self, groupdict, relaxed_ordering):
@@ -337,15 +350,12 @@ class Variant:
 
         if self.is_target_identical():
             return f"{prefix}.{self._sequences}"
-        elif self.variant_count > 1:
-            elements = list()
-            for vtype, pos, seq in zip(
-                self._variant_types, self._positions, self._sequences
-            ):
-                elements.append(format_variant(vtype, pos, seq))
-            return f"{prefix}.[{';'.join(elements)}]"
         else:
-            return f"{prefix}.{format_variant(self._variant_types, self._positions, self._sequences)}"
+            elements = [format_variant(*t) for t in self.variant_tuples()]
+            if self.is_multi_variant():
+                return f"{prefix}.[{';'.join(elements)}]"
+            else:
+                return f"{prefix}.{elements[0]}"
 
     @staticmethod
     def _target_validate_substitution(
