@@ -179,9 +179,9 @@ class Variant:
 
         if targetseq is not None:
             for vtype, pos, seq in self.variant_tuples():
-                if self._variant_types == "sub":
+                if vtype == "sub":
                     self._target_validate_substitution(pos, seq[0], targetseq)
-                elif self._variant_types in ("ins", "del", "dup", "delins"):
+                elif vtype in ("ins", "del", "dup", "delins"):
                     self._target_validate_indel(pos, targetseq)
 
     def variant_tuples(
