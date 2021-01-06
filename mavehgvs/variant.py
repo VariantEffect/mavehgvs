@@ -163,15 +163,13 @@ class Variant:
                     else:
                         raise ValueError("invalid position type")
 
-                variant_tuples = list(
-                    zip(self._variant_types, self._positions, self._sequences)
-                )
-                ordered_tuples = sorted(variant_tuples, key=sort_key)
-                if variant_tuples != ordered_tuples:
+                variant_list = list(self.variant_tuples())
+                ordered_list = sorted(variant_list, key=sort_key)
+                if variant_list != ordered_list:
                     if relaxed_ordering:
-                        self._variant_types = [x[0] for x in ordered_tuples]
-                        self._positions = [x[1] for x in ordered_tuples]
-                        self._sequences = [x[2] for x in ordered_tuples]
+                        self._variant_types = [x[0] for x in ordered_list]
+                        self._positions = [x[1] for x in ordered_list]
+                        self._sequences = [x[2] for x in ordered_list]
                     else:
                         raise MaveHgvsParseError("multi-variants not in sorted order")
 
