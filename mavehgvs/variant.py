@@ -1,6 +1,6 @@
 import re
 import itertools
-from typing import Optional, Union, List, Tuple, Mapping, Any, Generator
+from typing import Optional, Union, List, Tuple, Mapping, Any, Sequence, Dict, Generator
 
 from mavehgvs.position import VariantPosition
 from mavehgvs.patterns.combined import any_variant
@@ -29,7 +29,7 @@ class Variant:
 
     def __init__(
         self,
-        s: Union[str, Mapping[str, Any]],
+        s: Union[str, Mapping[str, Any], Sequence[Mapping[str, Any]]],
         targetseq: Optional[str] = None,
         relaxed_ordering: bool = False,
     ):
@@ -37,9 +37,10 @@ class Variant:
 
         Parameters
         ----------
-        s : Union[str, Mapping[str, Any]]
-            MAVE-HGVS variant string to convert into an object or dictionary type object containing key-value pairs
-            corresponding to a MAVE-HGVS object.
+        s : Union[str, Mapping[str, Any], Sequence[Mapping[str, Any]]]
+            MAVE-HGVS variant string to convert into an object, dictionary type object containing key-value pairs
+            corresponding to a MAVE-HGVS object, or list/tuple of dictionary type objects for a variant with
+            multiple events.
 
         targetseq : Optional[str]
             If provided, the variant will be validated for agreement with this sequence.
@@ -50,132 +51,132 @@ class Variant:
             DNA and amino acid sequences should be in uppercase, RNA in lowercase.
 
         relaxed_ordering : bool
-            If True, variant strings that do not observe the 3-prime rule for variant position ordering are allowed.
+            If True, variants that do not observe the 3-prime rule for variant position ordering are allowed.
             The object representation will observe the 3-prime rule, so it may differ from the input string in this
             case.
 
         """
-        self.variant_string = None
-        self.variant_mapping = None
-
-        if isinstance(s, str):
-            self.variant_string = s
-            variant_match = self.__variant_fullmatch(self.variant_string)
-
-            if variant_match is None:
-                raise MaveHgvsParseError("failed regular expression validation")
-            else:
-                self._groupdict = variant_match.groupdict()
-
-                # set target id if present
-                if self._groupdict["target_id"] is not None:
-                    self._target_id = self._groupdict["target_id"]
-                else:
-                    self._target_id = None
-
-                # set prefix and determine if this is a multi-variant
-                if self._groupdict["single_variant"] is not None:
-                    self.variant_count = 1
-                    self._prefix = self._groupdict["single_variant"][0]
-                elif self._groupdict["multi_variant"] is not None:
-                    self.variant_count = len(s.split(";"))
-                    self._prefix = self._groupdict["multi_variant"][0]
-                else:  # pragma: no cover
-                    raise ValueError("invalid match type")
-
-                if self.variant_count == 1:
-                    self._variant_types, self._positions, self._sequences = self.__process_string_variant(
-                        self._groupdict, relaxed_ordering=relaxed_ordering
-                    )
-                elif self.variant_count > 1:
-                    self._variant_types = list()
-                    self._positions = list()
-                    self._sequences = list()
-
-                    # format each individual variant event as a single variant and parse it
-                    for variant_substring in self._groupdict["multi_variant"][
-                        3:-1
-                    ].split(";"):
-                        groupdict = self.__variant_fullmatch(
-                            f"{self._prefix}.{variant_substring}"
-                        ).groupdict()
-                        vt, p, s = self.__process_string_variant(
-                            groupdict, relaxed_ordering=relaxed_ordering
-                        )
-                        if p is None:  # only the case for target-identical variants
-                            raise MaveHgvsParseError(
-                                "multi-variants cannot contain target-identical variants"
-                            )
-
-                        self._variant_types.append(vt)
-                        self._positions.append(p)
-                        self._sequences.append(s)
-
-                    # ensure that multiple variants aren't defined for the same positions
-                    for vp1, vp2 in itertools.combinations(self._positions, 2):
-                        if isinstance(vp1, VariantPosition) and isinstance(
-                            vp2, VariantPosition
-                        ):  # both single position
-                            if vp1 == vp2:
-                                raise MaveHgvsParseError(
-                                    "multi-variant has multiple changes for the same position"
-                                )
-                        elif isinstance(vp1, VariantPosition) and isinstance(
-                            vp2, Tuple
-                        ):
-                            if vp2[0] <= vp1 <= vp2[1]:
-                                raise MaveHgvsParseError(
-                                    "multi-variant has overlapping changes"
-                                )
-                        elif isinstance(vp1, Tuple) and isinstance(
-                            vp2, VariantPosition
-                        ):
-                            if vp1[0] <= vp2 <= vp1[1]:
-                                raise MaveHgvsParseError(
-                                    "multi-variant has overlapping changes"
-                                )
-                        elif isinstance(vp1, Tuple) and isinstance(vp2, Tuple):
-                            if (
-                                vp1[0] <= vp2[0] <= vp1[1]
-                                or vp1[0] <= vp2[1] <= vp1[1]
-                                or vp2[0] <= vp1[0] <= vp2[1]
-                                or vp2[0] <= vp1[1] <= vp2[1]
-                            ):
-                                raise MaveHgvsParseError(
-                                    "multi-variant has overlapping changes"
-                                )
-                        else:  # pragma: no cover
-                            raise ValueError("invalid position type")
-
-                    # re-order variants and validate
-                    def sort_key(x):
-                        if isinstance(x[1], VariantPosition):
-                            return x[1]
-                        elif isinstance(x[1], Tuple):
-                            return x[1][0]
-                        else:
-                            raise ValueError("invalid position type")
-
-                    variant_list = list(self.variant_tuples())
-                    ordered_list = sorted(variant_list, key=sort_key)
-                    if variant_list != ordered_list:
-                        if relaxed_ordering:  # re-sort the variants
-                            self._variant_types = [x[0] for x in ordered_list]
-                            self._positions = [x[1] for x in ordered_list]
-                            self._sequences = [x[2] for x in ordered_list]
-                        else:
-                            raise MaveHgvsParseError(
-                                "multi-variants not in sorted order"
-                            )
-
-                else:  # pragma: no cover
-                    raise ValueError("invalid variant count")
-
-        elif isinstance(s, Mapping):
-            self.variant_mapping = s
-            # TODO
+        if isinstance(s, str):  # variant string to parse
+            variant_match = self.__variant_fullmatch(s)
+        elif isinstance(s, Mapping):  # dictionary-style single variant
+            variant_string = self.__variant_dictionary_to_string(s, include_prefix=True)
+            variant_match = self.__variant_fullmatch(variant_string)
+        elif isinstance(s, Sequence):  # dictionary-style multi-variant
+            try:
+                all_prefixes = [v["prefix"] for v in s]
+            except KeyError:
+                raise MaveHgvsParseError("variant dictionary missing required keys")
+            if len(set(all_prefixes)) != 1:
+                raise MaveHgvsParseError(
+                    "cannot combine variants with different prefixes"
+                )
+            variant_string = f"{s[0]['prefix']}.[{';'.join(self.__variant_dictionary_to_string(v, include_prefix=False) for v in s)}]"
+            variant_match = self.__variant_fullmatch(variant_string)
         else:
             raise ValueError("can only create Variants from string or Mapping objects")
+
+        if variant_match is None:
+            raise MaveHgvsParseError("failed regular expression validation")
+        else:
+            match_dict = variant_match.groupdict()
+
+            # set target id if present
+            if match_dict["target_id"] is not None:
+                self._target_id = match_dict["target_id"]
+            else:
+                self._target_id = None
+
+            # set prefix and determine if this is a multi-variant
+            if match_dict["single_variant"] is not None:
+                self.variant_count = 1
+                self._prefix = match_dict["single_variant"][0]
+            elif match_dict["multi_variant"] is not None:
+                self.variant_count = len(s.split(";"))
+                self._prefix = match_dict["multi_variant"][0]
+            else:  # pragma: no cover
+                raise ValueError("invalid match type")
+
+            if self.variant_count == 1:
+                self._variant_types, self._positions, self._sequences = self.__process_string_variant(
+                    match_dict, relaxed_ordering=relaxed_ordering
+                )
+            elif self.variant_count > 1:
+                self._variant_types = list()
+                self._positions = list()
+                self._sequences = list()
+
+                # format each individual variant event as a single variant and parse it
+                for variant_substring in match_dict["multi_variant"][3:-1].split(";"):
+                    groupdict = self.__variant_fullmatch(
+                        f"{self._prefix}.{variant_substring}"
+                    ).groupdict()
+                    vt, p, s = self.__process_string_variant(
+                        groupdict, relaxed_ordering=relaxed_ordering
+                    )
+                    if p is None:  # only the case for target-identical variants
+                        raise MaveHgvsParseError(
+                            "multi-variants cannot contain target-identical variants"
+                        )
+
+                    self._variant_types.append(vt)
+                    self._positions.append(p)
+                    self._sequences.append(s)
+
+                # ensure that multiple variants aren't defined for the same positions
+                for vp1, vp2 in itertools.combinations(self._positions, 2):
+                    if isinstance(vp1, VariantPosition) and isinstance(
+                        vp2, VariantPosition
+                    ):  # both single position
+                        if vp1 == vp2:
+                            raise MaveHgvsParseError(
+                                "multi-variant has multiple changes for the same position"
+                            )
+                    elif isinstance(vp1, VariantPosition) and isinstance(vp2, Tuple):
+                        if vp2[0] <= vp1 <= vp2[1]:
+                            raise MaveHgvsParseError(
+                                "multi-variant has overlapping changes"
+                            )
+                    elif isinstance(vp1, Tuple) and isinstance(vp2, VariantPosition):
+                        if vp1[0] <= vp2 <= vp1[1]:
+                            raise MaveHgvsParseError(
+                                "multi-variant has overlapping changes"
+                            )
+                    elif isinstance(vp1, Tuple) and isinstance(vp2, Tuple):
+                        if (
+                            vp1[0] <= vp2[0] <= vp1[1]
+                            or vp1[0] <= vp2[1] <= vp1[1]
+                            or vp2[0] <= vp1[0] <= vp2[1]
+                            or vp2[0] <= vp1[1] <= vp2[1]
+                        ):
+                            raise MaveHgvsParseError(
+                                "multi-variant has overlapping changes"
+                            )
+                    else:  # pragma: no cover
+                        raise ValueError("invalid position type")
+
+                # re-order variants and validate
+                def sort_key(x):
+                    if isinstance(x[1], VariantPosition):
+                        return x[1]
+                    elif isinstance(x[1], Tuple):
+                        return x[1][0]
+                    else:
+                        raise ValueError("invalid position type")
+
+                variant_tuples = list(
+                    zip(self._variant_types, self._positions, self._sequences)
+                )
+                ordered_tuples = sorted(variant_tuples, key=sort_key)
+                if variant_tuples != ordered_tuples:
+                    if relaxed_ordering:
+                        self._variant_types = [x[0] for x in ordered_tuples]
+                        self._positions = [x[1] for x in ordered_tuples]
+                        self._sequences = [x[2] for x in ordered_tuples]
+                    else:
+                        raise MaveHgvsParseError("multi-variants not in sorted order")
+
+            else:  # pragma: no cover
+                raise ValueError("invalid variant count")
 
         if targetseq is not None:
             for vtype, pos, seq in self.variant_tuples():
@@ -211,68 +212,90 @@ class Variant:
         else:
             yield self._variant_types, self._positions, self._sequences
 
-    # TODO: type hints and docstring
-    def __process_string_variant(self, groupdict, relaxed_ordering):
+    def __process_string_variant(
+        self, match_dict: Dict[str, str], relaxed_ordering: bool
+    ) -> Tuple[
+        str,
+        Optional[Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]],
+        Optional[Union[str, Tuple[str, str]]],
+    ]:
+        """Process the match dictionary from a single variant into its components.
+
+        Parameters
+        ----------
+        match_dict : Dict[str, str]
+            Match dictionary from the MAVE-HGVS regular expression.
+        relaxed_ordering : bool
+            If True, variants that do not observe the 3-prime rule for variant position ordering are allowed.
+
+        Returns
+        -------
+        Tuple[str, Optional[Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]], Optional[Union[str, Tuple[str, str]]]]
+            Returns a 3-tuple containing the variant type, optional position (or start/end positions),
+            and optional before/after substitution sequences or inserted sequence.
+
+        """
         variant_type = None
         positions = None
         sequences = None
 
         # determine which named groups to check
         if self._prefix == "p":
-            gdict_prefixes = [(f"pro_{t}", t) for t in self.__vtypes]
+            pattern_group_tuples = [(f"pro_{t}", t) for t in self.__vtypes]
         elif self._prefix == "r":
-            gdict_prefixes = [(f"rna_{t}", t) for t in self.__vtypes]
+            pattern_group_tuples = [(f"rna_{t}", t) for t in self.__vtypes]
         elif self._prefix in "cn":
-            gdict_prefixes = [(f"dna_{t}_{self._prefix}", t) for t in self.__vtypes]
+            pattern_group_tuples = [
+                (f"dna_{t}_{self._prefix}", t) for t in self.__vtypes
+            ]
         elif self._prefix in "gmo":
-            gdict_prefixes = [(f"dna_{t}_gmo", t) for t in self.__vtypes]
+            pattern_group_tuples = [(f"dna_{t}_gmo", t) for t in self.__vtypes]
         else:  # pragma: no cover
             raise ValueError("unexpected prefix")
 
         # set the variant type
         vtype_set = False
-        groupdict_prefix = None
-        for groupname, vtype in gdict_prefixes:
-            if groupdict[groupname] is not None:
+        pattern_group = None
+        for pg, vtype in pattern_group_tuples:
+            if match_dict[pg] is not None:
                 if vtype_set:  # pragma: no cover
-                    raise ValueError(
-                        f"ambiguous match: '{groupname}' and '{groupdict_prefix}'"
-                    )
+                    raise ValueError(f"ambiguous match: '{pg}' and '{pattern_group}'")
                 variant_type = vtype
-                groupdict_prefix = groupname
+                pattern_group = pg
+                vtype_set = True
 
         # set the position and sequence
         if variant_type == "sub":
             if (
-                groupdict[f"{groupdict_prefix}_equal"] is not None
+                match_dict[f"{pattern_group}_equal"] is not None
             ):  # special case for target identity
-                sequences = groupdict[f"{groupdict_prefix}_equal"]
-            elif groupdict[f"pro_sub_equal_sy"] is not None:
-                sequences = groupdict[f"pro_sub_equal_sy"]
+                sequences = match_dict[f"{pattern_group}_equal"]
+            elif match_dict[f"pro_sub_equal_sy"] is not None:
+                sequences = match_dict[f"pro_sub_equal_sy"]
             else:
-                positions = VariantPosition(groupdict[f"{groupdict_prefix}_position"])
+                positions = VariantPosition(match_dict[f"{pattern_group}_position"])
                 if self._prefix == "p":
                     sequences = (
                         positions.amino_acid,
-                        groupdict[f"{groupdict_prefix}_new"],
+                        match_dict[f"{pattern_group}_new"],
                     )
                 elif self._prefix in "gmo" "cn" "r":
                     sequences = (
-                        groupdict[f"{groupdict_prefix}_ref"],
-                        groupdict[f"{groupdict_prefix}_new"],
+                        match_dict[f"{pattern_group}_ref"],
+                        match_dict[f"{pattern_group}_new"],
                     )
                 else:  # pragma: no cover
                     raise ValueError("unexpected prefix")
         elif variant_type in ("del", "dup", "ins", "delins"):
             # set position
             if (
-                groupdict.get(f"{groupdict_prefix}_pos") is not None
+                match_dict.get(f"{pattern_group}_pos") is not None
             ):  # use get() since ins pattern doesn't have pos
-                positions = VariantPosition(groupdict[f"{groupdict_prefix}_pos"])
+                positions = VariantPosition(match_dict[f"{pattern_group}_pos"])
             else:
                 positions = (
-                    VariantPosition(groupdict[f"{groupdict_prefix}_start"]),
-                    VariantPosition(groupdict[f"{groupdict_prefix}_end"]),
+                    VariantPosition(match_dict[f"{pattern_group}_start"]),
+                    VariantPosition(match_dict[f"{pattern_group}_end"]),
                 )
                 # extra validation on positions
                 if positions[0] >= positions[1]:
@@ -288,9 +311,81 @@ class Variant:
 
             # set sequence if needed
             if variant_type in ("ins", "delins"):
-                sequences = groupdict[f"{groupdict_prefix}_seq"]
+                sequences = match_dict[f"{pattern_group}_seq"]
 
         return variant_type, positions, sequences
+
+    # TODO: API documentation for the dictionary objects
+    @staticmethod
+    def __variant_dictionary_to_string(
+        vdict: Mapping[str, Any], include_prefix: bool
+    ) -> str:
+        """Convert a match dictionary from a single variant into a string for further validation.
+
+        This method performs minimal validation of the values provided in the input, and instead converts it into a
+        variant string that is validated using the regular expression based validators.
+
+        Parameters
+        ----------
+        vdict : Mapping[str, Any]
+            Key-value pairs describing a single variant.
+        include_prefix: bool
+            If True, the variant prefix and '.' will be included in the string; else it is omitted (for use with
+            multi-variants).
+
+        Returns
+        -------
+        str
+            A string representing this variant.
+
+        Raises
+        ------
+        MaveHgvsParseError
+            If the dictionary does not have a valid set of keys.
+
+        """
+        try:
+            variant_type = vdict["variant_type"]
+        except KeyError:
+            raise MaveHgvsParseError("variant dictionary missing required keys")
+
+        if variant_type == "sub":
+            if sorted(vdict.keys()) != sorted(
+                ["variant_type", "prefix", "position", "target", "variant"]
+            ):
+                raise MaveHgvsParseError("variant dictionary contains invalid keys")
+            if vdict["prefix"] == "p":
+                variant_string = (
+                    f"{vdict['target']}{vdict['position']}{vdict['variant']}"
+                )
+            else:
+                variant_string = (
+                    f"{vdict['position']}{vdict['target']}>{vdict['variant']}"
+                )
+        elif variant_type in ("del", "dup"):
+            if sorted(vdict.keys()) != sorted(
+                ["variant_type", "prefix", "start_position", "end_position"]
+            ):
+                raise MaveHgvsParseError("variant dictionary contains invalid keys")
+            if vdict["start_position"] == vdict["end_position"]:
+                variant_string = f"{vdict['start_position']}{variant_type}"
+            else:
+                variant_string = (
+                    f"{vdict['start_position']}_{vdict['end_position']}{variant_type}"
+                )
+        elif variant_type in ("ins", "delins"):
+            if sorted(vdict.keys()) != sorted(
+                ["variant_type", "prefix", "start_position", "end_position", "sequence"]
+            ):
+                raise MaveHgvsParseError("variant dictionary contains invalid keys")
+            variant_string = f"{vdict['start_position']}_{vdict['end_position']}{variant_type}{vdict['sequence']}"
+        else:
+            raise MaveHgvsParseError("invalid variant type")
+
+        if include_prefix:
+            return f"{vdict['prefix']}.{variant_string}"
+        else:
+            return variant_string
 
     def __repr__(self) -> str:
         """The object representation is equivalent to the input string.

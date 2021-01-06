@@ -211,7 +211,146 @@ class TestCreateMultiVariantFromString(unittest.TestCase):
 
 
 class TestCreateSingleVariantFromValues(unittest.TestCase):
-    pass
+    def test_sub(self):
+        valid_dict_tuples = [
+            (
+                {
+                    "variant_type": "sub",
+                    "prefix": "p",
+                    "position": 27,
+                    "target": "Glu",
+                    "variant": "Trp",
+                },
+                "p.Glu27Trp",
+            ),
+            (
+                {
+                    "variant_type": "sub",
+                    "prefix": "c",
+                    "position": "122-6",
+                    "target": "T",
+                    "variant": "A",
+                },
+                "c.122-6T>A",
+            ),
+        ]
+
+        for d, s in valid_dict_tuples:
+            with self.subTest(d=d, s=s):
+                v = Variant(d)
+                self.assertEqual(s, str(v))
+
+    def test_ins(self):
+        valid_dict_tuples = [
+            (
+                {
+                    "variant_type": "ins",
+                    "prefix": "p",
+                    "start_position": "Ala12",
+                    "end_position": "Pro13",
+                    "sequence": "GlyProCys",
+                },
+                "p.Ala12_Pro13insGlyProCys",
+            ),
+            (
+                {
+                    "variant_type": "ins",
+                    "prefix": "r",
+                    "start_position": 22,
+                    "end_position": 23,
+                    "sequence": "auc",
+                },
+                "r.22_23insauc",
+            ),
+        ]
+
+        for d, s in valid_dict_tuples:
+            with self.subTest(d=d, s=s):
+                v = Variant(d)
+                self.assertEqual(s, str(v))
+
+    def test_del(self):
+        valid_dict_tuples = [
+            (
+                {
+                    "variant_type": "del",
+                    "prefix": "g",
+                    "start_position": 44,
+                    "end_position": 44,
+                },
+                "g.44del",
+            ),
+            (
+                {
+                    "variant_type": "del",
+                    "prefix": "c",
+                    "start_position": "78+5",
+                    "end_position": "78+10",
+                },
+                "c.78+5_78+10del",
+            ),
+        ]
+
+        for d, s in valid_dict_tuples:
+            with self.subTest(d=d, s=s):
+                v = Variant(d)
+                self.assertEqual(s, str(v))
+
+    def test_dup(self):
+        valid_dict_tuples = [
+            (
+                {
+                    "variant_type": "dup",
+                    "prefix": "c",
+                    "start_position": 77,
+                    "end_position": 77,
+                },
+                "c.77dup",
+            ),
+            (
+                {
+                    "variant_type": "dup",
+                    "prefix": "p",
+                    "start_position": "Pro12",
+                    "end_position": "Gly18",
+                },
+                "p.Pro12_Gly18dup",
+            ),
+        ]
+
+        for d, s in valid_dict_tuples:
+            with self.subTest(d=d, s=s):
+                v = Variant(d)
+                self.assertEqual(s, str(v))
+
+    def test_delins(self):
+        valid_dict_tuples = [
+            (
+                {
+                    "variant_type": "delins",
+                    "prefix": "c",
+                    "start_position": "43-6",
+                    "end_position": "595+12",
+                    "sequence": "CTT",
+                },
+                "c.43-6_595+12delinsCTT",
+            ),
+            (
+                {
+                    "variant_type": "delins",
+                    "prefix": "p",
+                    "start_position": "Ile71",
+                    "end_position": "Cys80",
+                    "sequence": "Ser",
+                },
+                "p.Ile71_Cys80delinsSer",
+            ),
+        ]
+
+        for d, s in valid_dict_tuples:
+            with self.subTest(d=d, s=s):
+                v = Variant(d)
+                self.assertEqual(s, str(v))
 
 
 class TestCreateMultiVariantFromValues(unittest.TestCase):
