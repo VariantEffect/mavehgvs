@@ -359,7 +359,7 @@ class TestCreateMultiVariantFromValues(unittest.TestCase):
 
 class TestTargetSequenceValidation(unittest.TestCase):
     def test_matching_dna_substitution(self):
-        variant_tuples = [("ACGT", "c.1A>T"), ("ACGT", "c.3G>C")]
+        variant_tuples = [("ACGT", "c.1A>T"), ("ACGT", "c.3G>C"), ("ACGT", "c.[1A>T;3G>C]")]
 
         for target, s in variant_tuples:
             with self.subTest(target=target, s=s):
@@ -367,7 +367,7 @@ class TestTargetSequenceValidation(unittest.TestCase):
                 self.assertEqual(s, str(v))
 
     def test_nonmatching_dna_substitution(self):
-        variant_tuples = [("ACGT", "c.1C>T"), ("ACGT", "c.3T>C")]
+        variant_tuples = [("ACGT", "c.1C>T"), ("ACGT", "c.3T>C"), ("ACGT", "c.[1A>T;3T>C]")]
 
         for target, s in variant_tuples:
             with self.subTest(target=target, s=s):

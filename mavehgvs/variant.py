@@ -1,6 +1,6 @@
 import re
 import itertools
-from typing import Optional, Union, List, Tuple, Mapping, Any, Sequence, Dict
+from typing import Optional, Union, List, Tuple, Mapping, Any, Sequence, Dict, Generator
 
 from mavehgvs.position import VariantPosition
 from mavehgvs.patterns.combined import any_variant
@@ -46,7 +46,8 @@ class Variant:
             If provided, the variant will be validated for agreement with this sequence.
             Target sequence validation is not supported for variants using the extended position syntax.
 
-            The type of the target sequence (DNA, RNA, or amino acid) will be inferred.
+            This must be an amino acid sequence for protein variants or a nucleotide sequence for
+            coding/noncoding/genomic variants.
             DNA and amino acid sequences should be in uppercase, RNA in lowercase.
 
         relaxed_ordering : bool
@@ -178,15 +179,38 @@ class Variant:
                 raise ValueError("invalid variant count")
 
         if targetseq is not None:
-            if self.variant_count == 1:
-                if self._variant_types == "sub":
-                    self._target_validate_substitution(
-                        self._positions, self._sequences[0], targetseq
-                    )
-                elif self._variant_types in ("ins", "del", "dup", "delins"):
-                    self._target_validate_indel(self._positions, targetseq)
-            elif self.variant_count > 1:
-                pass
+            for vtype, pos, seq in self.variant_tuples():
+                if vtype == "sub":
+                    self._target_validate_substitution(pos, seq[0], targetseq)
+                elif vtype in ("ins", "del", "dup", "delins"):
+                    self._target_validate_indel(pos, targetseq)
+
+    def variant_tuples(
+        self
+    ) -> Generator[
+        Tuple[
+            str,
+            Optional[Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]],
+            Optional[Union[str, Tuple[str, str]]],
+        ],
+        None,
+        None,
+    ]:
+        """Generator that yields tuples containing the variant components.
+
+        Yields
+        ------
+        Tuple
+            Tuple of the variant type, position(s), and sequence(s) for each element in the variant.
+
+        """
+        if self.is_multi_variant():
+            for vtype, pos, seq in zip(
+                self._variant_types, self._positions, self._sequences
+            ):
+                yield vtype, pos, seq
+        else:
+            yield self._variant_types, self._positions, self._sequences
 
     def __process_string_variant(
         self, match_dict: Dict[str, str], relaxed_ordering: bool
@@ -421,15 +445,12 @@ class Variant:
 
         if self.is_target_identical():
             return f"{prefix}.{self._sequences}"
-        elif self.variant_count > 1:
-            elements = list()
-            for vtype, pos, seq in zip(
-                self._variant_types, self._positions, self._sequences
-            ):
-                elements.append(format_variant(vtype, pos, seq))
-            return f"{prefix}.[{';'.join(elements)}]"
         else:
-            return f"{prefix}.{format_variant(self._variant_types, self._positions, self._sequences)}"
+            elements = [format_variant(*t) for t in self.variant_tuples()]
+            if self.is_multi_variant():
+                return f"{prefix}.[{';'.join(elements)}]"
+            else:
+                return f"{prefix}.{elements[0]}"
 
     @staticmethod
     def _target_validate_substitution(
@@ -440,16 +461,16 @@ class Variant:
         Note that variants using extended syntax cannot be validated with this method.
         If an extended syntax variant is encountered, it will be interpreted as valid/matching.
 
-        # TODO: this needs to be aware of protein vs nucleotide targets
-
         Parameters
         ----------
         pos : VariantPosition
             Position of the substitution.
         ref : str
-            Reference base or amino acid.
+            Reference base or amino acid from the variant.
         target : str
-            Target sequence.
+            Target sequence. This must be an amino acid sequence for protein variants or a nucleotide sequence
+            for coding/noncoding/genomic variants.
+            RNA sequences should be in lowercase, DNA sequences should be in uppercase.
 
         Returns
         -------
@@ -482,14 +503,13 @@ class Variant:
         Note that variants using extended syntax cannot be validated with this method.
         If an extended syntax variant is encountered, it will be interpreted as valid/matching.
 
-        # TODO: this needs to be aware of protein vs nucleotide targets
-
         Parameters
         ----------
         pos : Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]
             Single variant position or start/end tuple for the indel.
         target : str
-            Target sequence.
+            Target sequence. This must be an amino acid sequence for protein variants or a nucleotide sequence
+            for coding/noncoding/genomic variants.
 
         Returns
         -------
