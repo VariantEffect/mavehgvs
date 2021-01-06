@@ -284,10 +284,7 @@ class TestTargetSequenceValidation(unittest.TestCase):
                 self.assertEqual(s, str(v))
 
     def test_invalid_dna_ins(self):
-        variant_tuples = [
-            ("ACGT", "c.4_5insA"),
-            ("ACGT", "c.10_11insTCG"),
-        ]
+        variant_tuples = [("ACGT", "c.4_5insA"), ("ACGT", "c.10_11insTCG")]
 
         for target, s in variant_tuples:
             with self.subTest(target=target, s=s):
@@ -303,10 +300,7 @@ class TestTargetSequenceValidation(unittest.TestCase):
                 self.assertEqual(s, str(v))
 
     def test_invalid_dna_delins(self):
-        variant_tuples = [
-            ("ACGT", "c.4_5delinsA"),
-            ("ACGT", "c.10_delinsTCG"),
-        ]
+        variant_tuples = [("ACGT", "c.4_5delinsA"), ("ACGT", "c.10_delinsTCG")]
 
         for target, s in variant_tuples:
             with self.subTest(target=target, s=s):
