@@ -37,7 +37,7 @@ class VariantPosition:
 
     """
 
-    __fullmatch = re.compile(pos_with_groups, flags=re.ASCII).fullmatch
+    fullmatch = re.compile(pos_with_groups, flags=re.ASCII).fullmatch
     """Callable[[str, int, int], Optional[Match[str]]]: fullmatch callable for parsing positions
     
     Returns an :py:obj:`re.Match` object if the full string matches one of the position groups in :py:data:`pos_extended`.
@@ -53,7 +53,7 @@ class VariantPosition:
 
         """
         try:
-            gdict = VariantPosition.__fullmatch(pos_str).groupdict()
+            gdict = VariantPosition.fullmatch(pos_str).groupdict()
         except AttributeError:
             raise MaveHgvsParseError(f"invalid variant position string '{pos_str}'")
 

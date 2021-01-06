@@ -10,14 +10,14 @@ __all__ = ["Variant"]
 
 
 class Variant:
-    __variant_fullmatch = re.compile(any_variant, flags=re.ASCII).fullmatch
+    fullmatch = re.compile(any_variant, flags=re.ASCII).fullmatch
     """Callable[[str, int, int], Optional[Match[str]]]: fullmatch callable for parsing a single MAVE-HGVS variant
     
     Returns an :py:obj:`re.Match` object if the full string defines a valid MAVE-HGVS variant.
     Match groups in the result can be used to extract components of the variant.
     """
 
-    __vtypes = (
+    VTYPES = (
         "sub",  # substitution
         "del",  # deletion
         "dup",  # duplication
@@ -57,10 +57,10 @@ class Variant:
 
         """
         if isinstance(s, str):  # variant string to parse
-            variant_match = self.__variant_fullmatch(s)
+            variant_match = self.fullmatch(s)
         elif isinstance(s, Mapping):  # dictionary-style single variant
-            variant_string = self.__variant_dictionary_to_string(s, include_prefix=True)
-            variant_match = self.__variant_fullmatch(variant_string)
+            variant_string = self._variant_dictionary_to_string(s, include_prefix=True)
+            variant_match = self.fullmatch(variant_string)
         elif isinstance(s, Sequence):  # dictionary-style multi-variant
             try:
                 all_prefixes = [v["prefix"] for v in s]
@@ -70,8 +70,8 @@ class Variant:
                 raise MaveHgvsParseError(
                     "cannot combine variants with different prefixes"
                 )
-            variant_string = f"{s[0]['prefix']}.[{';'.join(self.__variant_dictionary_to_string(v, include_prefix=False) for v in s)}]"
-            variant_match = self.__variant_fullmatch(variant_string)
+            variant_string = f"{s[0]['prefix']}.[{';'.join(self._variant_dictionary_to_string(v, include_prefix=False) for v in s)}]"
+            variant_match = self.fullmatch(variant_string)
         else:
             raise ValueError("can only create Variants from string or Mapping objects")
 
@@ -97,7 +97,7 @@ class Variant:
                 raise ValueError("invalid match type")
 
             if self.variant_count == 1:
-                self._variant_types, self._positions, self._sequences = self.__process_string_variant(
+                self._variant_types, self._positions, self._sequences = self._process_string_variant(
                     match_dict, relaxed_ordering=relaxed_ordering
                 )
             elif self.variant_count > 1:
@@ -107,10 +107,10 @@ class Variant:
 
                 # format each individual variant event as a single variant and parse it
                 for variant_substring in match_dict["multi_variant"][3:-1].split(";"):
-                    groupdict = self.__variant_fullmatch(
+                    groupdict = self.fullmatch(
                         f"{self._prefix}.{variant_substring}"
                     ).groupdict()
-                    vt, p, s = self.__process_string_variant(
+                    vt, p, s = self._process_string_variant(
                         groupdict, relaxed_ordering=relaxed_ordering
                     )
                     if p is None:  # only the case for target-identical variants
@@ -210,7 +210,7 @@ class Variant:
         else:
             yield self._variant_types, self._positions, self._sequences
 
-    def __process_string_variant(
+    def _process_string_variant(
         self, match_dict: Dict[str, str], relaxed_ordering: bool
     ) -> Tuple[
         str,
@@ -239,15 +239,15 @@ class Variant:
 
         # determine which named groups to check
         if self._prefix == "p":
-            pattern_group_tuples = [(f"pro_{t}", t) for t in self.__vtypes]
+            pattern_group_tuples = [(f"pro_{t}", t) for t in self.VTYPES]
         elif self._prefix == "r":
-            pattern_group_tuples = [(f"rna_{t}", t) for t in self.__vtypes]
+            pattern_group_tuples = [(f"rna_{t}", t) for t in self.VTYPES]
         elif self._prefix in "cn":
             pattern_group_tuples = [
-                (f"dna_{t}_{self._prefix}", t) for t in self.__vtypes
+                (f"dna_{t}_{self._prefix}", t) for t in self.VTYPES
             ]
         elif self._prefix in "gmo":
-            pattern_group_tuples = [(f"dna_{t}_gmo", t) for t in self.__vtypes]
+            pattern_group_tuples = [(f"dna_{t}_gmo", t) for t in self.VTYPES]
         else:  # pragma: no cover
             raise ValueError("unexpected prefix")
 
@@ -315,7 +315,7 @@ class Variant:
 
     # TODO: API documentation for the dictionary objects
     @staticmethod
-    def __variant_dictionary_to_string(
+    def _variant_dictionary_to_string(
         vdict: Mapping[str, Any], include_prefix: bool
     ) -> str:
         """Convert a match dictionary from a single variant into a string for further validation.
