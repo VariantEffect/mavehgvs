@@ -2,12 +2,17 @@ import re
 import itertools
 from typing import Optional, Union, List, Tuple, Mapping, Any, Sequence, Dict, Generator
 
+from fqfa.constants import AA_CODES
+
 from mavehgvs.position import VariantPosition
 from mavehgvs.patterns.combined import any_variant
 from mavehgvs.exceptions import MaveHgvsParseError
 
 __all__ = ["Variant"]
 
+AA_3_TO_1 = {value: key for key, value in AA_CODES.items()}
+"""Dict[str, str]: for converting three-letter amino acid codes to single-letter codes.
+"""
 
 class Variant:
     fullmatch = re.compile(any_variant, flags=re.ASCII).fullmatch
@@ -178,7 +183,11 @@ class Variant:
         if targetseq is not None:
             for vtype, pos, seq in self.variant_tuples():
                 if vtype == "sub":
-                    self._target_validate_substitution(pos, seq[0], targetseq)
+                    if self._prefix == "p":
+                        ref = AA_3_TO_1[seq[0]]
+                    else:
+                        ref = seq[0]
+                    self._target_validate_substitution(pos, ref, targetseq)
                 elif vtype in ("ins", "del", "dup", "delins"):
                     self._target_validate_indel(pos, targetseq)
 
