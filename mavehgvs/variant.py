@@ -350,6 +350,7 @@ class Variant:
         """
         try:
             variant_type = vdict["variant_type"]
+            prefix = vdict["prefix"]
         except KeyError:
             raise MaveHgvsParseError("variant dictionary missing required keys")
 
@@ -358,7 +359,7 @@ class Variant:
                 ["variant_type", "prefix", "position", "target", "variant"]
             ):
                 raise MaveHgvsParseError("variant dictionary contains invalid keys")
-            if vdict["prefix"] == "p":
+            if prefix == "p":
                 variant_string = (
                     f"{vdict['target']}{vdict['position']}{vdict['variant']}"
                 )
@@ -367,22 +368,36 @@ class Variant:
                     f"{vdict['position']}{vdict['target']}>{vdict['variant']}"
                 )
         elif variant_type in ("del", "dup"):
-            if sorted(vdict.keys()) != sorted(
-                ["variant_type", "prefix", "start_position", "end_position"]
-            ):
+            expected_keys = ["variant_type", "prefix", "start_position", "end_position"]
+            if prefix == "p":
+                expected_keys.extend(["start_target", "end_target"])
+            if sorted(vdict.keys()) != sorted(expected_keys):
                 raise MaveHgvsParseError("variant dictionary contains invalid keys")
-            if vdict["start_position"] == vdict["end_position"]:
-                variant_string = f"{vdict['start_position']}{variant_type}"
+            if prefix == "p":
+                start = f"{vdict['start_target']}{vdict['start_position']}"
+                end = f"{vdict['end_target']}{vdict['end_position']}"
+            else:
+                start = vdict['start_position']
+                end = vdict['end_position']
+            if start == end:
+                variant_string = f"{start}{variant_type}"
             else:
                 variant_string = (
-                    f"{vdict['start_position']}_{vdict['end_position']}{variant_type}"
+                    f"{start}_{end}{variant_type}"
                 )
         elif variant_type in ("ins", "delins"):
-            if sorted(vdict.keys()) != sorted(
-                ["variant_type", "prefix", "start_position", "end_position", "sequence"]
-            ):
+            expected_keys = ["variant_type", "prefix", "start_position", "end_position", "variant"]
+            if prefix == "p":
+                expected_keys.extend(["start_target", "end_target"])
+            if sorted(vdict.keys()) != sorted(expected_keys):
                 raise MaveHgvsParseError("variant dictionary contains invalid keys")
-            variant_string = f"{vdict['start_position']}_{vdict['end_position']}{variant_type}{vdict['sequence']}"
+            if prefix == "p":
+                start = f"{vdict['start_target']}{vdict['start_position']}"
+                end = f"{vdict['end_target']}{vdict['end_position']}"
+            else:
+                start = vdict['start_position']
+                end = vdict['end_position']
+            variant_string = f"{start}_{end}{variant_type}{vdict['variant']}"
         else:
             raise MaveHgvsParseError("invalid variant type")
 
