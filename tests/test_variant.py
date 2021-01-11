@@ -131,7 +131,7 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
                 self.assertEqual(s, str(v))
 
     def test_target_identical(self) -> None:
-        variant_strings = [f"{prefix}.=" for prefix in "gmo" "cn" "r"]
+        variant_strings = [f"{prefix}.=" for prefix in tuple("gmo" "cn" "r")]
 
         for s in variant_strings:
             with self.subTest(s=s):
@@ -593,7 +593,7 @@ class TestMiscMethods(unittest.TestCase):
 # TODO: multi-variant test cases
 class TestMiscProperties(unittest.TestCase):
     def test_prefix(self):
-        variant_tuples = [(prefix, f"{prefix}.=") for prefix in "gmo" "cn" "r"]
+        variant_tuples = [(prefix, f"{prefix}.=") for prefix in tuple("gmo" "cn" "r")]
 
         for p, s in variant_tuples:
             with self.subTest(p=p, s=s):
