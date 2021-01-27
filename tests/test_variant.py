@@ -131,7 +131,7 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
                 self.assertEqual(s, str(v))
 
     def test_target_identical(self) -> None:
-        variant_strings = [f"{prefix}.=" for prefix in "gmo" "cn" "r"]
+        variant_strings = [f"{prefix}.=" for prefix in tuple("gmo" "cn" "r")]
 
         for s in variant_strings:
             with self.subTest(s=s):
@@ -167,7 +167,7 @@ class TestCreateMultiVariantFromString(unittest.TestCase):
         for s in invalid_variant_strings:
             with self.subTest(s=s):
                 with self.assertRaises(MaveHgvsParseError):
-                    v = Variant(s)
+                    Variant(s)
 
     def test_ordering(self):
         variant_string_tuples = [
@@ -237,8 +237,7 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
 
         for d, s in valid_dict_tuples:
             with self.subTest(d=d, s=s):
-                v = Variant(d)
-                self.assertEqual(s, str(v))
+                self.assertEqual(Variant(s), Variant(d))
 
     def test_ins(self):
         valid_dict_tuples = [
@@ -246,9 +245,11 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
                 {
                     "variant_type": "ins",
                     "prefix": "p",
-                    "start_position": "Ala12",
-                    "end_position": "Pro13",
-                    "sequence": "GlyProCys",
+                    "start_position": 12,
+                    "start_target": "Ala",
+                    "end_position": 13,
+                    "end_target": "Pro",
+                    "variant": "GlyProCys",
                 },
                 "p.Ala12_Pro13insGlyProCys",
             ),
@@ -258,7 +259,7 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
                     "prefix": "r",
                     "start_position": 22,
                     "end_position": 23,
-                    "sequence": "auc",
+                    "variant": "auc",
                 },
                 "r.22_23insauc",
             ),
@@ -266,8 +267,7 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
 
         for d, s in valid_dict_tuples:
             with self.subTest(d=d, s=s):
-                v = Variant(d)
-                self.assertEqual(s, str(v))
+                self.assertEqual(Variant(s), Variant(d))
 
     def test_del(self):
         valid_dict_tuples = [
@@ -293,8 +293,7 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
 
         for d, s in valid_dict_tuples:
             with self.subTest(d=d, s=s):
-                v = Variant(d)
-                self.assertEqual(s, str(v))
+                self.assertEqual(Variant(s), Variant(d))
 
     def test_dup(self):
         valid_dict_tuples = [
@@ -311,8 +310,10 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
                 {
                     "variant_type": "dup",
                     "prefix": "p",
-                    "start_position": "Pro12",
-                    "end_position": "Gly18",
+                    "start_position": 12,
+                    "start_target": "Pro",
+                    "end_position": 18,
+                    "end_target": "Gly",
                 },
                 "p.Pro12_Gly18dup",
             ),
@@ -320,8 +321,7 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
 
         for d, s in valid_dict_tuples:
             with self.subTest(d=d, s=s):
-                v = Variant(d)
-                self.assertEqual(s, str(v))
+                self.assertEqual(Variant(s), Variant(d))
 
     def test_delins(self):
         valid_dict_tuples = [
@@ -331,7 +331,7 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
                     "prefix": "c",
                     "start_position": "43-6",
                     "end_position": "595+12",
-                    "sequence": "CTT",
+                    "variant": "CTT",
                 },
                 "c.43-6_595+12delinsCTT",
             ),
@@ -339,9 +339,11 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
                 {
                     "variant_type": "delins",
                     "prefix": "p",
-                    "start_position": "Ile71",
-                    "end_position": "Cys80",
-                    "sequence": "Ser",
+                    "start_position": 71,
+                    "start_target": "Ile",
+                    "end_position": 80,
+                    "end_target": "Cys",
+                    "variant": "Ser",
                 },
                 "p.Ile71_Cys80delinsSer",
             ),
@@ -349,8 +351,7 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
 
         for d, s in valid_dict_tuples:
             with self.subTest(d=d, s=s):
-                v = Variant(d)
-                self.assertEqual(s, str(v))
+                self.assertEqual(Variant(s), Variant(d))
 
 
 class TestCreateMultiVariantFromValues(unittest.TestCase):
@@ -368,10 +369,12 @@ class TestCreateMultiVariantFromValues(unittest.TestCase):
                     {
                         "variant_type": "delins",
                         "prefix": "p",
-                        "start_position": "Ile71",
-                        "end_position": "Cys80",
-                        "sequence": "Ser",
-                    }
+                        "start_position": 71,
+                        "start_target": "Ile",
+                        "end_position": 80,
+                        "end_target": "Cys",
+                        "variant": "Ser",
+                    },
                 ],
                 "p.[Glu27Trp;Ile71_Cys80delinsSer]",
             ),
@@ -389,15 +392,14 @@ class TestCreateMultiVariantFromValues(unittest.TestCase):
                         "position": "122-6",
                         "target": "T",
                         "variant": "A",
-                    }
+                    },
                 ],
                 "c.[77dup;122-6T>A]",
             ),
         ]
         for d, s in valid_dict_tuples:
             with self.subTest(d=d, s=s):
-                v = Variant(d)
-                self.assertEqual(s, str(v))
+                self.assertEqual(Variant(s), Variant(d))
 
 
 class TestTargetSequenceValidation(unittest.TestCase):
@@ -585,7 +587,7 @@ class TestMiscMethods(unittest.TestCase):
 # TODO: multi-variant test cases
 class TestMiscProperties(unittest.TestCase):
     def test_prefix(self):
-        variant_tuples = [(prefix, f"{prefix}.=") for prefix in "gmo" "cn" "r"]
+        variant_tuples = [(prefix, f"{prefix}.=") for prefix in tuple("gmo" "cn" "r")]
 
         for p, s in variant_tuples:
             with self.subTest(p=p, s=s):

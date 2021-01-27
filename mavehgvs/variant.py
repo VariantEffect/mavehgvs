@@ -14,6 +14,7 @@ AA_3_TO_1 = {value: key for key, value in AA_CODES.items()}
 """Dict[str, str]: for converting three-letter amino acid codes to single-letter codes.
 """
 
+
 class Variant:
     fullmatch = re.compile(any_variant, flags=re.ASCII).fullmatch
     """Callable[[str, int, int], Optional[Match[str]]]: fullmatch callable for parsing a single MAVE-HGVS variant
@@ -250,9 +251,9 @@ class Variant:
             pattern_group_tuples = [(f"pro_{t}", t) for t in self.VTYPES]
         elif self._prefix == "r":
             pattern_group_tuples = [(f"rna_{t}", t) for t in self.VTYPES]
-        elif self._prefix in "cn":
+        elif self._prefix in tuple("cn"):
             pattern_group_tuples = [(f"dna_{t}_{self._prefix}", t) for t in self.VTYPES]
-        elif self._prefix in "gmo":
+        elif self._prefix in tuple("gmo"):
             pattern_group_tuples = [(f"dna_{t}_gmo", t) for t in self.VTYPES]
         else:  # pragma: no cover
             raise ValueError("unexpected prefix")
@@ -283,7 +284,7 @@ class Variant:
                         positions.amino_acid,
                         match_dict[f"{pattern_group}_new"],
                     )
-                elif self._prefix in "gmo" "cn" "r":
+                elif self._prefix in tuple("gmo" "cn" "r"):
                     sequences = (
                         match_dict[f"{pattern_group}_ref"],
                         match_dict[f"{pattern_group}_new"],
@@ -350,6 +351,7 @@ class Variant:
         """
         try:
             variant_type = vdict["variant_type"]
+            prefix = vdict["prefix"]
         except KeyError:
             raise MaveHgvsParseError("variant dictionary missing required keys")
 
@@ -358,7 +360,7 @@ class Variant:
                 ["variant_type", "prefix", "position", "target", "variant"]
             ):
                 raise MaveHgvsParseError("variant dictionary contains invalid keys")
-            if vdict["prefix"] == "p":
+            if prefix == "p":
                 variant_string = (
                     f"{vdict['target']}{vdict['position']}{vdict['variant']}"
                 )
@@ -367,22 +369,40 @@ class Variant:
                     f"{vdict['position']}{vdict['target']}>{vdict['variant']}"
                 )
         elif variant_type in ("del", "dup"):
-            if sorted(vdict.keys()) != sorted(
-                ["variant_type", "prefix", "start_position", "end_position"]
-            ):
+            expected_keys = ["variant_type", "prefix", "start_position", "end_position"]
+            if prefix == "p":
+                expected_keys.extend(["start_target", "end_target"])
+            if sorted(vdict.keys()) != sorted(expected_keys):
                 raise MaveHgvsParseError("variant dictionary contains invalid keys")
-            if vdict["start_position"] == vdict["end_position"]:
-                variant_string = f"{vdict['start_position']}{variant_type}"
+            if prefix == "p":
+                start = f"{vdict['start_target']}{vdict['start_position']}"
+                end = f"{vdict['end_target']}{vdict['end_position']}"
             else:
-                variant_string = (
-                    f"{vdict['start_position']}_{vdict['end_position']}{variant_type}"
-                )
+                start = vdict["start_position"]
+                end = vdict["end_position"]
+            if start == end:
+                variant_string = f"{start}{variant_type}"
+            else:
+                variant_string = f"{start}_{end}{variant_type}"
         elif variant_type in ("ins", "delins"):
-            if sorted(vdict.keys()) != sorted(
-                ["variant_type", "prefix", "start_position", "end_position", "sequence"]
-            ):
+            expected_keys = [
+                "variant_type",
+                "prefix",
+                "start_position",
+                "end_position",
+                "variant",
+            ]
+            if prefix == "p":
+                expected_keys.extend(["start_target", "end_target"])
+            if sorted(vdict.keys()) != sorted(expected_keys):
                 raise MaveHgvsParseError("variant dictionary contains invalid keys")
-            variant_string = f"{vdict['start_position']}_{vdict['end_position']}{variant_type}{vdict['sequence']}"
+            if prefix == "p":
+                start = f"{vdict['start_target']}{vdict['start_position']}"
+                end = f"{vdict['end_target']}{vdict['end_position']}"
+            else:
+                start = vdict["start_position"]
+                end = vdict["end_position"]
+            variant_string = f"{start}_{end}{variant_type}{vdict['variant']}"
         else:
             raise MaveHgvsParseError("invalid variant type")
 
@@ -390,6 +410,36 @@ class Variant:
             return f"{vdict['prefix']}.{variant_string}"
         else:
             return variant_string
+
+    def __eq__(self, other: "Variant") -> bool:
+        """Equality comparison operator.
+
+        Parameters
+        ----------
+        other : Variant
+            The other Variant to compare to.
+
+        Returns
+        -------
+        bool
+            True if this variant is the same as the other position; else False.
+
+        """
+        return (
+            self._target_id,
+            self.variant_count,
+            self._prefix,
+            self._variant_types,
+            self._positions,
+            self._sequences,
+        ) == (
+            other._target_id,
+            other.variant_count,
+            other._prefix,
+            other._variant_types,
+            other._positions,
+            other._sequences,
+        )
 
     def __repr__(self) -> str:
         """The object representation is equivalent to the input string.
