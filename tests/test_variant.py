@@ -167,7 +167,7 @@ class TestCreateMultiVariantFromString(unittest.TestCase):
         for s in invalid_variant_strings:
             with self.subTest(s=s):
                 with self.assertRaises(MaveHgvsParseError):
-                    v = Variant(s)
+                    Variant(s)
 
     def test_ordering(self):
         variant_string_tuples = [
@@ -237,8 +237,7 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
 
         for d, s in valid_dict_tuples:
             with self.subTest(d=d, s=s):
-                v = Variant(d)
-                self.assertEqual(s, str(v))
+                self.assertEqual(Variant(s), Variant(d))
 
     def test_ins(self):
         valid_dict_tuples = [
@@ -268,8 +267,7 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
 
         for d, s in valid_dict_tuples:
             with self.subTest(d=d, s=s):
-                v = Variant(d)
-                self.assertEqual(s, str(v))
+                self.assertEqual(Variant(s), Variant(d))
 
     def test_del(self):
         valid_dict_tuples = [
@@ -295,8 +293,7 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
 
         for d, s in valid_dict_tuples:
             with self.subTest(d=d, s=s):
-                v = Variant(d)
-                self.assertEqual(s, str(v))
+                self.assertEqual(Variant(s), Variant(d))
 
     def test_dup(self):
         valid_dict_tuples = [
@@ -324,8 +321,7 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
 
         for d, s in valid_dict_tuples:
             with self.subTest(d=d, s=s):
-                v = Variant(d)
-                self.assertEqual(s, str(v))
+                self.assertEqual(Variant(s), Variant(d))
 
     def test_delins(self):
         valid_dict_tuples = [
@@ -355,8 +351,7 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
 
         for d, s in valid_dict_tuples:
             with self.subTest(d=d, s=s):
-                v = Variant(d)
-                self.assertEqual(s, str(v))
+                self.assertEqual(Variant(s), Variant(d))
 
 
 class TestCreateMultiVariantFromValues(unittest.TestCase):
@@ -404,8 +399,7 @@ class TestCreateMultiVariantFromValues(unittest.TestCase):
         ]
         for d, s in valid_dict_tuples:
             with self.subTest(d=d, s=s):
-                v = Variant(d)
-                self.assertEqual(s, str(v))
+                self.assertEqual(Variant(s), Variant(d))
 
 
 class TestTargetSequenceValidation(unittest.TestCase):

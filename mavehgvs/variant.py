@@ -411,6 +411,36 @@ class Variant:
         else:
             return variant_string
 
+    def __eq__(self, other: "Variant") -> bool:
+        """Equality comparison operator.
+
+        Parameters
+        ----------
+        other : Variant
+            The other Variant to compare to.
+
+        Returns
+        -------
+        bool
+            True if this variant is the same as the other position; else False.
+
+        """
+        return (
+            self._target_id,
+            self.variant_count,
+            self._prefix,
+            self._variant_types,
+            self._positions,
+            self._sequences,
+        ) == (
+            other._target_id,
+            other.variant_count,
+            other._prefix,
+            other._variant_types,
+            other._positions,
+            other._sequences,
+        )
+
     def __repr__(self) -> str:
         """The object representation is equivalent to the input string.
 
