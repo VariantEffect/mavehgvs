@@ -379,7 +379,7 @@ class TestCreateMultiVariantFromValues(unittest.TestCase):
                         "end_position": 80,
                         "end_target": "Cys",
                         "variant": "Ser",
-                    }
+                    },
                 ],
                 "p.[Glu27Trp;Ile71_Cys80delinsSer]",
             ),
@@ -397,7 +397,7 @@ class TestCreateMultiVariantFromValues(unittest.TestCase):
                         "position": "122-6",
                         "target": "T",
                         "variant": "A",
-                    }
+                    },
                 ],
                 "c.[77dup;122-6T>A]",
             ),

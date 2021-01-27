@@ -14,6 +14,7 @@ AA_3_TO_1 = {value: key for key, value in AA_CODES.items()}
 """Dict[str, str]: for converting three-letter amino acid codes to single-letter codes.
 """
 
+
 class Variant:
     fullmatch = re.compile(any_variant, flags=re.ASCII).fullmatch
     """Callable[[str, int, int], Optional[Match[str]]]: fullmatch callable for parsing a single MAVE-HGVS variant
@@ -377,16 +378,20 @@ class Variant:
                 start = f"{vdict['start_target']}{vdict['start_position']}"
                 end = f"{vdict['end_target']}{vdict['end_position']}"
             else:
-                start = vdict['start_position']
-                end = vdict['end_position']
+                start = vdict["start_position"]
+                end = vdict["end_position"]
             if start == end:
                 variant_string = f"{start}{variant_type}"
             else:
-                variant_string = (
-                    f"{start}_{end}{variant_type}"
-                )
+                variant_string = f"{start}_{end}{variant_type}"
         elif variant_type in ("ins", "delins"):
-            expected_keys = ["variant_type", "prefix", "start_position", "end_position", "variant"]
+            expected_keys = [
+                "variant_type",
+                "prefix",
+                "start_position",
+                "end_position",
+                "variant",
+            ]
             if prefix == "p":
                 expected_keys.extend(["start_target", "end_target"])
             if sorted(vdict.keys()) != sorted(expected_keys):
@@ -395,8 +400,8 @@ class Variant:
                 start = f"{vdict['start_target']}{vdict['start_position']}"
                 end = f"{vdict['end_target']}{vdict['end_position']}"
             else:
-                start = vdict['start_position']
-                end = vdict['end_position']
+                start = vdict["start_position"]
+                end = vdict["end_position"]
             variant_string = f"{start}_{end}{variant_type}{vdict['variant']}"
         else:
             raise MaveHgvsParseError("invalid variant type")
