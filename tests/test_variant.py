@@ -21,6 +21,10 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
             "p.=",
             "c.=",
             "p.(=)",
+            "c.1_3=",
+            "c.12=",
+            "g.88_99=",
+            "c.43-6_595+12=",
         ]
 
         invalid_variant_strings = [
@@ -63,6 +67,10 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
             "p.=",
             "p.(=)",
             "n.=",
+            "c.1_3=",
+            "c.12=",
+            "g.88_99=",
+            "c.43-6_595+12=",
         ]
 
         for s in variant_strings:
