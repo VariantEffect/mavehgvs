@@ -86,21 +86,23 @@ RNA variants are intended to be used when assaying the functional consequences t
 such as a tRNA or ribozyme.
 Variants that are measured at the DNA level should generally not use the RNA syntax.
 
-Substitution
-------------
+Equality
+--------
 
-.. note:: TODO: add some noncoding ('n.' variants) to the examples.
+MAVE-HGVS allows variants to describe equality to the target in a variety of ways.
 
-MAVE-HGVS supports substitutions of a single nucleotide or amino acid.
-
-Unlike in HGVS, variants that describe identity to the reference (target) at a single position (e.g. :code:`c.44=`)
-are not valid for nucleotide positions.
 Variants describing identity to the full target sequence (e.g. :code:`c.=`) are valid and are the intended way to
 specify identity to the target (wild-type) sequence.
 This replaces the `Enrich2 <https://doi.org/10.1186/s13059-017-1272-5>`_ :code:`_wt` variant syntax.
 
+Variants that describe identity to the reference (target) at a single position (e.g. :code:`c.44=`)
+or range of positions (e.g. :code:`c.1_3=`) are valid for coding and genomic sequences.
+These should only be used for special cases, such as in MITE-seq datasets where the scores and counts are
+reported separately for each wild-type codon.
+
 The target-identity variants :code:`c.=` and :code:`p.=` are only valid on their own and are considered invalid as
 part of multi-variants.
+The variants that describe nucleotide identity to part of the reference are also invalid as part of multi-variants.
 
 Variants that describe identity to the target at a single amino acid position (e.g. :code:`p.Cys22=`) are valid and
 are the preferred way to describe specific synonymous variants.
@@ -115,6 +117,21 @@ This replaces the `Enrich2 <https://doi.org/10.1186/s13059-017-1272-5>`_  :code:
    resulting in duplicate protein variants in the multi-variant.
    This should also be considered invalid.
 
+Examples of valid equality variants include:
+
+* c.=
+* c.22=
+* g.123=
+* p.Cys22=
+* p.(=)
+
+Substitution
+------------
+
+.. note:: TODO: add some noncoding ('n.' variants) to the examples.
+
+MAVE-HGVS supports substitutions of a single nucleotide or amino acid.
+
 MAVE-HGVS does not support extension variants, which extend an amino acid sequence to the N- or C- terminal end
 (e.g. :code:`p.Met1ext-4` for gain of an upstream start or :code:`p.Ter345Lysext5` for a new downstream termination
 codon).
@@ -126,24 +143,20 @@ Substitutions of more than one base at a time are covered under `Deletion-Insert
 Examples of valid substitutions include:
 
 * g.48C>A
-* c.=
 * c.122-6T>A
 * c.*33G>C
 * p.Glu27Trp
 * p.Ter345Lys
-* p.Cys22=
 * r.22g>u
 * r.33+12a>c
 
 Examples of valid HGVS substitutions that are invalid in MAVE-HGVS:
 
 * g.48C>W
-* c.22=
 * c.122=/T>A
 * p.(Glu27Trp)
 * p.*345Lys
 * p.Glu23Xaa
-* r.84=
 * r.spl
 
 Deletion
