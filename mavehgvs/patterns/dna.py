@@ -32,10 +32,8 @@ dna_delins_c: str = rf"(?P<dna_delins_c>(?:(?:(?P<start>{pos_intron_utr})_(?P<en
 """str: Pattern matching a DNA deletion-insertion with numeric, intronic, or UTR positions.
 """
 
-dna_equal_n: str = dna_equal_c.replace(pos_intron_utr, pos_intron).replace(
-    "(?P<dna_equal_c>", "(?P<dna_equal_n>"
-)
-"""str: Pattern matching DNA equality with numeric or intron positions for non-coding variants.
+dna_equal_n: str = rf"(?P<dna_equal_n>(?P<equal>=))"
+"""str: Pattern matching DNA equality with no position support.
 """
 
 dna_sub_n: str = dna_sub_c.replace(pos_intron_utr, pos_intron).replace(

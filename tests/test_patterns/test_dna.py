@@ -56,9 +56,9 @@ class TestDnaEqualN(unittest.TestCase):
     def setUpClass(cls):
         cls.pattern = re.compile(dna_equal_n, flags=re.ASCII)
 
-        cls.valid_strings = ["=", "18=", "10_14=", "122-6=", "19+22=", "19+22_88="]
+        cls.valid_strings = ["="]
 
-        cls.invalid_strings = ["=22", "(=)", "18(=)", "-27+3=", "*24="]
+        cls.invalid_strings = ["=22", "(=)", "18(=)", "-27+3=", "*24=", "18=", "10_14=", "122-6=", "19+22=", "19+22_88="]
 
     def test_valid_strings(self):
         for s in self.valid_strings:
@@ -133,7 +133,6 @@ class TestDnaSubN(unittest.TestCase):
         cls.invalid_strings = [
             "22g>u",
             "48C>W",
-            "22=",
             "122=/T>A",
             "*24G>C",
             "-27+3T>C",
@@ -554,6 +553,7 @@ class TestDnaVariantC(unittest.TestCase):
             "48C>A",
             "=",
             "22=",
+            "4_6=",
             "122-6T>A",
             "*24G>C",
             "19+22A>G",
@@ -617,7 +617,6 @@ class TestDnaVariantN(unittest.TestCase):
         cls.valid_strings = [
             "48C>A",
             "=",
-            "22=",
             "122-6T>A",
             "19+22A>G",
             "44del",
@@ -635,6 +634,8 @@ class TestDnaVariantN(unittest.TestCase):
         ]
 
         cls.invalid_strings = [
+            "22=",
+            "1_3=",
             "22g>u",
             "48C>W",
             "122=/T>A",
@@ -682,6 +683,7 @@ class TestDnaVariantGmo(unittest.TestCase):
             "48C>A",
             "=",
             "22=",
+            "1_3=",
             "44del",
             "1_95del",
             "22_24dup",
@@ -745,7 +747,6 @@ class TestDnaSingleVariant(unittest.TestCase):
         cls.valid_strings = [
             "48C>A",
             "=",
-            "22=",
             "44del",
             "1_95del",
             "22_24dup",
@@ -775,6 +776,11 @@ class TestDnaSingleVariant(unittest.TestCase):
             "122-6T>A",
         ]
 
+        cls.valid_strings_cgmo_only = [
+            "22=",
+            "4_6=",
+        ]
+
         cls.invalid_strings = [
             "22g>u",
             "48C>W",
@@ -795,6 +801,13 @@ class TestDnaSingleVariant(unittest.TestCase):
     def test_valid_strings(self):
         for p in "cngmo":
             for s in self.valid_strings:
+                with self.subTest(s=s, p=p):
+                    v = f"{p}.{s}"
+                    self.assertIsNotNone(
+                        self.pattern.fullmatch(v), msg=f'failed to match "{v}"'
+                    )
+        for p in "cgmo":
+            for s in self.valid_strings_cgmo_only:
                 with self.subTest(s=s, p=p):
                     v = f"{p}.{s}"
                     self.assertIsNotNone(
