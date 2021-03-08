@@ -43,6 +43,8 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
             "r.43-6_595+12delinsctt",
             "x.=",
             "c.(=)",
+            "p.(Gly24=)",
+            "p.Gly24(=)",
         ]
 
         for s in valid_variant_strings:
