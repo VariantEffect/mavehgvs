@@ -119,7 +119,7 @@ class Variant:
                     vt, p, s = self._process_string_variant(
                         groupdict, relaxed_ordering=relaxed_ordering
                     )
-                    if p is None:  # only the case for target-identical variants
+                    if vt == "equal":
                         raise MaveHgvsParseError(
                             "multi-variants cannot contain target-identical variants"
                         )

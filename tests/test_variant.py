@@ -165,6 +165,7 @@ class TestCreateMultiVariantFromString(unittest.TestCase):
             "p.[Glu27Trp;=;Ter345Lys]",
             "p.[(=);Gly18del;Glu27Trp;Ter345Lys]",
             "c.[12T>A;=;78+5_78+10del]",
+            "c.[1_3=;12T>A;78+5_78+10del]",
         ]
 
         for s in variant_strings:
