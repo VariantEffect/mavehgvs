@@ -8,15 +8,19 @@ dna_nt: str = rf"[{''.join(DNA_BASES)}]"
 This does not include IUPAC ambiguity characters.
 """
 
-dna_sub_c: str = rf"(?P<dna_sub_c>(?:(?P<position>{pos_intron_utr})(?P<ref>{dna_nt})>(?P<new>{dna_nt}))|(?P<equal>=))"
+dna_equal_c: str = rf"(?P<dna_equal_c>(?:(?:(?P<start>{pos_intron_utr})_(?P<end>{pos_intron_utr}))|(?P<position>{pos_intron_utr}))?(?P<equal>=))"
+"""str: Pattern matching DNA equality with numeric, intronic, or UTR positions.
+"""
+
+dna_sub_c: str = rf"(?P<dna_sub_c>(?P<position>{pos_intron_utr})(?P<ref>{dna_nt})>(?P<new>{dna_nt}))"
 """str: Pattern matching a DNA substitution with numeric, intronic, or UTR positions.
 """
 
-dna_del_c: str = rf"(?P<dna_del_c>(?:(?:(?P<start>{pos_intron_utr})_(?P<end>{pos_intron_utr}))|(?P<pos>{pos_intron_utr}))del)"
+dna_del_c: str = rf"(?P<dna_del_c>(?:(?:(?P<start>{pos_intron_utr})_(?P<end>{pos_intron_utr}))|(?P<position>{pos_intron_utr}))del)"
 """str: Pattern matching a DNA deletion with numeric, intronic, or UTR positions.
 """
 
-dna_dup_c: str = rf"(?P<dna_dup_c>(?:(?:(?P<start>{pos_intron_utr})_(?P<end>{pos_intron_utr}))|(?P<pos>{pos_intron_utr}))dup)"
+dna_dup_c: str = rf"(?P<dna_dup_c>(?:(?:(?P<start>{pos_intron_utr})_(?P<end>{pos_intron_utr}))|(?P<position>{pos_intron_utr}))dup)"
 """str: Pattern matching a DNA duplication with numeric, intronic, or UTR positions.
 """
 
@@ -24,8 +28,14 @@ dna_ins_c: str = rf"(?P<dna_ins_c>(?P<start>{pos_intron_utr})_(?P<end>{pos_intro
 """str: Pattern matching a DNA insertion with numeric, intronic, or UTR positions.
 """
 
-dna_delins_c: str = rf"(?P<dna_delins_c>(?:(?:(?P<start>{pos_intron_utr})_(?P<end>{pos_intron_utr}))|(?P<pos>{pos_intron_utr}))delins(?P<seq>{dna_nt}+))"
+dna_delins_c: str = rf"(?P<dna_delins_c>(?:(?:(?P<start>{pos_intron_utr})_(?P<end>{pos_intron_utr}))|(?P<position>{pos_intron_utr}))delins(?P<seq>{dna_nt}+))"
 """str: Pattern matching a DNA deletion-insertion with numeric, intronic, or UTR positions.
+"""
+
+dna_equal_n: str = dna_equal_c.replace(pos_intron_utr, pos_intron).replace(
+    "(?P<dna_equal_c>", "(?P<dna_equal_n>"
+)
+"""str: Pattern matching DNA equality with numeric or intron positions for non-coding variants.
 """
 
 dna_sub_n: str = dna_sub_c.replace(pos_intron_utr, pos_intron).replace(
@@ -56,6 +66,12 @@ dna_delins_n: str = dna_delins_c.replace(pos_intron_utr, pos_intron).replace(
     "(?P<dna_delins_c>", "(?P<dna_delins_n>"
 )
 """str: Pattern matching a DNA deletion-insertion with numeric or intron positions for non-coding variants.
+"""
+
+dna_equal_gmo: str = dna_equal_c.replace(pos_intron_utr, pos).replace(
+    "(?P<dna_equal_c>", "(?P<dna_equal_gmo>"
+)
+"""str: Pattern matching a DNA substitution with only numeric positions for genomic-style variants.
 """
 
 dna_sub_gmo: str = dna_sub_c.replace(pos_intron_utr, pos).replace(
@@ -89,19 +105,19 @@ dna_delins_gmo: str = dna_delins_c.replace(pos_intron_utr, pos).replace(
 """
 
 dna_variant_c: str = combine_patterns(
-    [dna_sub_c, dna_del_c, dna_dup_c, dna_ins_c, dna_delins_c], None
+    [dna_equal_c, dna_sub_c, dna_del_c, dna_dup_c, dna_ins_c, dna_delins_c], None
 )
 """str: Pattern matching any of the coding DNA variants.
 """
 
 dna_variant_n: str = combine_patterns(
-    [dna_sub_n, dna_del_n, dna_dup_n, dna_ins_n, dna_delins_n], None
+    [dna_equal_n, dna_sub_n, dna_del_n, dna_dup_n, dna_ins_n, dna_delins_n], None
 )
 """str: Pattern matching any of the non-coding DNA variants.
 """
 
 dna_variant_gmo: str = combine_patterns(
-    [dna_sub_gmo, dna_del_gmo, dna_dup_gmo, dna_ins_gmo, dna_delins_gmo], None
+    [dna_equal_gmo, dna_sub_gmo, dna_del_gmo, dna_dup_gmo, dna_ins_gmo, dna_delins_gmo], None
 )
 """str: Pattern matching any of the genomic-style DNA variants.
 """
