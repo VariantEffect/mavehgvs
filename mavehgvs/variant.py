@@ -192,6 +192,9 @@ class Variant:
                     self._target_validate_substitution(pos, ref, targetseq)
                 elif vtype in ("ins", "del", "dup", "delins"):
                     self._target_validate_indel(pos, targetseq)
+                elif vtype == "equal":
+                    if pos is not None:
+                        self._target_validate_indel(pos, targetseq)
 
     def variant_tuples(
         self
@@ -600,13 +603,35 @@ class Variant:
         This is the variant described with only the equals sign (e.g. ``c.=``)
         or the uncertain equals protein variant (e.g. ``p.(=)``).
 
+        Coding or genomic variants that specify an identical region (e.g. ``c.1_3=`` are also considered target
+        identical.
+
+        Synonymous protein variants (e.g. ``p.Leu12=``) are not considered target identical.
+
         Returns
         -------
         bool
             True if this variant describes the wild-type or target sequence; else False.
 
         """
-        return self._variant_types == "equal"
+        if self._variant_types == "equal":
+            if self._prefix == "p":
+                return self._positions is None
+            else:
+                return True
+        else:
+            return False
+
+    def is_synonymous(self) -> bool:
+        """Return whether the variant describes a synonymous protein variant or is the special synonymous variant.
+
+        Returns
+        -------
+        bool
+            True if this variant describes a synonymous protein variant; else False.
+
+        """
+        return self._variant_types == "equal" and self._prefix == "p"
 
     def is_multi_variant(self) -> bool:
         """Return whether the variant is a multi-variant.

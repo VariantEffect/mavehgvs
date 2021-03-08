@@ -141,17 +141,49 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
                 self.assertEqual(s, str(v))
 
     def test_target_identical(self) -> None:
-        variant_strings = [f"{prefix}.=" for prefix in tuple("gmo" "cn" "r")]
+        identical_variant_strings = [*[f"{prefix}.=" for prefix in tuple("gmo" "cn" "r")], "p.(=)", "c.1_3="]
 
-        for s in variant_strings:
+        non_identical_variant_strings = [
+            "p.Ter345Lys",
+            "p.Cys22=",
+            "g.48C>A",
+            "c.122-6T>A",
+            "g.22delinsAACG",
+            "c.83_85delinsT",
+        ]
+
+        for s in identical_variant_strings:
             with self.subTest(s=s):
                 v = Variant(s)
                 self.assertTrue(v.is_target_identical())
 
-        for s in variant_strings:
+        for s in non_identical_variant_strings:
             with self.subTest(s=s):
                 v = Variant(s)
-                self.assertEqual(s, str(v))
+                self.assertFalse(v.is_target_identical())
+
+    def test_synonymous(self) -> None:
+        synonymous_variant_strings = [
+            "p.Gly24=",
+            "p.=",
+            "p.(=)",
+        ]
+
+        nonsynonymous_variant_strings = [
+            "p.Ter345Lys",
+            "c.=",
+            "g.48C>A",
+        ]
+
+        for s in synonymous_variant_strings:
+            with self.subTest(s=s):
+                v = Variant(s)
+                self.assertTrue(v.is_synonymous())
+
+        for s in nonsynonymous_variant_strings:
+            with self.subTest(s=s):
+                v = Variant(s)
+                self.assertFalse(v.is_synonymous())
 
 
 class TestCreateMultiVariantFromString(unittest.TestCase):
@@ -222,6 +254,41 @@ class TestCreateMultiVariantFromString(unittest.TestCase):
 
 
 class TestCreateSingleVariantFromValues(unittest.TestCase):
+    def test_equal(self):
+        valid_dict_tuples = [
+            (
+                {
+                    "variant_type": "equal",
+                    "prefix": "p",
+                    "position": "27",
+                    "target": "Glu",
+                },
+                "p.Glu27=",
+            ),
+            (
+                {
+                    "variant_type": "equal",
+                    "prefix": "c",
+                    "start_position": "12",
+                    "end_position": "12",
+                },
+                "c.12=",
+            ),
+            (
+                {
+                    "variant_type": "equal",
+                    "prefix": "c",
+                    "start_position": "1",
+                    "end_position": "3",
+                },
+                "c.1_3=",
+            ),
+        ]
+
+        for d, s in valid_dict_tuples:
+            with self.subTest(d=d, s=s):
+                self.assertEqual(Variant(s), Variant(d))
+
     def test_sub(self):
         valid_dict_tuples = [
             (
@@ -432,6 +499,22 @@ class TestTargetSequenceValidation(unittest.TestCase):
             ("ACGT", "c.3T>C"),
             ("ACGT", "c.[1A>T;3T>C]"),
         ]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                with self.assertRaises(MaveHgvsParseError):
+                    Variant(s, targetseq=target)
+
+    def test_valid_dna_equal(self):
+        variant_tuples = [("ACGT", "c.1_2="), ("ACGT", "c.4=")]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                v = Variant(s, targetseq=target)
+                self.assertEqual(s, str(v))
+
+    def test_invalid_dna_equal(self):
+        variant_tuples = [("ACGT", "c.4_5="), ("ACGT", "c.10=")]
 
         for target, s in variant_tuples:
             with self.subTest(target=target, s=s):
