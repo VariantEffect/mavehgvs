@@ -277,10 +277,7 @@ class Variant:
         if variant_type == "sub":
             positions = VariantPosition(match_dict[f"{pattern_group}_position"])
             if self._prefix == "p":
-                sequences = (
-                    positions.amino_acid,
-                    match_dict[f"{pattern_group}_new"],
-                )
+                sequences = (positions.amino_acid, match_dict[f"{pattern_group}_new"])
             elif self._prefix in tuple("gmo" "cn" "r"):
                 sequences = (
                     match_dict[f"{pattern_group}_ref"],
@@ -294,7 +291,10 @@ class Variant:
                 match_dict.get(f"{pattern_group}_position") is not None
             ):  # use get() since ins pattern doesn't have pos
                 positions = VariantPosition(match_dict[f"{pattern_group}_position"])
-            elif match_dict.get(f"{pattern_group}_start") is not None and match_dict.get(f"{pattern_group}_end") is not None:
+            elif (
+                match_dict.get(f"{pattern_group}_start") is not None
+                and match_dict.get(f"{pattern_group}_end") is not None
+            ):
                 positions = (
                     VariantPosition(match_dict[f"{pattern_group}_start"]),
                     VariantPosition(match_dict[f"{pattern_group}_end"]),

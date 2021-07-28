@@ -115,7 +115,8 @@ dna_variant_n: str = combine_patterns(
 """
 
 dna_variant_gmo: str = combine_patterns(
-    [dna_equal_gmo, dna_sub_gmo, dna_del_gmo, dna_dup_gmo, dna_ins_gmo, dna_delins_gmo], None
+    [dna_equal_gmo, dna_sub_gmo, dna_del_gmo, dna_dup_gmo, dna_ins_gmo, dna_delins_gmo],
+    None,
 )
 """str: Pattern matching any of the genomic-style DNA variants.
 """

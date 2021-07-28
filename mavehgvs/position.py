@@ -123,7 +123,9 @@ class VariantPosition:
         """
         if self.utr == other.utr:
             if self.position == other.position:
-                if self.intronic_position == other.intronic_position:  # pragma: no cover
+                if (
+                    self.intronic_position == other.intronic_position
+                ):  # pragma: no cover
                     # this case is covered by __eq__
                     return False
                 elif self.intronic_position is None:
