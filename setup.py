@@ -11,7 +11,7 @@ if sys.version_info.major == 3 and sys.version_info.minor == 6:
 
 setuptools.setup(
     name="mavehgvs",
-    version="0.3.0",
+    version="0.4.0",
     author="Daniel Esposito and Alan F Rubin",
     author_email="alan.rubin@wehi.edu.au",
     description=(
