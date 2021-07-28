@@ -498,6 +498,7 @@ class TestTargetSequenceValidation(unittest.TestCase):
             ("ACGT", "c.1C>T"),
             ("ACGT", "c.3T>C"),
             ("ACGT", "c.[1A>T;3T>C]"),
+            ("ACGT", "c.5A>G"),
         ]
 
         for target, s in variant_tuples:
@@ -506,7 +507,7 @@ class TestTargetSequenceValidation(unittest.TestCase):
                     Variant(s, targetseq=target)
 
     def test_valid_dna_equal(self):
-        variant_tuples = [("ACGT", "c.1_2="), ("ACGT", "c.4=")]
+        variant_tuples = [("ACGT", "c.1_2="), ("ACGT", "c.4="), ("ACGT", "c.=")]
 
         for target, s in variant_tuples:
             with self.subTest(target=target, s=s):
@@ -610,7 +611,24 @@ class TestTargetSequenceValidation(unittest.TestCase):
             ("RCQY", "p.Cys1Ala"),
             ("RCQY", "p.Ala3Trp"),
             ("RCQY", "p.[Arg1Ala;Cys3Trp]"),
+            ("RCQY", "p.Asp5Glu"),
         ]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                with self.assertRaises(MaveHgvsParseError):
+                    Variant(s, targetseq=target)
+
+    def test_valid_protein_equal(self):
+        variant_tuples = [("RCQY", "p.Arg1="), ("RCQY", "p.Tyr4="), ("RCQY", "p.=")]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                v = Variant(s, targetseq=target)
+                self.assertEqual(s, str(v))
+
+    def test_invalid_protein_equal(self):
+        variant_tuples = [("RCQY", "p.Trp5=")]
 
         for target, s in variant_tuples:
             with self.subTest(target=target, s=s):
