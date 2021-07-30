@@ -452,6 +452,40 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
             with self.subTest(d=d, s=s):
                 self.assertEqual(Variant(s), Variant(d))
 
+    def test_extra_keys(self):
+        invalid_dicts = [
+            {
+                "variant_type": "sub",
+                "prefix": "p",
+                "position": 27,
+                "target": "Glu",
+                "variant": "Trp",
+                "bonus": "data",
+            },
+            {
+                "variant_type": "sub",
+                "prefix": "c",
+                "position": "122-6",
+                "start_target": "T",
+                "target": "T",
+                "variant": "A",
+            },
+            {
+                "variant_type": "delins",
+                "prefix": "p",
+                "start_target": "Ile",
+                "end_position": 80,
+                "end_target": "Cys",
+                "variant": "Ser",
+                "position": "Ala",
+            },
+        ]
+
+        for d in invalid_dicts:
+            with self.subTest(d=d):
+                with self.assertRaises(MaveHgvsParseError):
+                    Variant(d)
+
     def test_missing_keys(self):
         invalid_dicts = [
             {
@@ -473,6 +507,33 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
                 "end_position": 80,
                 "end_target": "Cys",
                 "variant": "Ser",
+            },
+        ]
+
+        for d in invalid_dicts:
+            with self.subTest(d=d):
+                with self.assertRaises(MaveHgvsParseError):
+                    Variant(d)
+
+    def test_invalid_keys(self):
+        invalid_dicts = [
+            {
+                "variant_type": "equal",
+                "prefix": "p",
+                "start_position": "27",
+                "end_position": "27",
+                "target": "Glu",
+            },
+            {
+                "variant_type": "dup",
+                "prefix": "c",
+                "position": 77,
+            },
+            {
+                "variant_type": "test",
+                "prefix": "c",
+                "start_position": 77,
+                "end_position": 77,
             },
         ]
 
@@ -735,6 +796,18 @@ class TestTargetSequenceValidation(unittest.TestCase):
                 with self.assertRaises(MaveHgvsParseError):
                     Variant(s, targetseq=target)
 
+    def test_skips_extended(self):
+        variant_tuples = [
+            ("ACGT", "c.1+3A>T"),
+            ("ACGT", "c.*33G>C"),
+            ("ACGT", "c.43-6_595+12delinsCTT"),
+        ]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                v = Variant(s, targetseq=target)
+                self.assertEqual(s, str(v))
+
 
 class TestMiscMethods(unittest.TestCase):
     def test_is_multi_variant(self):
@@ -775,6 +848,8 @@ class TestMiscMethods(unittest.TestCase):
             "r.22g>u",
             "p.Ile71_Cys80delinsSer",
             "p.=",
+            "p.[Pro12_Gly18dup;Glu27Trp]",
+            "r.[22g>u;35del]"
         ]
 
         extended_variant_strings = [
@@ -783,6 +858,8 @@ class TestMiscMethods(unittest.TestCase):
             "c.43-6_595+12delinsCTT",
             "c.*33G>C",
             "r.33+12a>c",
+            "c.[12G>T;122-6T>A]",
+            "c.[43-6_595+12delinsCTT;*33G>C]",
         ]
 
         for s in non_extended_variant_strings:
@@ -896,6 +973,11 @@ class TestMiscProperties(unittest.TestCase):
             with self.subTest(t=t, s=s):
                 v = Variant(s)
                 self.assertEqual(t, v.target_id)
+
+        for _, s in variant_tuples:
+            with self.subTest(s=s):
+                v = Variant(s)
+                self.assertEqual(s, str(v))
 
 
 if __name__ == "__main__":
