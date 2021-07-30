@@ -184,7 +184,7 @@ class Variant:
             else:  # pragma: no cover
                 raise ValueError("invalid variant count")
 
-        if targetseq is not None:
+        if targetseq is not None and not self.is_target_identical():
             for vtype, pos, seq in self.variant_tuples():
                 if vtype == "sub":
                     if self._prefix == "p":

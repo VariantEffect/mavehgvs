@@ -624,6 +624,23 @@ class TestCreateMultiVariantFromValues(unittest.TestCase):
 
 
 class TestTargetSequenceValidation(unittest.TestCase):
+    def test_target_identity(self):
+        variant_tuples = [
+            ("ACGT", "g.="),
+            ("ACGT", "m.="),
+            ("ACGT", "o.="),
+            ("ACGT", "c.="),
+            ("ACGT", "n.="),
+            ("ACGU", "r.="),
+            ("RCQY", "p.="),
+            ("RCQY", "p.(=)"),
+        ]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                v = Variant(s, targetseq=target)
+                self.assertEqual(s, str(v))
+
     def test_matching_dna_substitution(self):
         variant_tuples = [
             ("ACGT", "c.1A>T"),
