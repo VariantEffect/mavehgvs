@@ -37,9 +37,11 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
             "a.78+5_78+10del",
             "77dup",
             "n.Pro12_Gly18dup",
+            "p.Pro12_Gly18insGlyProAla",
             "g.22_23insauc",
             "g.25_24del",
             "g.25_24ins",
+            "r.22_24insauc",
             "r.43-6_595+12delinsctt",
             "x.=",
             "c.(=)",
@@ -185,6 +187,24 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
                 v = Variant(s)
                 self.assertFalse(v.is_synonymous())
 
+    def test_relaxed_ordering(self):
+        variant_tuples = [
+            ("c.78+10_78+5del", "c.78+5_78+10del"),
+            ("c.80_77dup", "c.77_80dup"),
+            ("p.Gly18_Pro12dup", "p.Pro12_Gly18dup"),
+            ("p.Pro13_Ala12insGlyProCys", "p.Ala12_Pro13insGlyProCys"),
+            ("r.23_22insauc", "r.22_23insauc"),
+            ("c.595+12_43-6delinsCTT", "c.43-6_595+12delinsCTT"),
+            ("p.Cys80_Ile71delinsSer", "p.Ile71_Cys80delinsSer"),
+            ("c.3_1=", "c.1_3="),
+            ("g.99_88=", "g.88_99="),
+            ("c.595+12_43-6=", "c.43-6_595+12="),
+        ]
+
+        for v, s in variant_tuples:
+            with self.subTest(v=v, s=s):
+                self.assertEqual(str(Variant(v, relaxed_ordering=True)), s)
+
 
 class TestCreateMultiVariantFromString(unittest.TestCase):
     def test_creation(self):
@@ -241,6 +261,7 @@ class TestCreateMultiVariantFromString(unittest.TestCase):
             "p.[Pro27Trp;Glu27Tyr]",
             "p.[Gly18del;Gly18Tyr]",
             "p.[Gln7_Asn19del;Glu13Trp]",
+            "p.[Glu13Trp;Gln7_Asn19del]",
             "p.[Gln7_Asn19del;Glu13Trp;Ter345Lys]",
             "c.[1_95del;78+5_78+10del;122T>A]",
             "c.[1_95del;22T>A]",
@@ -431,6 +452,43 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
             with self.subTest(d=d, s=s):
                 self.assertEqual(Variant(s), Variant(d))
 
+    def test_missing_keys(self):
+        invalid_dicts = [
+            {
+                "prefix": "p",
+                "position": 27,
+                "target": "Glu",
+                "variant": "Trp",
+            },
+            {
+                "variant_type": "sub",
+                "position": "122-6",
+                "target": "T",
+                "variant": "A",
+            },
+            {
+                "variant_type": "delins",
+                "prefix": "p",
+                "start_target": "Ile",
+                "end_position": 80,
+                "end_target": "Cys",
+                "variant": "Ser",
+            },
+        ]
+
+        for d in invalid_dicts:
+            with self.subTest(d=d):
+                with self.assertRaises(MaveHgvsParseError):
+                    Variant(d)
+
+    def test_invalid_type(self):
+        invalid_values = [1234, None, 5.55, ("p", "Ile", 80, "Cys")]
+
+        for v in invalid_values:
+            with self.subTest(v=v):
+                with self.assertRaises(ValueError):
+                    Variant(v)
+
 
 class TestCreateMultiVariantFromValues(unittest.TestCase):
     def test_create_multivariant(self):
@@ -475,9 +533,51 @@ class TestCreateMultiVariantFromValues(unittest.TestCase):
                 "c.[77dup;122-6T>A]",
             ),
         ]
+
+        invalid_dicts = [
+            [
+                {
+                    "variant_type": "sub",
+                    "position": 27,
+                    "target": "Glu",
+                    "variant": "Trp",
+                },
+                {
+                    "variant_type": "delins",
+                    "prefix": "p",
+                    "start_position": 71,
+                    "start_target": "Ile",
+                    "end_position": 80,
+                    "end_target": "Cys",
+                    "variant": "Ser",
+                },
+            ],
+            [
+                {
+                    "variant_type": "sub",
+                    "prefix": "p",
+                    "position": 27,
+                    "target": "Glu",
+                    "variant": "Trp",
+                },
+                {
+                    "variant_type": "sub",
+                    "prefix": "c",
+                    "position": "122-6",
+                    "target": "T",
+                    "variant": "A",
+                },
+            ],
+        ]
+
         for d, s in valid_dict_tuples:
             with self.subTest(d=d, s=s):
                 self.assertEqual(Variant(s), Variant(d))
+
+        for d in invalid_dicts:
+            with self.subTest(d=d):
+                with self.assertRaises(MaveHgvsParseError):
+                    Variant(d)
 
 
 class TestTargetSequenceValidation(unittest.TestCase):

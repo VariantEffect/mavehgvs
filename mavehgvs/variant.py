@@ -68,6 +68,8 @@ class Variant:
         elif isinstance(s, Mapping):  # dictionary-style single variant
             variant_string = self._variant_dictionary_to_string(s, include_prefix=True)
         elif isinstance(s, Sequence):  # dictionary-style multi-variant
+            if not all(isinstance(v, Mapping) for v in s):
+                raise ValueError("multi-variant iterable must contain Mapping objects")
             try:
                 all_prefixes = [v["prefix"] for v in s]
             except KeyError:
@@ -166,7 +168,7 @@ class Variant:
                         return x[1]
                     elif isinstance(x[1], Tuple):
                         return x[1][0]
-                    else:
+                    else:  # pragma: no cover
                         raise ValueError("invalid position type")
 
                 variant_list = list(self.variant_tuples())
