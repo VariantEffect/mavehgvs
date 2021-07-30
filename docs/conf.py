@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath(".."))
 # -- Project information -----------------------------------------------------
 
 project = "MAVE-HGVS"
-copyright = "2018-2021, Alan F Rubin and Daniel Esposito"
+copyright = "2018-2020, Alan F Rubin and Daniel Esposito"
 author = "Alan F Rubin and Daniel Esposito"
 
 
