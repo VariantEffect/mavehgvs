@@ -1,6 +1,9 @@
 import unittest
 import re
 from mavehgvs.patterns.dna import (
+    dna_equal_c,
+    dna_equal_n,
+    dna_equal_gmo,
     dna_sub_c,
     dna_sub_n,
     dna_sub_gmo,
@@ -24,14 +27,115 @@ from mavehgvs.patterns.dna import (
 )
 
 
+class TestDnaEqualC(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.pattern = re.compile(dna_equal_c, flags=re.ASCII)
+
+        cls.valid_strings = [
+            "=",
+            "18=",
+            "10_14=",
+            "122-6=",
+            "*24=",
+            "19+22=",
+            "19+22_88=",
+            "-27+3=",
+        ]
+
+        cls.invalid_strings = ["=22", "(=)", "18(=)"]
+
+    def test_valid_strings(self):
+        for s in self.valid_strings:
+            with self.subTest(s=s):
+                self.assertIsNotNone(
+                    self.pattern.fullmatch(s), msg=f'failed to match "{s}"'
+                )
+
+    def test_invalid_strings(self):
+        for s in self.invalid_strings:
+            with self.subTest(s=s):
+                self.assertIsNone(
+                    self.pattern.fullmatch(s), msg=f'incorrectly matched "{s}"'
+                )
+
+
+class TestDnaEqualN(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.pattern = re.compile(dna_equal_n, flags=re.ASCII)
+
+        cls.valid_strings = ["="]
+
+        cls.invalid_strings = [
+            "=22",
+            "(=)",
+            "18(=)",
+            "-27+3=",
+            "*24=",
+            "18=",
+            "10_14=",
+            "122-6=",
+            "19+22=",
+            "19+22_88=",
+        ]
+
+    def test_valid_strings(self):
+        for s in self.valid_strings:
+            with self.subTest(s=s):
+                self.assertIsNotNone(
+                    self.pattern.fullmatch(s), msg=f'failed to match "{s}"'
+                )
+
+    def test_invalid_strings(self):
+        for s in self.invalid_strings:
+            with self.subTest(s=s):
+                self.assertIsNone(
+                    self.pattern.fullmatch(s), msg=f'incorrectly matched "{s}"'
+                )
+
+
+class TestDnaEqualGMO(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.pattern = re.compile(dna_equal_gmo, flags=re.ASCII)
+
+        cls.valid_strings = ["=", "18=", "10_14="]
+
+        cls.invalid_strings = [
+            "=22",
+            "(=)",
+            "18(=)",
+            "122-6=",
+            "*24=",
+            "19+22=",
+            "19+22_88=",
+            "-27+3=",
+        ]
+
+    def test_valid_strings(self):
+        for s in self.valid_strings:
+            with self.subTest(s=s):
+                self.assertIsNotNone(
+                    self.pattern.fullmatch(s), msg=f'failed to match "{s}"'
+                )
+
+    def test_invalid_strings(self):
+        for s in self.invalid_strings:
+            with self.subTest(s=s):
+                self.assertIsNone(
+                    self.pattern.fullmatch(s), msg=f'incorrectly matched "{s}"'
+                )
+
+
 class TestDnaSubC(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.pattern = re.compile(dna_sub_c, flags=re.ASCII)
 
-        cls.valid_strings = ["48C>A", "=", "122-6T>A", "*24G>C", "19+22A>G", "-27+3T>C"]
+        cls.valid_strings = ["48C>A", "122-6T>A", "*24G>C", "19+22A>G", "-27+3T>C"]
 
-        cls.invalid_strings = ["22g>u", "48C>W", "22=", "122=/T>A"]
+        cls.invalid_strings = ["22g>u", "48C>W", "122=/T>A"]
 
     def test_valid_strings(self):
         for s in self.valid_strings:
@@ -53,16 +157,9 @@ class TestDnaSubN(unittest.TestCase):
     def setUpClass(cls):
         cls.pattern = re.compile(dna_sub_n, flags=re.ASCII)
 
-        cls.valid_strings = ["48C>A", "=", "122-6T>A", "19+22A>G"]
+        cls.valid_strings = ["48C>A", "122-6T>A", "19+22A>G"]
 
-        cls.invalid_strings = [
-            "22g>u",
-            "48C>W",
-            "22=",
-            "122=/T>A",
-            "*24G>C",
-            "-27+3T>C",
-        ]
+        cls.invalid_strings = ["22g>u", "48C>W", "122=/T>A", "*24G>C", "-27+3T>C"]
 
     def test_valid_strings(self):
         for s in self.valid_strings:
@@ -84,7 +181,7 @@ class TestDnaSubGmo(unittest.TestCase):
     def setUpClass(cls):
         cls.pattern = re.compile(dna_sub_gmo, flags=re.ASCII)
 
-        cls.valid_strings = ["48C>A", "="]
+        cls.valid_strings = ["48C>A"]
 
         cls.invalid_strings = ["122-6T>A", "22g>u", "48C>W", "22=", "122=/T>A", "0C>T"]
 
@@ -478,6 +575,8 @@ class TestDnaVariantC(unittest.TestCase):
         cls.valid_strings = [
             "48C>A",
             "=",
+            "22=",
+            "4_6=",
             "122-6T>A",
             "*24G>C",
             "19+22A>G",
@@ -504,7 +603,6 @@ class TestDnaVariantC(unittest.TestCase):
         cls.invalid_strings = [
             "22g>u",
             "48C>W",
-            "22=",
             "122=/T>A",
             "(78+1_79-1)_(124+1_125-1)del",
             "(?_85)_(124_?)del",
@@ -559,9 +657,10 @@ class TestDnaVariantN(unittest.TestCase):
         ]
 
         cls.invalid_strings = [
+            "22=",
+            "1_3=",
             "22g>u",
             "48C>W",
-            "22=",
             "122=/T>A",
             "(78+1_79-1)_(124+1_125-1)del",
             "(?_85)_(124_?)del",
@@ -606,6 +705,8 @@ class TestDnaVariantGmo(unittest.TestCase):
         cls.valid_strings = [
             "48C>A",
             "=",
+            "22=",
+            "1_3=",
             "44del",
             "1_95del",
             "22_24dup",
@@ -632,7 +733,6 @@ class TestDnaVariantGmo(unittest.TestCase):
             "-27+3T>C",
             "22g>u",
             "48C>W",
-            "22=",
             "122=/T>A",
             "(78+1_79-1)_(124+1_125-1)del",
             "(?_85)_(124_?)del",
@@ -699,10 +799,11 @@ class TestDnaSingleVariant(unittest.TestCase):
             "122-6T>A",
         ]
 
+        cls.valid_strings_cgmo_only = ["22=", "4_6="]
+
         cls.invalid_strings = [
             "22g>u",
             "48C>W",
-            "22=",
             "122=/T>A",
             "(78+1_79-1)_(124+1_125-1)del",
             "(?_85)_(124_?)del",
@@ -720,6 +821,13 @@ class TestDnaSingleVariant(unittest.TestCase):
     def test_valid_strings(self):
         for p in "cngmo":
             for s in self.valid_strings:
+                with self.subTest(s=s, p=p):
+                    v = f"{p}.{s}"
+                    self.assertIsNotNone(
+                        self.pattern.fullmatch(v), msg=f'failed to match "{v}"'
+                    )
+        for p in "cgmo":
+            for s in self.valid_strings_cgmo_only:
                 with self.subTest(s=s, p=p):
                     v = f"{p}.{s}"
                     self.assertIsNotNone(

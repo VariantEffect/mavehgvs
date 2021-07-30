@@ -12,15 +12,19 @@ aa_pos: str = rf"(?:{amino_acid}{pos})"
 """str: Pattern matching an amino acid code followed by a position.
 """
 
-pro_sub: str = rf"(?P<pro_sub>(?:(?P<position>{aa_pos})(?P<new>{amino_acid}|=))|(?P<equal>=)|(?P<equal_sy>\(=\)))"
+pro_equal: str = rf"(?P<pro_equal>(?:(?P<position>{aa_pos})?(?P<equal>=))|(?P<equal_sy>\(=\)))"
+"""str: Pattern matching protein equality or synonymous variant.
+"""
+
+pro_sub: str = rf"(?P<pro_sub>(?P<position>{aa_pos})(?P<new>{amino_acid}))"
 """str: Pattern matching a protein substitution.
 """
 
-pro_del: str = rf"(?P<pro_del>(?:(?P<start>{aa_pos})_(?P<end>{aa_pos})del)|(?:(?P<pos>{aa_pos})del))"
+pro_del: str = rf"(?P<pro_del>(?:(?P<start>{aa_pos})_(?P<end>{aa_pos})del)|(?:(?P<position>{aa_pos})del))"
 """str: Pattern matching a protein deletion.
 """
 
-pro_dup: str = rf"(?P<pro_dup>(?:(?P<start>{aa_pos})_(?P<end>{aa_pos})dup)|(?:(?P<pos>{aa_pos})dup))"
+pro_dup: str = rf"(?P<pro_dup>(?:(?P<start>{aa_pos})_(?P<end>{aa_pos})dup)|(?:(?P<position>{aa_pos})dup))"
 """str: Pattern matching a protein duplication.
 """
 
@@ -28,12 +32,12 @@ pro_ins: str = rf"(?P<pro_ins>(?P<start>{aa_pos})_(?P<end>{aa_pos})ins(?P<seq>{a
 """str: Pattern matching a protein insertion.
 """
 
-pro_delins: str = rf"(?P<pro_delins>(?:(?:(?P<start>{aa_pos})_(?P<end>{aa_pos}))|(?P<pos>{aa_pos}))delins(?P<seq>{amino_acid}+))"
+pro_delins: str = rf"(?P<pro_delins>(?:(?:(?P<start>{aa_pos})_(?P<end>{aa_pos}))|(?P<position>{aa_pos}))delins(?P<seq>{amino_acid}+))"
 """str: Pattern matching a protein deletion-insertion.
 """
 
 pro_variant: str = combine_patterns(
-    [pro_sub, pro_del, pro_dup, pro_ins, pro_delins], None
+    [pro_equal, pro_sub, pro_del, pro_dup, pro_ins, pro_delins], None
 )
 """str: Pattern matching any single protein variant event.
 """

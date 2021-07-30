@@ -12,12 +12,20 @@ class TestObjectCreation(unittest.TestCase):
             (v.position, v.amino_acid, v.intronic_position, v.utr),
             (8, None, None, None),
         )
+        self.assertFalse(v.is_utr())
+        self.assertFalse(v.is_intronic())
+        self.assertFalse(v.is_protein())
+        self.assertFalse(v.is_extended())
 
         v = VariantPosition("92380")
         self.assertTupleEqual(
             (v.position, v.amino_acid, v.intronic_position, v.utr),
             (92380, None, None, None),
         )
+        self.assertFalse(v.is_utr())
+        self.assertFalse(v.is_intronic())
+        self.assertFalse(v.is_protein())
+        self.assertFalse(v.is_extended())
 
     def test_amino_acid(self) -> None:
         v = VariantPosition("Gly8")
@@ -25,12 +33,20 @@ class TestObjectCreation(unittest.TestCase):
             (v.position, v.amino_acid, v.intronic_position, v.utr),
             (8, "Gly", None, None),
         )
+        self.assertFalse(v.is_utr())
+        self.assertFalse(v.is_intronic())
+        self.assertTrue(v.is_protein())
+        self.assertFalse(v.is_extended())
 
         v = VariantPosition("Cys92380")
         self.assertTupleEqual(
             (v.position, v.amino_acid, v.intronic_position, v.utr),
             (92380, "Cys", None, None),
         )
+        self.assertFalse(v.is_utr())
+        self.assertFalse(v.is_intronic())
+        self.assertTrue(v.is_protein())
+        self.assertFalse(v.is_extended())
 
     def test_invalid_strings(self) -> None:
         position_strings = (
@@ -62,12 +78,20 @@ class TestObjectCreation(unittest.TestCase):
             (v.position, v.amino_acid, v.intronic_position, v.utr),
             (8, None, None, True),
         )
+        self.assertTrue(v.is_utr())
+        self.assertFalse(v.is_intronic())
+        self.assertFalse(v.is_protein())
+        self.assertTrue(v.is_extended())
 
         v = VariantPosition("-80")
         self.assertTupleEqual(
             (v.position, v.amino_acid, v.intronic_position, v.utr),
             (-80, None, None, True),
         )
+        self.assertTrue(v.is_utr())
+        self.assertFalse(v.is_intronic())
+        self.assertFalse(v.is_protein())
+        self.assertTrue(v.is_extended())
 
     def test_intron(self) -> None:
         v = VariantPosition("122-6")
@@ -75,35 +99,59 @@ class TestObjectCreation(unittest.TestCase):
             (v.position, v.amino_acid, v.intronic_position, v.utr),
             (122, None, -6, None),
         )
+        self.assertFalse(v.is_utr())
+        self.assertTrue(v.is_intronic())
+        self.assertFalse(v.is_protein())
+        self.assertTrue(v.is_extended())
 
         v = VariantPosition("78+10")
         self.assertTupleEqual(
             (v.position, v.amino_acid, v.intronic_position, v.utr), (78, None, 10, None)
         )
+        self.assertFalse(v.is_utr())
+        self.assertTrue(v.is_intronic())
+        self.assertFalse(v.is_protein())
+        self.assertTrue(v.is_extended())
 
     def test_utr_intron(self) -> None:
         v = VariantPosition("*89+67")
         self.assertTupleEqual(
             (v.position, v.amino_acid, v.intronic_position, v.utr), (89, None, 67, True)
         )
+        self.assertTrue(v.is_utr())
+        self.assertTrue(v.is_intronic())
+        self.assertFalse(v.is_protein())
+        self.assertTrue(v.is_extended())
 
         v = VariantPosition("-127+6")
         self.assertTupleEqual(
             (v.position, v.amino_acid, v.intronic_position, v.utr),
             (-127, None, 6, True),
         )
+        self.assertTrue(v.is_utr())
+        self.assertTrue(v.is_intronic())
+        self.assertFalse(v.is_protein())
+        self.assertTrue(v.is_extended())
 
         v = VariantPosition("*73-105")
         self.assertTupleEqual(
             (v.position, v.amino_acid, v.intronic_position, v.utr),
             (73, None, -105, True),
         )
+        self.assertTrue(v.is_utr())
+        self.assertTrue(v.is_intronic())
+        self.assertFalse(v.is_protein())
+        self.assertTrue(v.is_extended())
 
         v = VariantPosition("-45-1")
         self.assertTupleEqual(
             (v.position, v.amino_acid, v.intronic_position, v.utr),
             (-45, None, -1, True),
         )
+        self.assertTrue(v.is_utr())
+        self.assertTrue(v.is_intronic())
+        self.assertFalse(v.is_protein())
+        self.assertTrue(v.is_extended())
 
 
 class TestObjectRepresentation(unittest.TestCase):

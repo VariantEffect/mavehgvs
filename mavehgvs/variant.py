@@ -24,11 +24,12 @@ class Variant:
     """
 
     VTYPES = (
+        "equal",  # equality
         "sub",  # substitution
         "del",  # deletion
         "dup",  # duplication
         "ins",  # insertion
-        "delins",  # deletion-insertion"
+        "delins",  # deletion-insertion
     )
     """Tuple[str]: variant type tags used in MAVE-HGVS patterns and variant type names.
     """
@@ -67,6 +68,8 @@ class Variant:
         elif isinstance(s, Mapping):  # dictionary-style single variant
             variant_string = self._variant_dictionary_to_string(s, include_prefix=True)
         elif isinstance(s, Sequence):  # dictionary-style multi-variant
+            if not all(isinstance(v, Mapping) for v in s):
+                raise ValueError("multi-variant iterable must contain Mapping objects")
             try:
                 all_prefixes = [v["prefix"] for v in s]
             except KeyError:
@@ -118,7 +121,7 @@ class Variant:
                     vt, p, s = self._process_string_variant(
                         groupdict, relaxed_ordering=relaxed_ordering
                     )
-                    if p is None:  # only the case for target-identical variants
+                    if vt == "equal":
                         raise MaveHgvsParseError(
                             "multi-variants cannot contain target-identical variants"
                         )
@@ -165,7 +168,7 @@ class Variant:
                         return x[1]
                     elif isinstance(x[1], Tuple):
                         return x[1][0]
-                    else:
+                    else:  # pragma: no cover
                         raise ValueError("invalid position type")
 
                 variant_list = list(self.variant_tuples())
@@ -181,7 +184,7 @@ class Variant:
             else:  # pragma: no cover
                 raise ValueError("invalid variant count")
 
-        if targetseq is not None and not self.is_target_identical():
+        if targetseq is not None:
             for vtype, pos, seq in self.variant_tuples():
                 if vtype == "sub":
                     if self._prefix == "p":
@@ -191,6 +194,9 @@ class Variant:
                     self._target_validate_substitution(pos, ref, targetseq)
                 elif vtype in ("ins", "del", "dup", "delins"):
                     self._target_validate_indel(pos, targetseq)
+                elif vtype == "equal":
+                    if pos is not None:
+                        self._target_validate_indel(pos, targetseq)
 
     def variant_tuples(
         self
@@ -271,33 +277,26 @@ class Variant:
 
         # set the position and sequence
         if variant_type == "sub":
-            if (
-                match_dict[f"{pattern_group}_equal"] is not None
-            ):  # special case for target identity
-                sequences = match_dict[f"{pattern_group}_equal"]
-            elif match_dict[f"pro_sub_equal_sy"] is not None:
-                sequences = match_dict[f"pro_sub_equal_sy"]
-            else:
-                positions = VariantPosition(match_dict[f"{pattern_group}_position"])
-                if self._prefix == "p":
-                    sequences = (
-                        positions.amino_acid,
-                        match_dict[f"{pattern_group}_new"],
-                    )
-                elif self._prefix in tuple("gmo" "cn" "r"):
-                    sequences = (
-                        match_dict[f"{pattern_group}_ref"],
-                        match_dict[f"{pattern_group}_new"],
-                    )
-                else:  # pragma: no cover
-                    raise ValueError("unexpected prefix")
-        elif variant_type in ("del", "dup", "ins", "delins"):
+            positions = VariantPosition(match_dict[f"{pattern_group}_position"])
+            if self._prefix == "p":
+                sequences = (positions.amino_acid, match_dict[f"{pattern_group}_new"])
+            elif self._prefix in tuple("gmo" "cn" "r"):
+                sequences = (
+                    match_dict[f"{pattern_group}_ref"],
+                    match_dict[f"{pattern_group}_new"],
+                )
+            else:  # pragma: no cover
+                raise ValueError("unexpected prefix")
+        elif variant_type in ("del", "dup", "ins", "delins", "equal"):
             # set position
             if (
-                match_dict.get(f"{pattern_group}_pos") is not None
+                match_dict.get(f"{pattern_group}_position") is not None
             ):  # use get() since ins pattern doesn't have pos
-                positions = VariantPosition(match_dict[f"{pattern_group}_pos"])
-            else:
+                positions = VariantPosition(match_dict[f"{pattern_group}_position"])
+            elif (
+                match_dict.get(f"{pattern_group}_start") is not None
+                and match_dict.get(f"{pattern_group}_end") is not None
+            ):
                 positions = (
                     VariantPosition(match_dict[f"{pattern_group}_start"]),
                     VariantPosition(match_dict[f"{pattern_group}_end"]),
@@ -313,10 +312,20 @@ class Variant:
                 if variant_type == "ins":
                     if not positions[0].is_adjacent(positions[1]):
                         raise MaveHgvsParseError("insertion positions must be adjacent")
+            else:  # pragma: no cover
+                if variant_type != "equal":
+                    raise MaveHgvsParseError("variant position not found")
 
             # set sequence if needed
             if variant_type in ("ins", "delins"):
                 sequences = match_dict[f"{pattern_group}_seq"]
+            elif variant_type == "equal":
+                if (
+                    match_dict[f"{pattern_group}_equal"] is not None
+                ):  # special case for target identity
+                    sequences = match_dict[f"{pattern_group}_equal"]
+                elif match_dict[f"pro_equal_equal_sy"] is not None:
+                    sequences = match_dict[f"pro_equal_equal_sy"]
 
         return variant_type, positions, sequences
 
@@ -355,7 +364,22 @@ class Variant:
         except KeyError:
             raise MaveHgvsParseError("variant dictionary missing required keys")
 
-        if variant_type == "sub":
+        if variant_type == "equal":
+            expected_keys = ["variant_type", "prefix"]
+            if prefix == "p":
+                expected_keys.extend(["position", "target"])
+            else:
+                expected_keys.extend(["start_position", "end_position"])
+            if sorted(vdict.keys()) != sorted(expected_keys):
+                raise MaveHgvsParseError("variant dictionary contains invalid keys")
+            if prefix == "p":
+                variant_string = f"{vdict['target']}{vdict['position']}="
+            elif vdict["start_position"] == vdict["end_position"]:
+                variant_string = f"{vdict['start_position']}="
+            else:
+                variant_string = f"{vdict['start_position']}_{vdict['end_position']}="
+
+        elif variant_type == "sub":
             if sorted(vdict.keys()) != sorted(
                 ["variant_type", "prefix", "position", "target", "variant"]
             ):
@@ -489,6 +513,13 @@ class Variant:
                     return f"{pos[0]}_{pos[1]}{vtype}{seq}"
                 else:
                     return f"{pos}{vtype}{seq}"
+            elif vtype == "equal":
+                if pos is None:
+                    return f"{seq}"
+                elif isinstance(pos, tuple):
+                    return f"{pos[0]}_{pos[1]}{seq}"
+                else:
+                    return f"{pos}{seq}"
             else:  # pragma: no cover
                 raise ValueError("invalid variant type")
 
@@ -497,14 +528,11 @@ class Variant:
         else:
             prefix = f"{self._prefix}"
 
-        if self.is_target_identical():
-            return f"{prefix}.{self._sequences}"
+        elements = [format_variant(*t) for t in self.variant_tuples()]
+        if self.is_multi_variant():
+            return f"{prefix}.[{';'.join(elements)}]"
         else:
-            elements = [format_variant(*t) for t in self.variant_tuples()]
-            if self.is_multi_variant():
-                return f"{prefix}.[{';'.join(elements)}]"
-            else:
-                return f"{prefix}.{elements[0]}"
+            return f"{prefix}.{elements[0]}"
 
     @staticmethod
     def _target_validate_substitution(
@@ -592,13 +620,35 @@ class Variant:
         This is the variant described with only the equals sign (e.g. ``c.=``)
         or the uncertain equals protein variant (e.g. ``p.(=)``).
 
+        Coding or genomic variants that specify an identical region (e.g. ``c.1_3=`` are also considered target
+        identical.
+
+        Synonymous protein variants (e.g. ``p.Leu12=``) are not considered target identical.
+
         Returns
         -------
         bool
             True if this variant describes the wild-type or target sequence; else False.
 
         """
-        return self._positions is None
+        if self._variant_types == "equal":
+            if self._prefix == "p":
+                return self._positions is None
+            else:
+                return True
+        else:
+            return False
+
+    def is_synonymous(self) -> bool:
+        """Return whether the variant describes a synonymous protein variant or is the special synonymous variant.
+
+        Returns
+        -------
+        bool
+            True if this variant describes a synonymous protein variant; else False.
+
+        """
+        return self._variant_types == "equal" and self._prefix == "p"
 
     def is_multi_variant(self) -> bool:
         """Return whether the variant is a multi-variant.
