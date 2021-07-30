@@ -143,7 +143,11 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
                 self.assertEqual(s, str(v))
 
     def test_target_identical(self) -> None:
-        identical_variant_strings = [*[f"{prefix}.=" for prefix in tuple("gmo" "cn" "r")], "p.(=)", "c.1_3="]
+        identical_variant_strings = [
+            *[f"{prefix}.=" for prefix in tuple("gmo" "cn" "r")],
+            "p.(=)",
+            "c.1_3=",
+        ]
 
         non_identical_variant_strings = [
             "p.Ter345Lys",
@@ -165,17 +169,9 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
                 self.assertFalse(v.is_target_identical())
 
     def test_synonymous(self) -> None:
-        synonymous_variant_strings = [
-            "p.Gly24=",
-            "p.=",
-            "p.(=)",
-        ]
+        synonymous_variant_strings = ["p.Gly24=", "p.=", "p.(=)"]
 
-        nonsynonymous_variant_strings = [
-            "p.Ter345Lys",
-            "c.=",
-            "g.48C>A",
-        ]
+        nonsynonymous_variant_strings = ["p.Ter345Lys", "c.=", "g.48C>A"]
 
         for s in synonymous_variant_strings:
             with self.subTest(s=s):
@@ -488,18 +484,8 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
 
     def test_missing_keys(self):
         invalid_dicts = [
-            {
-                "prefix": "p",
-                "position": 27,
-                "target": "Glu",
-                "variant": "Trp",
-            },
-            {
-                "variant_type": "sub",
-                "position": "122-6",
-                "target": "T",
-                "variant": "A",
-            },
+            {"prefix": "p", "position": 27, "target": "Glu", "variant": "Trp"},
+            {"variant_type": "sub", "position": "122-6", "target": "T", "variant": "A"},
             {
                 "variant_type": "delins",
                 "prefix": "p",
@@ -524,11 +510,7 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
                 "end_position": "27",
                 "target": "Glu",
             },
-            {
-                "variant_type": "dup",
-                "prefix": "c",
-                "position": 77,
-            },
+            {"variant_type": "dup", "prefix": "c", "position": 77},
             {
                 "variant_type": "test",
                 "prefix": "c",
@@ -849,7 +831,7 @@ class TestMiscMethods(unittest.TestCase):
             "p.Ile71_Cys80delinsSer",
             "p.=",
             "p.[Pro12_Gly18dup;Glu27Trp]",
-            "r.[22g>u;35del]"
+            "r.[22g>u;35del]",
         ]
 
         extended_variant_strings = [
