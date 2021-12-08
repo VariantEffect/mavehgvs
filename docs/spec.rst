@@ -53,7 +53,6 @@ MAVE-HGVS supports a subset of HGVS variants including:
 Many HGVS variants are unsupported including:
 
 * inversions
-* conversions
 * extensions
 * changes in methylation state
 * RNA fusion transcripts
