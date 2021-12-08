@@ -135,8 +135,9 @@ MAVE-HGVS supports substitutions of a single nucleotide or amino acid.
 MAVE-HGVS does not support extension variants, which extend an amino acid sequence to the N- or C- terminal end
 (e.g. :code:`p.Met1ext-4` for gain of an upstream start or :code:`p.Ter345Lysext5` for a new downstream termination
 codon).
-Variants that result in an N-terminal extension should use `Insertion`_ syntax and variants that remove a termination
-codon should be written as standard substitution variants.
+Variants that remove a termination codon should be written as standard substitution variants.
+Variants that result in an N-terminal extension are currently undefined,
+but have not been observed in the MAVE literature at the time of writing.
 
 Substitutions of more than one base at a time are covered under `Deletion-Insertion`_.
 
