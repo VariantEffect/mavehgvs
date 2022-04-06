@@ -7,7 +7,7 @@ __all__ = ["parse_variant_strings"]
 
 
 def parse_variant_strings(
-    variants: List[str]
+    variants: List[str],
 ) -> Tuple[List[Optional[Variant]], List[Optional[str]]]:
     """Parse a list of MAVE-HGVS strings into Variant objects or error messages.
 
