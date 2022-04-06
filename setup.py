@@ -12,7 +12,7 @@ if sys.version_info.major == 3 and sys.version_info.minor == 6:
 setuptools.setup(
     name="mavehgvs",
     version="0.4.0",
-    author="Daniel Esposito and Alan F Rubin",
+    author="MaveDB Developers",
     author_email="alan.rubin@wehi.edu.au",
     description=(
         "Regular expression-based validation of HGVS-style variant strings for Multiplexed Assays of Variant Effect."
