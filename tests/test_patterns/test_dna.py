@@ -1,5 +1,6 @@
 import unittest
 import re
+import itertools
 from mavehgvs.patterns.dna import (
     dna_equal_c,
     dna_equal_n,
@@ -873,9 +874,135 @@ class TestDnaSingleVariant(unittest.TestCase):
 
 
 class TestDnaMultiVariant(unittest.TestCase):
-    @unittest.expectedFailure
-    def test_something(self):
-        self.assertEqual(True, False)
+    @classmethod
+    def build_multi_variants(cls, single_strings, max=5):
+        """Generate a semicolon-separated list of all possible multivariants of length 2 to max, inclusive."""
+        multi_variants = list()
+        for i in range(2, max + 1):
+            multi_variants.extend(
+                ";".join(x) for x in itertools.combinations(single_strings, i)
+            )
+        return multi_variants
+
+    @classmethod
+    def setUpClass(cls):
+        cls.pattern = re.compile(dna_multi_variant, flags=re.ASCII)
+
+        single_valid_strings = [
+            "48C>A",
+            "=",
+            "44del",
+            "1_95del",
+            "22_24dup",
+            "77dup",
+            "234_235insT",
+            "84_85insCTG",
+            "22delinsAACG",
+            "83_85delinsT",
+        ]
+
+        single_valid_strings_c_only = [
+            "*788delinsA",
+            "-25+1_-25+3dup",
+            "*17dup",
+            "-25+1_-25+3del",
+            "*17del",
+            "*24G>C",
+            "-27+3T>C",
+        ]
+
+        single_valid_strings_cn_only = [
+            "43-6_595+12delinsCTT",
+            "99+6_99+7insA",
+            "101+1_101+7dup",
+            "78+5_78+10del",
+            "19+22A>G",
+            "122-6T>A",
+        ]
+
+        single_valid_strings_cgmo_only = ["22=", "4_6="]
+
+        single_invalid_strings = [
+            "22g>u",
+            "48C>W",
+            "122=/T>A",
+            "(78+1_79-1)_(124+1_125-1)del",
+            "(?_85)_(124_?)del",
+            "122=/del",
+            "(78+1_79-1)_(124+1_125-1)dup",
+            "(?_85)_(124_?)dup",
+            "122_125=//dup",
+            "84_85ins100_125",
+            "234_235ins(10)",
+            "234_235ins(?)",
+            "84_85delinsAAN",
+            "234delinsW",
+        ]
+
+        cls.valid_strings = cls.build_multi_variants(single_valid_strings)
+        cls.valid_strings_c_only = cls.build_multi_variants(single_valid_strings_c_only)
+        cls.valid_strings_cn_only = cls.build_multi_variants(
+            single_valid_strings_cn_only
+        )
+        cls.valid_strings_cgmo_only = cls.build_multi_variants(
+            single_valid_strings_cgmo_only
+        )
+        cls.invalid_strings = (
+            cls.build_multi_variants(single_invalid_strings) + single_valid_strings
+        )
+
+    def test_valid_strings(self):
+        for p in "cngmo":
+            for s in self.valid_strings:
+                with self.subTest(s=s, p=p):
+                    v = f"{p}.[{s}]"
+                    self.assertIsNotNone(
+                        self.pattern.fullmatch(v), msg=f'failed to match "{v}"'
+                    )
+        for p in "cgmo":
+            for s in self.valid_strings_cgmo_only:
+                with self.subTest(s=s, p=p):
+                    v = f"{p}.[{s}]"
+                    self.assertIsNotNone(
+                        self.pattern.fullmatch(v), msg=f'failed to match "{v}"'
+                    )
+        for p in "cn":
+            for s in self.valid_strings_cn_only:
+                with self.subTest(s=s, p=p):
+                    v = f"{p}.[{s}]"
+                    self.assertIsNotNone(
+                        self.pattern.fullmatch(v), msg=f'failed to match "{v}"'
+                    )
+        for p in "c":
+            for s in self.valid_strings_c_only:
+                with self.subTest(s=s, p=p):
+                    v = f"{p}.[{s}]"
+                    self.assertIsNotNone(
+                        self.pattern.fullmatch(v), msg=f'failed to match "{v}"'
+                    )
+
+    def test_invalid_strings(self):
+        for p in "cngmo":
+            for s in self.invalid_strings:
+                with self.subTest(s=s, p=p):
+                    v = f"{p}.[{s}]"
+                    self.assertIsNone(
+                        self.pattern.fullmatch(v), msg=f'incorrectly matched "{v}"'
+                    )
+        for p in "gmo":
+            for s in self.valid_strings_cn_only:
+                with self.subTest(s=s, p=p):
+                    v = f"{p}.[{s}]"
+                    self.assertIsNone(
+                        self.pattern.fullmatch(v), msg=f'incorrectly matched "{v}"'
+                    )
+        for p in "n":
+            for s in self.valid_strings_c_only:
+                with self.subTest(s=s, p=p):
+                    v = f"{p}.[{s}]"
+                    self.assertIsNone(
+                        self.pattern.fullmatch(v), msg=f'incorrectly matched "{v}"'
+                    )
 
 
 if __name__ == "__main__":
