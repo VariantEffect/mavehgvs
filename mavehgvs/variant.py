@@ -522,6 +522,8 @@ class Variant:
                     return f"{pos}{seq[1]}"
                 else:  # nucleotide variant
                     return f"{pos}{seq[0]}>{seq[1]}"
+            elif vtype == "fs":
+                return f"{pos}fs"
             elif vtype in ("del", "dup"):
                 if isinstance(pos, tuple):
                     return f"{pos[0]}_{pos[1]}{vtype}"
