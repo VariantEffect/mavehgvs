@@ -18,7 +18,7 @@ AA_3_TO_1 = {value: key for key, value in AA_CODES.items()}
 class Variant:
     fullmatch = re.compile(any_variant, flags=re.ASCII).fullmatch
     """Callable[[str, int, int], Optional[Match[str]]]: fullmatch callable for parsing a single MAVE-HGVS variant
-    
+
     Returns an :py:obj:`re.Match` object if the full string defines a valid MAVE-HGVS variant.
     Match groups in the result can be used to extract components of the variant.
     """
@@ -105,7 +105,11 @@ class Variant:
                 raise ValueError("invalid match type")
 
             if self.variant_count == 1:
-                self._variant_types, self._positions, self._sequences = self._process_string_variant(
+                (
+                    self._variant_types,
+                    self._positions,
+                    self._sequences,
+                ) = self._process_string_variant(
                     match_dict, relaxed_ordering=relaxed_ordering
                 )
             elif self.variant_count > 1:
@@ -199,7 +203,7 @@ class Variant:
                         self._target_validate_indel(pos, targetseq)
 
     def variant_tuples(
-        self
+        self,
     ) -> Generator[
         Tuple[
             str,
@@ -740,7 +744,7 @@ class Variant:
 
     @property
     def positions(
-        self
+        self,
     ) -> Optional[
         Union[
             VariantPosition,
@@ -763,7 +767,7 @@ class Variant:
 
     @property
     def sequence(
-        self
+        self,
     ) -> Optional[
         Union[str, Tuple[str, str], List[Optional[Union[str, Tuple[str, str]]]]]
     ]:

@@ -12,7 +12,9 @@ aa_pos: str = rf"(?:{amino_acid}{pos})"
 """str: Pattern matching an amino acid code followed by a position.
 """
 
-pro_equal: str = rf"(?P<pro_equal>(?:(?P<position>{aa_pos})?(?P<equal>=))|(?P<equal_sy>\(=\)))"
+pro_equal: str = (
+    rf"(?P<pro_equal>(?:(?P<position>{aa_pos})?(?P<equal>=))|(?P<equal_sy>\(=\)))"
+)
 """str: Pattern matching protein equality or synonymous variant.
 """
 
@@ -28,7 +30,9 @@ pro_dup: str = rf"(?P<pro_dup>(?:(?P<start>{aa_pos})_(?P<end>{aa_pos})dup)|(?:(?
 """str: Pattern matching a protein duplication.
 """
 
-pro_ins: str = rf"(?P<pro_ins>(?P<start>{aa_pos})_(?P<end>{aa_pos})ins(?P<seq>{amino_acid}+))"
+pro_ins: str = (
+    rf"(?P<pro_ins>(?P<start>{aa_pos})_(?P<end>{aa_pos})ins(?P<seq>{amino_acid}+))"
+)
 """str: Pattern matching a protein insertion.
 """
 

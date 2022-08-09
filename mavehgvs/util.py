@@ -1,4 +1,4 @@
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Iterable
 
 from mavehgvs.variant import Variant
 from mavehgvs.exceptions import MaveHgvsParseError
@@ -7,7 +7,7 @@ __all__ = ["parse_variant_strings"]
 
 
 def parse_variant_strings(
-    variants: List[str],
+    variants: Iterable[str],
     targetseq: Optional[str] = None,
     expected_prefix: Optional[str] = None,
 ) -> Tuple[List[Optional[Variant]], List[Optional[str]]]:
@@ -15,8 +15,8 @@ def parse_variant_strings(
 
     Parameters
     ----------
-    variants : List[str]
-        List of MAVE-HGVS strings to parse.
+    variants : Iterable[str]
+        Iterable of MAVE-HGVS strings to parse.
 
     targetseq : Optional[str]
         If provided, all variants will be validated for agreement with this sequence.

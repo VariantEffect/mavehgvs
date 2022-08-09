@@ -12,7 +12,9 @@ rna_equal: str = rf"(?P<rna_equal>(?:(?:(?P<start>{pos_intron})_(?P<end>{pos_int
 """str: Pattern matching RNA equality with numeric or relative-to-transcript positions.
 """
 
-rna_sub: str = rf"(?P<rna_sub>(?P<position>{pos_intron})(?P<ref>{rna_nt})>(?P<new>{rna_nt}))"
+rna_sub: str = (
+    rf"(?P<rna_sub>(?P<position>{pos_intron})(?P<ref>{rna_nt})>(?P<new>{rna_nt}))"
+)
 """str: Pattern matching a RNA substitution with numeric or relative-to-transcript positions.
 """
 
@@ -20,11 +22,13 @@ rna_del: str = rf"(?P<rna_del>(?:(?:(?P<start>{pos_intron})_(?P<end>{pos_intron}
 """str: Pattern matching a RNA deletion with numeric or relative-to-transcript positions.
 """
 
-rna_dup: str = rf"(?P<rna_dup>(?:(?:(?P<start>{pos_intron})_(?P<end>{pos_intron})dup)|(?P<position>{pos_intron}))dup)"
+rna_dup: str = rf"(?P<rna_dup>(?:(?:(?P<start>{pos_intron})_(?P<end>{pos_intron}))|(?P<position>{pos_intron}))dup)"
 """str: Pattern matching a RNA duplication with numeric or relative-to-transcript positions.
 """
 
-rna_ins: str = rf"(?P<rna_ins>(?P<start>{pos_intron})_(?P<end>{pos_intron})ins(?P<seq>{rna_nt}+))"
+rna_ins: str = (
+    rf"(?P<rna_ins>(?P<start>{pos_intron})_(?P<end>{pos_intron})ins(?P<seq>{rna_nt}+))"
+)
 """str: Pattern matching a RNA insertion with numeric or relative-to-transcript positions.
 """
 
