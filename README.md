@@ -9,7 +9,7 @@ a strict subset of [HGVS](http://varnomen.hgvs.org/), used primarily for clinica
 ## The MAVE-HGVS Standard
 MAVE-HGVS is a strict subset of the [HGVS Sequence Variant Nomenclature](https://varnomen.hgvs.org/), version 20.05.
 HGVS nomenclature is comprehensive and very expressive and consequently includes a lot of syntax that is not needed to
-represent variants from Multiplexed Assay of Variant Effect (MAVE) data and makes the variant strings more challenging 
+represent variants from Multiplexed Assay of Variant Effect (MAVE) data and makes the variant strings more challenging
 to parse.
 
 While packages exist for parsing HGVS (most notably the
