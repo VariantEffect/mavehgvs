@@ -22,6 +22,10 @@ pro_sub: str = rf"(?P<pro_sub>(?P<position>{aa_pos})(?P<new>{amino_acid}))"
 """str: Pattern matching a protein substitution.
 """
 
+pro_fs: str = rf"(?P<pro_fs>(?P<position>{aa_pos})fs)"
+"""str: Pattern matching a protein substitution.
+"""
+
 pro_del: str = rf"(?P<pro_del>(?:(?P<start>{aa_pos})_(?P<end>{aa_pos})del)|(?:(?P<position>{aa_pos})del))"
 """str: Pattern matching a protein deletion.
 """
@@ -41,7 +45,7 @@ pro_delins: str = rf"(?P<pro_delins>(?:(?:(?P<start>{aa_pos})_(?P<end>{aa_pos}))
 """
 
 pro_variant: str = combine_patterns(
-    [pro_equal, pro_sub, pro_del, pro_dup, pro_ins, pro_delins], None
+    [pro_equal, pro_sub, pro_fs, pro_del, pro_dup, pro_ins, pro_delins], None
 )
 """str: Pattern matching any single protein variant event.
 """
