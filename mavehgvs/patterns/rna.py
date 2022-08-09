@@ -22,7 +22,7 @@ rna_del: str = rf"(?P<rna_del>(?:(?:(?P<start>{pos_intron})_(?P<end>{pos_intron}
 """str: Pattern matching a RNA deletion with numeric or relative-to-transcript positions.
 """
 
-rna_dup: str = rf"(?P<rna_dup>(?:(?:(?P<start>{pos_intron})_(?P<end>{pos_intron})dup)|(?P<position>{pos_intron}))dup)"
+rna_dup: str = rf"(?P<rna_dup>(?:(?:(?P<start>{pos_intron})_(?P<end>{pos_intron}))|(?P<position>{pos_intron}))dup)"
 """str: Pattern matching a RNA duplication with numeric or relative-to-transcript positions.
 """
 
