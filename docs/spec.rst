@@ -120,6 +120,7 @@ Examples of valid equality variants:
 
 * c.=
 * c.22=
+* c.1_3=
 * g.123=
 * p.Cys22=
 * p.(=)
