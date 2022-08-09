@@ -852,7 +852,7 @@ class TestTargetSequenceValidation(unittest.TestCase):
     def test_nonmatching_protein_indel(self):
         variant_tuples = [
             ("RCQY", "p.Cys1del"),
-            ("RCQY", "p.Arg1_Gln3dup"),
+            ("RCQY", "p.Arg1_Asp3dup"),
             ("RCQY", "p.Asp5del"),
         ]
 
