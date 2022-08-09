@@ -1,6 +1,5 @@
 import unittest
 import re
-import itertools
 from mavehgvs.patterns.dna import (
     dna_equal_c,
     dna_equal_n,
@@ -26,6 +25,7 @@ from mavehgvs.patterns.dna import (
     dna_single_variant,
     dna_multi_variant,
 )
+from . import build_multi_variants
 
 
 class TestDnaEqualC(unittest.TestCase):
@@ -857,6 +857,13 @@ class TestDnaSingleVariant(unittest.TestCase):
                     self.assertIsNone(
                         self.pattern.fullmatch(v), msg=f'incorrectly matched "{v}"'
                     )
+        for p in "ngmo":
+            for s in self.valid_strings_c_only:
+                with self.subTest(s=s, p=p):
+                    v = f"{p}.{s}"
+                    self.assertIsNone(
+                        self.pattern.fullmatch(v), msg=f'incorrectly matched "{v}"'
+                    )
         for p in "gmo":
             for s in self.valid_strings_cn_only:
                 with self.subTest(s=s, p=p):
@@ -865,7 +872,7 @@ class TestDnaSingleVariant(unittest.TestCase):
                         self.pattern.fullmatch(v), msg=f'incorrectly matched "{v}"'
                     )
         for p in "n":
-            for s in self.valid_strings_c_only:
+            for s in self.valid_strings_cgmo_only:
                 with self.subTest(s=s, p=p):
                     v = f"{p}.{s}"
                     self.assertIsNone(
@@ -874,16 +881,6 @@ class TestDnaSingleVariant(unittest.TestCase):
 
 
 class TestDnaMultiVariant(unittest.TestCase):
-    @classmethod
-    def build_multi_variants(cls, single_strings, max=5):
-        """Generate a semicolon-separated list of all possible multivariants of length 2 to max, inclusive."""
-        multi_variants = list()
-        for i in range(2, max + 1):
-            multi_variants.extend(
-                ";".join(x) for x in itertools.combinations(single_strings, i)
-            )
-        return multi_variants
-
     @classmethod
     def setUpClass(cls):
         cls.pattern = re.compile(dna_multi_variant, flags=re.ASCII)
@@ -939,16 +936,17 @@ class TestDnaMultiVariant(unittest.TestCase):
             "234delinsW",
         ]
 
-        cls.valid_strings = cls.build_multi_variants(single_valid_strings)
-        cls.valid_strings_c_only = cls.build_multi_variants(single_valid_strings_c_only)
-        cls.valid_strings_cn_only = cls.build_multi_variants(
-            single_valid_strings_cn_only
+        cls.valid_strings, cls.invalid_strings = build_multi_variants(
+            single_valid_strings, single_invalid_strings
         )
-        cls.valid_strings_cgmo_only = cls.build_multi_variants(
-            single_valid_strings_cgmo_only
+        cls.valid_strings_c_only, cls.invalid_strings_ngmo = build_multi_variants(
+            single_valid_strings_c_only, single_valid_strings_c_only
         )
-        cls.invalid_strings = (
-            cls.build_multi_variants(single_invalid_strings) + single_valid_strings
+        cls.valid_strings_cn_only, cls.invalid_strings_gmo = build_multi_variants(
+            single_valid_strings_cn_only, single_valid_strings_cn_only
+        )
+        cls.valid_strings_cgmo_only, cls.invalid_strings_n = build_multi_variants(
+            single_valid_strings_cgmo_only, single_valid_strings_cgmo_only
         )
 
     def test_valid_strings(self):
@@ -989,15 +987,22 @@ class TestDnaMultiVariant(unittest.TestCase):
                     self.assertIsNone(
                         self.pattern.fullmatch(v), msg=f'incorrectly matched "{v}"'
                     )
+        for p in "ngmo":
+            for s in self.invalid_strings_ngmo:
+                with self.subTest(s=s, p=p):
+                    v = f"{p}.[{s}]"
+                    self.assertIsNone(
+                        self.pattern.fullmatch(v), msg=f'incorrectly matched "{v}"'
+                    )
         for p in "gmo":
-            for s in self.valid_strings_cn_only:
+            for s in self.invalid_strings_gmo:
                 with self.subTest(s=s, p=p):
                     v = f"{p}.[{s}]"
                     self.assertIsNone(
                         self.pattern.fullmatch(v), msg=f'incorrectly matched "{v}"'
                     )
         for p in "n":
-            for s in self.valid_strings_c_only:
+            for s in self.invalid_strings_n:
                 with self.subTest(s=s, p=p):
                     v = f"{p}.[{s}]"
                     self.assertIsNone(
