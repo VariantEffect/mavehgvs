@@ -296,7 +296,7 @@ class Variant:
                 )
             else:  # pragma: no cover
                 raise ValueError("unexpected prefix")
-        elif variant_type in ("del", "dup", "ins", "delins", "equal"):
+        elif variant_type in ("equal", "fs", "del", "dup", "ins", "delins"):
             # set position
             if (
                 match_dict.get(f"{pattern_group}_position") is not None
@@ -387,7 +387,6 @@ class Variant:
                 variant_string = f"{vdict['start_position']}="
             else:
                 variant_string = f"{vdict['start_position']}_{vdict['end_position']}="
-
         elif variant_type == "sub":
             if sorted(vdict.keys()) != sorted(
                 ["variant_type", "prefix", "position", "target", "variant"]
@@ -400,6 +399,17 @@ class Variant:
             else:
                 variant_string = (
                     f"{vdict['position']}{vdict['target']}>{vdict['variant']}"
+                )
+        elif variant_type == "fs":
+            if sorted(vdict.keys()) != sorted(
+                ["variant_type", "prefix", "position", "target"]
+            ):
+                raise MaveHgvsParseError("variant dictionary contains invalid keys")
+            if prefix == "p":
+                variant_string = f"{vdict['target']}{vdict['position']}fs"
+            else:
+                raise MaveHgvsParseError(
+                    "frame shifts are only supported for protein variants"
                 )
         elif variant_type in ("del", "dup"):
             expected_keys = ["variant_type", "prefix", "start_position", "end_position"]
