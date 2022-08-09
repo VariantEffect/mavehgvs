@@ -26,6 +26,7 @@ class Variant:
     VTYPES = (
         "equal",  # equality
         "sub",  # substitution
+        "fs",  # frame shift
         "del",  # deletion
         "dup",  # duplication
         "ins",  # insertion
@@ -260,11 +261,15 @@ class Variant:
         if self._prefix == "p":
             pattern_group_tuples = [(f"pro_{t}", t) for t in self.VTYPES]
         elif self._prefix == "r":
-            pattern_group_tuples = [(f"rna_{t}", t) for t in self.VTYPES]
+            pattern_group_tuples = [(f"rna_{t}", t) for t in self.VTYPES if t != "fs"]
         elif self._prefix in tuple("cn"):
-            pattern_group_tuples = [(f"dna_{t}_{self._prefix}", t) for t in self.VTYPES]
+            pattern_group_tuples = [
+                (f"dna_{t}_{self._prefix}", t) for t in self.VTYPES if t != "fs"
+            ]
         elif self._prefix in tuple("gmo"):
-            pattern_group_tuples = [(f"dna_{t}_gmo", t) for t in self.VTYPES]
+            pattern_group_tuples = [
+                (f"dna_{t}_gmo", t) for t in self.VTYPES if t != "fs"
+            ]
         else:  # pragma: no cover
             raise ValueError("unexpected prefix")
 
