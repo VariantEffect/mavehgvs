@@ -45,10 +45,10 @@ Multi-variants are represented as a semicolon-separated list of valid MAVE-HGVS 
 MAVE-HGVS supports a subset of HGVS variants including:
 
 * substitutions
+* frame shifts
 * deletions
 * duplications
 * insertions
-* frame shifts
 
 Many HGVS variants are unsupported including:
 
@@ -116,7 +116,7 @@ This replaces the `Enrich2 <https://doi.org/10.1186/s13059-017-1272-5>`_  :code:
    resulting in duplicate protein variants in the multi-variant.
    This should also be considered invalid.
 
-Examples of valid equality variants include:
+Examples of valid equality variants:
 
 * c.=
 * c.22=
@@ -140,7 +140,7 @@ but have not been observed in the MAVE literature at the time of writing.
 
 Substitutions of more than one base at a time are covered under `Deletion-Insertion`_.
 
-Examples of valid substitutions include:
+Examples of valid substitutions:
 
 * g.48C>A
 * c.122-6T>A
@@ -159,6 +159,24 @@ Examples of valid HGVS substitutions that are invalid in MAVE-HGVS:
 * p.Glu23Xaa
 * r.spl
 
+Frame Shift
+-----------
+
+MAVE-HGVS supports a simplified syntax to describe frame shifts in protein variants.
+Multi-variants that include multiple frame shifts or a second variant after a frame shift are considered invalid.
+
+Examples of valid frame shift variants:
+
+* p.Glu27fs
+* p.Asp125fs
+
+Examples of valid HGVS frame shift variants that are invalid in MAVE-HGVS:
+
+* p.Arg12LysfsTer18
+* p.Arg12Lysfs*18
+* p.Glu27fs*?
+* p.(Glu27fs)
+
 Deletion
 --------
 
@@ -170,7 +188,7 @@ cannot be represented with uncertainty.
 To represent a deletion of a sequence including the start or end of the target, specify the deletion exactly as if it
 extended to the first or last position.
 
-Examples of valid deletions include:
+Examples of valid deletions:
 
 * g.44del
 * c.78+5_78+10del
@@ -194,7 +212,7 @@ Duplication
 MAVE-HGVS supports duplications of one or more nucleotides or amino acids.
 The syntax is the same as HGVS.
 
-Examples of valid duplications include:
+Examples of valid duplications:
 
 * g.22_24dup
 * c.77dup
@@ -225,7 +243,7 @@ MAVE-HGVS.
 To describe an insertion at the end of the target sequence, use a :ref:`Deletion-Insertion` variant that deletes
 the last base or amino acid in the target and inserts the deleted symbol plus the insertion.
 
-Examples of valid insertions include:
+Examples of valid insertions:
 
 * g.234_235insT
 * c.84_85insCTG
@@ -254,7 +272,7 @@ MAVE-HGVS supports deletion-insertions of a specified nucleotide or amino acid s
 Deletion-insertions of a number of unspecified bases or amino acids or insertions using ambiguity characters
 (e.g. N or Xaa) are not supported. This includes deletion-insertions with uncertain breakpoints.
 
-Examples of valid deletion-insertions include:
+Examples of valid deletion-insertions:
 
 * g.22delinsAACG
 * c.83_85delinsT

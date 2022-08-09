@@ -25,6 +25,7 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
             "c.12=",
             "g.88_99=",
             "c.43-6_595+12=",
+            "p.Glu27fs",
         ]
 
         invalid_variant_strings = [
@@ -47,6 +48,8 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
             "c.(=)",
             "p.(Gly24=)",
             "p.Gly24(=)",
+            "p.Arg12LysfsTer18",
+            "p.Glu27fs*?",
         ]
 
         for s in valid_variant_strings:
@@ -76,6 +79,14 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
             "g.88_99=",
             "c.43-6_595+12=",
         ]
+
+        for s in variant_strings:
+            with self.subTest(s=s):
+                v = Variant(s)
+                self.assertEqual(s, str(v))
+
+    def test_fs(self) -> None:
+        variant_strings = ["p.Glu27fs"]
 
         for s in variant_strings:
             with self.subTest(s=s):
@@ -206,6 +217,7 @@ class TestCreateMultiVariantFromString(unittest.TestCase):
     def test_creation(self):
         variant_strings = [
             "p.[Glu27Trp;Ter345Lys]",
+            "p.[Glu27Trp;Lys212fs]",
             "p.[Gly18del;Glu27Trp;Ter345Lys]",
             "p.[Gln7_Asn19del;Glu27Trp;Ter345Lys]",
             "c.[1_35del;78+5_78+10del;122T>A]",
@@ -216,6 +228,8 @@ class TestCreateMultiVariantFromString(unittest.TestCase):
             "p.[(=);Gly18del;Glu27Trp;Ter345Lys]",
             "c.[12T>A;=;78+5_78+10del]",
             "c.[1_3=;12T>A;78+5_78+10del]",
+            "p.[Glu27fs;Arg48Lys]",
+            "p.[Glu27fs;Arg48fs]",
         ]
 
         for s in variant_strings:
@@ -327,6 +341,23 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
                     "variant": "A",
                 },
                 "c.122-6T>A",
+            ),
+        ]
+
+        for d, s in valid_dict_tuples:
+            with self.subTest(d=d, s=s):
+                self.assertEqual(Variant(s), Variant(d))
+
+    def test_fs(self):
+        valid_dict_tuples = [
+            (
+                {
+                    "variant_type": "fs",
+                    "prefix": "p",
+                    "position": 27,
+                    "target": "Glu",
+                },
+                "p.Glu27fs",
             ),
         ]
 
@@ -517,6 +548,12 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
                 "start_position": 77,
                 "end_position": 77,
             },
+            {
+                "variant_type": "fs",
+                "prefix": "c",
+                "position": "12",
+                "target": "T",
+            },
         ]
 
         for d in invalid_dicts:
@@ -624,6 +661,22 @@ class TestCreateMultiVariantFromValues(unittest.TestCase):
 
 
 class TestTargetSequenceValidation(unittest.TestCase):
+    def test_valid_dna_equal(self):
+        variant_tuples = [("ACGT", "c.1_2="), ("ACGT", "c.4="), ("ACGT", "c.=")]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                v = Variant(s, targetseq=target)
+                self.assertEqual(s, str(v))
+
+    def test_invalid_dna_equal(self):
+        variant_tuples = [("ACGT", "c.4_5="), ("ACGT", "c.10=")]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                with self.assertRaises(MaveHgvsParseError):
+                    Variant(s, targetseq=target)
+
     def test_matching_dna_substitution(self):
         variant_tuples = [
             ("ACGT", "c.1A>T"),
@@ -643,22 +696,6 @@ class TestTargetSequenceValidation(unittest.TestCase):
             ("ACGT", "c.[1A>T;3T>C]"),
             ("ACGT", "c.5A>G"),
         ]
-
-        for target, s in variant_tuples:
-            with self.subTest(target=target, s=s):
-                with self.assertRaises(MaveHgvsParseError):
-                    Variant(s, targetseq=target)
-
-    def test_valid_dna_equal(self):
-        variant_tuples = [("ACGT", "c.1_2="), ("ACGT", "c.4="), ("ACGT", "c.=")]
-
-        for target, s in variant_tuples:
-            with self.subTest(target=target, s=s):
-                v = Variant(s, targetseq=target)
-                self.assertEqual(s, str(v))
-
-    def test_invalid_dna_equal(self):
-        variant_tuples = [("ACGT", "c.4_5="), ("ACGT", "c.10=")]
 
         for target, s in variant_tuples:
             with self.subTest(target=target, s=s):
@@ -737,6 +774,22 @@ class TestTargetSequenceValidation(unittest.TestCase):
                 with self.assertRaises(MaveHgvsParseError):
                     Variant(s, targetseq=target)
 
+    def test_valid_protein_equal(self):
+        variant_tuples = [("RCQY", "p.Arg1="), ("RCQY", "p.Tyr4="), ("RCQY", "p.=")]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                v = Variant(s, targetseq=target)
+                self.assertEqual(s, str(v))
+
+    def test_invalid_protein_equal(self):
+        variant_tuples = [("RCQY", "p.Trp5=")]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                with self.assertRaises(MaveHgvsParseError):
+                    Variant(s, targetseq=target)
+
     def test_matching_protein_substitution(self):
         variant_tuples = [
             ("RCQY", "p.Arg1Ala"),
@@ -762,16 +815,46 @@ class TestTargetSequenceValidation(unittest.TestCase):
                 with self.assertRaises(MaveHgvsParseError):
                     Variant(s, targetseq=target)
 
-    def test_valid_protein_equal(self):
-        variant_tuples = [("RCQY", "p.Arg1="), ("RCQY", "p.Tyr4="), ("RCQY", "p.=")]
+    def test_matching_protein_fs(self):
+        variant_tuples = [
+            ("RCQY", "p.Arg1fs"),
+            ("RCQY", "p.Gln3fs"),
+        ]
 
         for target, s in variant_tuples:
             with self.subTest(target=target, s=s):
                 v = Variant(s, targetseq=target)
                 self.assertEqual(s, str(v))
 
-    def test_invalid_protein_equal(self):
-        variant_tuples = [("RCQY", "p.Trp5=")]
+    def test_nonmatching_protein_fs(self):
+        variant_tuples = [
+            ("RCQY", "p.Cys1fs"),
+            ("RCQY", "p.Ala3fs"),
+            ("RCQY", "p.Asp5fs"),
+        ]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                with self.assertRaises(MaveHgvsParseError):
+                    Variant(s, targetseq=target)
+
+    def test_matching_protein_indel(self):
+        variant_tuples = [
+            ("RCQY", "p.Arg1del"),
+            ("RCQY", "p.Arg1_Gln3dup"),
+        ]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                v = Variant(s, targetseq=target)
+                self.assertEqual(s, str(v))
+
+    def test_nonmatching_protein_indel(self):
+        variant_tuples = [
+            ("RCQY", "p.Cys1del"),
+            ("RCQY", "p.Arg1_Asp3dup"),
+            ("RCQY", "p.Asp5del"),
+        ]
 
         for target, s in variant_tuples:
             with self.subTest(target=target, s=s):
@@ -869,6 +952,7 @@ class TestMiscProperties(unittest.TestCase):
         variant_tuples = [
             ("sub", "p.Glu27Trp"),
             ("sub", "c.122-6T>A"),
+            ("fs", "p.Glu27fs"),
             ("del", "g.44del"),
             ("del", "c.78+5_78+10del"),
             ("dup", "c.77dup"),
@@ -887,6 +971,7 @@ class TestMiscProperties(unittest.TestCase):
     def test_position(self):
         variant_tuples = [
             (VariantPosition("Glu27"), "p.Glu27Trp"),
+            (VariantPosition("Glu27"), "p.Glu27fs"),
             (VariantPosition("122-6"), "c.122-6T>A"),
             (VariantPosition("44"), "g.44del"),
             ((VariantPosition("78+5"), VariantPosition("78+10")), "c.78+5_78+10del"),
@@ -926,6 +1011,7 @@ class TestMiscProperties(unittest.TestCase):
         variant_tuples = [
             (("Glu", "Trp"), "p.Glu27Trp"),
             (("T", "A"), "c.122-6T>A"),
+            (None, "p.Glu27fs"),
             (None, "g.44del"),
             (None, "c.78+5_78+10del"),
             (None, "c.77dup"),

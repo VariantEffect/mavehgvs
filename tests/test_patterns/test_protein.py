@@ -3,6 +3,7 @@ import re
 from mavehgvs.patterns.protein import (
     pro_equal,
     pro_sub,
+    pro_fs,
     pro_del,
     pro_dup,
     pro_ins,
@@ -56,6 +57,36 @@ class TestProteinSub(unittest.TestCase):
             "Pro17*",
             "*345Lys",
             "(Glu27Trp)",
+        ]
+
+    def test_valid_strings(self):
+        for s in self.valid_strings:
+            with self.subTest(s=s):
+                self.assertIsNotNone(
+                    self.pattern.fullmatch(s), msg=f'failed to match "{s}"'
+                )
+
+    def test_invalid_strings(self):
+        for s in self.invalid_strings:
+            with self.subTest(s=s):
+                self.assertIsNone(
+                    self.pattern.fullmatch(s), msg=f'incorrectly matched "{s}"'
+                )
+
+
+class TestProteinFs(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.pattern = re.compile(pro_fs, flags=re.ASCII)
+
+        cls.valid_strings = ["Glu27fs"]
+
+        cls.invalid_strings = [
+            "=fs",
+            "Arg12LysfsTer18",
+            "Arg12Lysfs*18",
+            "Glu27fs*?",
+            "(Glu27fs)",
         ]
 
     def test_valid_strings(self):
@@ -198,6 +229,7 @@ class TestProteinVariant(unittest.TestCase):
             "Cys22=",
             "Glu27Trp",
             "Ter345Lys",
+            "Glu27fs",
             "Gly18del",
             "Gln7_Asn19del",
             "Cys5dup",
@@ -219,6 +251,11 @@ class TestProteinVariant(unittest.TestCase):
             "Pro17*",
             "*345Lys",
             "(Glu27Trp)",
+            "=fs",
+            "Arg12LysfsTer18",
+            "Arg12Lysfs*18",
+            "Glu27fs*?",
+            "(Glu27fs)",
             "=del",
             "18del",
             "122_128del",
@@ -262,6 +299,7 @@ class TestProteinSingleVariant(unittest.TestCase):
             "Cys22=",
             "Glu27Trp",
             "Ter345Lys",
+            "Glu27fs",
             "Gly18del",
             "Gln7_Asn19del",
             "Cys5dup",
@@ -283,6 +321,11 @@ class TestProteinSingleVariant(unittest.TestCase):
             "Pro17*",
             "*345Lys",
             "(Glu27Trp)",
+            "=fs",
+            "Arg12LysfsTer18",
+            "Arg12Lysfs*18",
+            "Glu27fs*?",
+            "(Glu27fs)",
             "=del",
             "18del",
             "122_128del",
@@ -328,6 +371,7 @@ class TestProteinMultiVariant(unittest.TestCase):
             "Cys22=",
             "Glu27Trp",
             "Ter345Lys",
+            "Glu27fs",
             "Gly18del",
             "Gln7_Asn19del",
             "Cys5dup",
@@ -349,6 +393,11 @@ class TestProteinMultiVariant(unittest.TestCase):
             "Pro17*",
             "*345Lys",
             "(Glu27Trp)",
+            "=fs",
+            "Arg12LysfsTer18",
+            "Arg12Lysfs*18",
+            "Glu27fs*?",
+            "(Glu27fs)",
             "=del",
             "18del",
             "122_128del",
