@@ -661,6 +661,22 @@ class TestCreateMultiVariantFromValues(unittest.TestCase):
 
 
 class TestTargetSequenceValidation(unittest.TestCase):
+    def test_valid_dna_equal(self):
+        variant_tuples = [("ACGT", "c.1_2="), ("ACGT", "c.4="), ("ACGT", "c.=")]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                v = Variant(s, targetseq=target)
+                self.assertEqual(s, str(v))
+
+    def test_invalid_dna_equal(self):
+        variant_tuples = [("ACGT", "c.4_5="), ("ACGT", "c.10=")]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                with self.assertRaises(MaveHgvsParseError):
+                    Variant(s, targetseq=target)
+
     def test_matching_dna_substitution(self):
         variant_tuples = [
             ("ACGT", "c.1A>T"),
@@ -680,22 +696,6 @@ class TestTargetSequenceValidation(unittest.TestCase):
             ("ACGT", "c.[1A>T;3T>C]"),
             ("ACGT", "c.5A>G"),
         ]
-
-        for target, s in variant_tuples:
-            with self.subTest(target=target, s=s):
-                with self.assertRaises(MaveHgvsParseError):
-                    Variant(s, targetseq=target)
-
-    def test_valid_dna_equal(self):
-        variant_tuples = [("ACGT", "c.1_2="), ("ACGT", "c.4="), ("ACGT", "c.=")]
-
-        for target, s in variant_tuples:
-            with self.subTest(target=target, s=s):
-                v = Variant(s, targetseq=target)
-                self.assertEqual(s, str(v))
-
-    def test_invalid_dna_equal(self):
-        variant_tuples = [("ACGT", "c.4_5="), ("ACGT", "c.10=")]
 
         for target, s in variant_tuples:
             with self.subTest(target=target, s=s):
@@ -768,6 +768,22 @@ class TestTargetSequenceValidation(unittest.TestCase):
 
     def test_invalid_dna_delins(self):
         variant_tuples = [("ACGT", "c.4_5delinsA"), ("ACGT", "c.10_delinsTCG")]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                with self.assertRaises(MaveHgvsParseError):
+                    Variant(s, targetseq=target)
+
+    def test_valid_protein_equal(self):
+        variant_tuples = [("RCQY", "p.Arg1="), ("RCQY", "p.Tyr4="), ("RCQY", "p.=")]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                v = Variant(s, targetseq=target)
+                self.assertEqual(s, str(v))
+
+    def test_invalid_protein_equal(self):
+        variant_tuples = [("RCQY", "p.Trp5=")]
 
         for target, s in variant_tuples:
             with self.subTest(target=target, s=s):
