@@ -18,7 +18,7 @@ AA_3_TO_1 = {value: key for key, value in AA_CODES.items()}
 class Variant:
     fullmatch = re.compile(any_variant, flags=re.ASCII).fullmatch
     """Callable[[str, int, int], Optional[Match[str]]]: fullmatch callable for parsing a single MAVE-HGVS variant
-    
+
     Returns an :py:obj:`re.Match` object if the full string defines a valid MAVE-HGVS variant.
     Match groups in the result can be used to extract components of the variant.
     """
@@ -26,6 +26,7 @@ class Variant:
     VTYPES = (
         "equal",  # equality
         "sub",  # substitution
+        "fs",  # frame shift
         "del",  # deletion
         "dup",  # duplication
         "ins",  # insertion
@@ -105,7 +106,11 @@ class Variant:
                 raise ValueError("invalid match type")
 
             if self.variant_count == 1:
-                self._variant_types, self._positions, self._sequences = self._process_string_variant(
+                (
+                    self._variant_types,
+                    self._positions,
+                    self._sequences,
+                ) = self._process_string_variant(
                     match_dict, relaxed_ordering=relaxed_ordering
                 )
             elif self.variant_count > 1:
@@ -181,25 +186,33 @@ class Variant:
                     else:
                         raise MaveHgvsParseError("multi-variants not in sorted order")
 
+                # make sure there is at most one frame shift
+                if sum(x == "fs" for x in self._variant_types) > 1:
+                    raise MaveHgvsParseError("maximum of one frame shift is permitted")
+
+                # make sure the frame shift is last if present
+                if any(x == "fs" for x in self._variant_types):
+                    if self._variant_types[-1] != "fs":
+                        raise MaveHgvsParseError(
+                            "no variants are permitted to follow a frame shift"
+                        )
+
             else:  # pragma: no cover
                 raise ValueError("invalid variant count")
 
         if targetseq is not None:
             for vtype, pos, seq in self.variant_tuples():
-                if vtype == "sub":
-                    if self._prefix == "p":
-                        ref = AA_3_TO_1[seq[0]]
-                    else:
-                        ref = seq[0]
-                    self._target_validate_substitution(pos, ref, targetseq)
-                elif vtype in ("ins", "del", "dup", "delins"):
-                    self._target_validate_indel(pos, targetseq)
-                elif vtype == "equal":
-                    if pos is not None:
-                        self._target_validate_indel(pos, targetseq)
+                if self._prefix != "p" and vtype == "sub":
+                    self._target_validate(pos, seq[0], targetseq)
+                elif (
+                    pos is None and vtype == "equal"
+                ):  # special case for full-length target identical variants
+                    pass
+                else:
+                    self._target_validate(pos, None, targetseq)
 
     def variant_tuples(
-        self
+        self,
     ) -> Generator[
         Tuple[
             str,
@@ -256,11 +269,15 @@ class Variant:
         if self._prefix == "p":
             pattern_group_tuples = [(f"pro_{t}", t) for t in self.VTYPES]
         elif self._prefix == "r":
-            pattern_group_tuples = [(f"rna_{t}", t) for t in self.VTYPES]
+            pattern_group_tuples = [(f"rna_{t}", t) for t in self.VTYPES if t != "fs"]
         elif self._prefix in tuple("cn"):
-            pattern_group_tuples = [(f"dna_{t}_{self._prefix}", t) for t in self.VTYPES]
+            pattern_group_tuples = [
+                (f"dna_{t}_{self._prefix}", t) for t in self.VTYPES if t != "fs"
+            ]
         elif self._prefix in tuple("gmo"):
-            pattern_group_tuples = [(f"dna_{t}_gmo", t) for t in self.VTYPES]
+            pattern_group_tuples = [
+                (f"dna_{t}_gmo", t) for t in self.VTYPES if t != "fs"
+            ]
         else:  # pragma: no cover
             raise ValueError("unexpected prefix")
 
@@ -287,7 +304,7 @@ class Variant:
                 )
             else:  # pragma: no cover
                 raise ValueError("unexpected prefix")
-        elif variant_type in ("del", "dup", "ins", "delins", "equal"):
+        elif variant_type in ("equal", "fs", "del", "dup", "ins", "delins"):
             # set position
             if (
                 match_dict.get(f"{pattern_group}_position") is not None
@@ -378,7 +395,6 @@ class Variant:
                 variant_string = f"{vdict['start_position']}="
             else:
                 variant_string = f"{vdict['start_position']}_{vdict['end_position']}="
-
         elif variant_type == "sub":
             if sorted(vdict.keys()) != sorted(
                 ["variant_type", "prefix", "position", "target", "variant"]
@@ -391,6 +407,17 @@ class Variant:
             else:
                 variant_string = (
                     f"{vdict['position']}{vdict['target']}>{vdict['variant']}"
+                )
+        elif variant_type == "fs":
+            if sorted(vdict.keys()) != sorted(
+                ["variant_type", "prefix", "position", "target"]
+            ):
+                raise MaveHgvsParseError("variant dictionary contains invalid keys")
+            if prefix == "p":
+                variant_string = f"{vdict['target']}{vdict['position']}fs"
+            else:
+                raise MaveHgvsParseError(
+                    "frame shifts are only supported for protein variants"
                 )
         elif variant_type in ("del", "dup"):
             expected_keys = ["variant_type", "prefix", "start_position", "end_position"]
@@ -503,6 +530,8 @@ class Variant:
                     return f"{pos}{seq[1]}"
                 else:  # nucleotide variant
                     return f"{pos}{seq[0]}>{seq[1]}"
+            elif vtype == "fs":
+                return f"{pos}fs"
             elif vtype in ("del", "dup"):
                 if isinstance(pos, tuple):
                     return f"{pos[0]}_{pos[1]}{vtype}"
@@ -535,20 +564,23 @@ class Variant:
             return f"{prefix}.{elements[0]}"
 
     @staticmethod
-    def _target_validate_substitution(
-        pos: VariantPosition, ref: str, target: str
+    def _target_validate(
+        pos: Union[VariantPosition, Tuple[VariantPosition, VariantPosition]],
+        ref: Optional[str],
+        target: str,
     ) -> None:
-        """Determine whether the target portion of a substitution matches the target sequence.
+        """Determine whether the target portion of a variant matches the target sequence.
 
         Note that variants using extended syntax cannot be validated with this method.
         If an extended syntax variant is encountered, it will be interpreted as valid/matching.
 
         Parameters
         ----------
-        pos : VariantPosition
-            Position of the substitution.
-        ref : str
-            Reference base or amino acid from the variant.
+        pos : Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]
+            Single variant position or start/end tuple for an indel.
+        ref : Optional[str]
+            Reference base to validate for nucleotide substitutions.
+            This should be None for amino acid substitutions, since the reference is included in the VariantPosition.
         target : str
             Target sequence. This must be an amino acid sequence for protein variants or a nucleotide sequence
             for coding/noncoding/genomic variants.
@@ -566,53 +598,25 @@ class Variant:
             If the position is outside the bounds of the target.
 
         """
-        if pos.is_extended():
+        if not isinstance(pos, tuple):
+            pos = (pos,)
+
+        if any(p.is_extended() for p in pos):
             return
-        elif pos.position > len(target):
+        elif any(p.position > len(target) for p in pos):
             raise MaveHgvsParseError("variant coordinate out of bounds")
-        elif target[pos.position - 1] != ref:
-            raise MaveHgvsParseError("substitution reference does not match target")
         else:
-            return
-
-    @staticmethod
-    def _target_validate_indel(
-        pos: Union[VariantPosition, Tuple[VariantPosition, VariantPosition]],
-        target: str,
-    ) -> None:
-        """Determine whether indel coordinates are valid for the target sequence.
-
-        Note that variants using extended syntax cannot be validated with this method.
-        If an extended syntax variant is encountered, it will be interpreted as valid/matching.
-
-        Parameters
-        ----------
-        pos : Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]
-            Single variant position or start/end tuple for the indel.
-        target : str
-            Target sequence. This must be an amino acid sequence for protein variants or a nucleotide sequence
-            for coding/noncoding/genomic variants.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        MaveHgvsParseError
-            If the indel coordinates are outside the target bounds.
-
-        """
-        if isinstance(pos, tuple):
-            start, end = pos
-            if start.is_extended() or end.is_extended():
+            if ref is not None and len(pos) == 1:  # nucleotide substitution
+                if target[pos[0].position - 1] != ref:
+                    raise MaveHgvsParseError("variant reference does not match target")
+            elif pos[0].amino_acid is not None:  # protein variant
+                for p in pos:
+                    if target[p.position - 1] != AA_3_TO_1[p.amino_acid]:
+                        raise MaveHgvsParseError(
+                            "variant reference does not match target"
+                        )
+            else:
                 return
-            elif start.position > len(target) or end.position > len(target):
-                raise MaveHgvsParseError("variant coordinate out of bounds")
-        elif pos.position > len(target):
-            raise MaveHgvsParseError("substitution coordinate out of bounds")
-        else:
-            return
 
     def is_target_identical(self) -> bool:
         """Return whether the variant describes the "wild-type" sequence or is the special synonymous variant.
@@ -740,7 +744,7 @@ class Variant:
 
     @property
     def positions(
-        self
+        self,
     ) -> Optional[
         Union[
             VariantPosition,
@@ -763,7 +767,7 @@ class Variant:
 
     @property
     def sequence(
-        self
+        self,
     ) -> Optional[
         Union[str, Tuple[str, str], List[Optional[Union[str, Tuple[str, str]]]]]
     ]:

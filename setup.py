@@ -1,18 +1,14 @@
 import setuptools
-import sys
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 requirements = ["fqfa>=1.2.1"]
-# fqfa requires backported dataclasses in Python 3.6
-if sys.version_info.major == 3 and sys.version_info.minor == 6:
-    requirements.append("dataclasses")
 
 setuptools.setup(
     name="mavehgvs",
-    version="0.4.0",
-    author="Daniel Esposito and Alan F Rubin",
+    version="0.5.0",
+    author="MaveDB Developers",
     author_email="alan.rubin@wehi.edu.au",
     description=(
         "Regular expression-based validation of HGVS-style variant strings for Multiplexed Assays of Variant Effect."

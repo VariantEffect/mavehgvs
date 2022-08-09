@@ -52,3 +52,51 @@ class TestParseVariantStrings(unittest.TestCase):
                 valid, invalid = parse_variant_strings([s])
                 self.assertIsInstance(valid[0], Variant)
                 self.assertIsNone(invalid[0])
+
+    def test_validates_with_targetseq(self) -> None:
+        targetseq = "ACGT"
+        valid_variant_strings = ["c.1A>T", "c.3G>C", "c.[1A>T;3G>C]"]
+        invalid_variant_strings = ["c.1C>T", "c.3T>C", "c.[1A>T;3T>C]", "c.5A>G"]
+
+        for s in valid_variant_strings:
+            with self.subTest(s=s, targetseq=targetseq):
+                valid, invalid = parse_variant_strings([s], targetseq=targetseq)
+                self.assertIsInstance(valid[0], Variant)
+                self.assertIsNone(invalid[0])
+
+        for s in invalid_variant_strings:
+            with self.subTest(s=s, targetseq=targetseq):
+                valid, invalid = parse_variant_strings([s], targetseq=targetseq)
+                self.assertIsNone(valid[0])
+                self.assertIsInstance(invalid[0], str)
+
+    def test_validates_expected_prefix(self) -> None:
+        valid_variant_strings = ["p.Glu27Trp", "c.122-6T>A", "r.22_23insauc"]
+
+        for s in valid_variant_strings:
+            p = s[0]
+            with self.subTest(s=s, p=p):
+                valid, invalid = parse_variant_strings([s], expected_prefix=p)
+                self.assertIsInstance(valid[0], Variant)
+                self.assertIsNone(invalid[0])
+
+        for s in valid_variant_strings:
+            p = "g"
+            with self.subTest(s=s, p=p):
+                valid, invalid = parse_variant_strings([s], expected_prefix=p)
+                self.assertIsNone(valid[0])
+                self.assertIsInstance(invalid[0], str)
+
+    def test_valid_expected_prefixes_only(self) -> None:
+        valid_prefixes = list("cgmnopr")
+        invalid_prefixes = list("CGMNOPRx.4ab?")
+        variant = "p.Glu27Trp"
+
+        for p in valid_prefixes:
+            with self.subTest(p=p):
+                parse_variant_strings([variant], expected_prefix=p)
+
+        for p in invalid_prefixes:
+            with self.subTest(p=p):
+                with self.assertRaises(ValueError):
+                    parse_variant_strings([variant], expected_prefix=p)

@@ -12,7 +12,9 @@ dna_equal_c: str = rf"(?P<dna_equal_c>(?:(?:(?P<start>{pos_intron_utr})_(?P<end>
 """str: Pattern matching DNA equality with numeric, intronic, or UTR positions.
 """
 
-dna_sub_c: str = rf"(?P<dna_sub_c>(?P<position>{pos_intron_utr})(?P<ref>{dna_nt})>(?P<new>{dna_nt}))"
+dna_sub_c: str = (
+    rf"(?P<dna_sub_c>(?P<position>{pos_intron_utr})(?P<ref>{dna_nt})>(?P<new>{dna_nt}))"
+)
 """str: Pattern matching a DNA substitution with numeric, intronic, or UTR positions.
 """
 
