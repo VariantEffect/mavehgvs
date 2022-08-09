@@ -838,6 +838,29 @@ class TestTargetSequenceValidation(unittest.TestCase):
                 with self.assertRaises(MaveHgvsParseError):
                     Variant(s, targetseq=target)
 
+    def test_matching_protein_indel(self):
+        variant_tuples = [
+            ("RCQY", "p.Arg1del"),
+            ("RCQY", "p.Arg1_Gln3dup"),
+        ]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                v = Variant(s, targetseq=target)
+                self.assertEqual(s, str(v))
+
+    def test_nonmatching_protein_indel(self):
+        variant_tuples = [
+            ("RCQY", "p.Cys1del"),
+            ("RCQY", "p.Arg1_Gln3dup"),
+            ("RCQY", "p.Asp5del"),
+        ]
+
+        for target, s in variant_tuples:
+            with self.subTest(target=target, s=s):
+                with self.assertRaises(MaveHgvsParseError):
+                    Variant(s, targetseq=target)
+
     def test_skips_extended(self):
         variant_tuples = [
             ("ACGT", "c.1+3A>T"),
