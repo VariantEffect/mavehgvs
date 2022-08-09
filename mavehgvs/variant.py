@@ -186,6 +186,17 @@ class Variant:
                     else:
                         raise MaveHgvsParseError("multi-variants not in sorted order")
 
+                # make sure there is at most one frame shift
+                if sum(x == "fs" for x in self._variant_types) > 1:
+                    raise MaveHgvsParseError("maximum of one frame shift is permitted")
+
+                # make sure the frame shift is last if present
+                if any(x == "fs" for x in self._variant_types):
+                    if self._variant_types[-1] != "fs":
+                        raise MaveHgvsParseError(
+                            "no variants are permitted to follow a frame shift"
+                        )
+
             else:  # pragma: no cover
                 raise ValueError("invalid variant count")
 
