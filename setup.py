@@ -7,7 +7,7 @@ requirements = ["fqfa>=1.2.1"]
 
 setuptools.setup(
     name="mavehgvs",
-    version="0.4.0",
+    version="0.5.0",
     author="MaveDB Developers",
     author_email="alan.rubin@wehi.edu.au",
     description=(
