@@ -191,17 +191,14 @@ class Variant:
 
         if targetseq is not None:
             for vtype, pos, seq in self.variant_tuples():
-                if vtype == "sub":
-                    if self._prefix == "p":
-                        ref = AA_3_TO_1[seq[0]]
-                    else:
-                        ref = seq[0]
-                    self._target_validate_substitution(pos, ref, targetseq)
-                elif vtype in ("ins", "del", "dup", "delins"):
-                    self._target_validate_indel(pos, targetseq)
-                elif vtype == "equal":
-                    if pos is not None:
-                        self._target_validate_indel(pos, targetseq)
+                if self._prefix != "p" and vtype == "sub":
+                    self._target_validate(pos, seq[0], targetseq)
+                elif (
+                    pos is None and vtype == "equal"
+                ):  # special case for full-length target identical variants
+                    pass
+                else:
+                    self._target_validate(pos, None, targetseq)
 
     def variant_tuples(
         self,
@@ -556,20 +553,23 @@ class Variant:
             return f"{prefix}.{elements[0]}"
 
     @staticmethod
-    def _target_validate_substitution(
-        pos: VariantPosition, ref: str, target: str
+    def _target_validate(
+        pos: Union[VariantPosition, Tuple[VariantPosition, VariantPosition]],
+        ref: Optional[str],
+        target: str,
     ) -> None:
-        """Determine whether the target portion of a substitution matches the target sequence.
+        """Determine whether the target portion of a variant matches the target sequence.
 
         Note that variants using extended syntax cannot be validated with this method.
         If an extended syntax variant is encountered, it will be interpreted as valid/matching.
 
         Parameters
         ----------
-        pos : VariantPosition
-            Position of the substitution.
-        ref : str
-            Reference base or amino acid from the variant.
+        pos : Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]
+            Single variant position or start/end tuple for an indel.
+        ref : Optional[str]
+            Reference base to validate for nucleotide substitutions.
+            This should be None for amino acid substitutions, since the reference is included in the VariantPosition.
         target : str
             Target sequence. This must be an amino acid sequence for protein variants or a nucleotide sequence
             for coding/noncoding/genomic variants.
@@ -587,53 +587,25 @@ class Variant:
             If the position is outside the bounds of the target.
 
         """
-        if pos.is_extended():
+        if not isinstance(pos, tuple):
+            pos = (pos,)
+
+        if any(p.is_extended() for p in pos):
             return
-        elif pos.position > len(target):
+        elif any(p.position > len(target) for p in pos):
             raise MaveHgvsParseError("variant coordinate out of bounds")
-        elif target[pos.position - 1] != ref:
-            raise MaveHgvsParseError("substitution reference does not match target")
         else:
-            return
-
-    @staticmethod
-    def _target_validate_indel(
-        pos: Union[VariantPosition, Tuple[VariantPosition, VariantPosition]],
-        target: str,
-    ) -> None:
-        """Determine whether indel coordinates are valid for the target sequence.
-
-        Note that variants using extended syntax cannot be validated with this method.
-        If an extended syntax variant is encountered, it will be interpreted as valid/matching.
-
-        Parameters
-        ----------
-        pos : Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]
-            Single variant position or start/end tuple for the indel.
-        target : str
-            Target sequence. This must be an amino acid sequence for protein variants or a nucleotide sequence
-            for coding/noncoding/genomic variants.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        MaveHgvsParseError
-            If the indel coordinates are outside the target bounds.
-
-        """
-        if isinstance(pos, tuple):
-            start, end = pos
-            if start.is_extended() or end.is_extended():
+            if ref is not None and len(pos) == 1:  # nucleotide substitution
+                if target[pos[0].position - 1] != ref:
+                    raise MaveHgvsParseError("variant reference does not match target")
+            elif pos[0].amino_acid is not None:  # protein variant
+                for p in pos:
+                    if target[p.position - 1] != AA_3_TO_1[p.amino_acid]:
+                        raise MaveHgvsParseError(
+                            "variant reference does not match target"
+                        )
+            else:
                 return
-            elif start.position > len(target) or end.position > len(target):
-                raise MaveHgvsParseError("variant coordinate out of bounds")
-        elif pos.position > len(target):
-            raise MaveHgvsParseError("substitution coordinate out of bounds")
-        else:
-            return
 
     def is_target_identical(self) -> bool:
         """Return whether the variant describes the "wild-type" sequence or is the special synonymous variant.
