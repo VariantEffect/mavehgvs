@@ -166,10 +166,14 @@ Frame Shift
 MAVE-HGVS supports a simplified syntax to describe frame shifts in protein variants.
 Multi-variants that include multiple frame shifts or a second variant after a frame shift are considered invalid.
 
+Because frame shift (and the related extension) variants are uncommon in MAVE datasets, MAVE-HGVS provides this minimal support.
+Extension variants (removal of a termination codon) should be expressed as a frame shift at the termination codon.
+
 Examples of valid frame shift variants:
 
 * p.Glu27fs
 * p.Asp125fs
+* p.Ter385fs
 
 Examples of valid HGVS frame shift variants that are invalid in MAVE-HGVS:
 
