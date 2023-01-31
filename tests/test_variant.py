@@ -415,6 +415,17 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
                 },
                 "c.78+5_78+10del",
             ),
+            (
+                {
+                    "variant_type": "del",
+                    "prefix": "p",
+                    "start_position": 33,
+                    "start_target": "Arg",
+                    "end_position": 33,
+                    "end_target": "Arg",
+                },
+                "p.Arg33del",
+            ),
         ]
 
         for d, s in valid_dict_tuples:
@@ -464,6 +475,16 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
             (
                 {
                     "variant_type": "delins",
+                    "prefix": "c",
+                    "start_position": "45",
+                    "end_position": "45",
+                    "variant": "AGA",
+                },
+                "c.45delinsAGA",
+            ),
+            (
+                {
+                    "variant_type": "delins",
                     "prefix": "p",
                     "start_position": 71,
                     "start_target": "Ile",
@@ -473,11 +494,40 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
                 },
                 "p.Ile71_Cys80delinsSer",
             ),
+            (
+                {
+                    "variant_type": "delins",
+                    "prefix": "p",
+                    "start_position": 50,
+                    "start_target": "Arg",
+                    "end_position": 50,
+                    "end_target": "Arg",
+                    "variant": "AlaGly",
+                },
+                "p.Arg50delinsAlaGly",
+            ),
+        ]
+
+        invalid_dicts = [
+            {
+                "variant_type": "delins",
+                "prefix": "p",
+                "start_position": 50,
+                "start_target": "Arg",
+                "end_position": 50,
+                "end_target": "Cys",
+                "variant": "AlaGly",
+            },
         ]
 
         for d, s in valid_dict_tuples:
             with self.subTest(d=d, s=s):
                 self.assertEqual(Variant(s), Variant(d))
+
+        for d in invalid_dicts:
+            with self.subTest(d=d):
+                with self.assertRaises(MaveHgvsParseError):
+                    Variant(d)
 
     def test_extra_keys(self):
         invalid_dicts = [
