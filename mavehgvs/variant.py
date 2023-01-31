@@ -453,7 +453,10 @@ class Variant:
             else:
                 start = vdict["start_position"]
                 end = vdict["end_position"]
-            variant_string = f"{start}_{end}{variant_type}{vdict['variant']}"
+            if start == end and variant_type == "delins":
+                variant_string = f"{start}{variant_type}{vdict['variant']}"
+            else:
+                variant_string = f"{start}_{end}{variant_type}{vdict['variant']}"
         else:
             raise MaveHgvsParseError("invalid variant type")
 
