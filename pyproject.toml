@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mavehgvs"
+dynamic = ["version"]
+description = "Regular expression-based validation of HGVS-style variant strings for Multiplexed Assays of Variant Effect."
+readme = "README.md"
+license = "BSD-3-Clause"
+requires-python = ">=3.6"
+authors = [
+    { name = "Alan F Rubin", email = "alan.rubin@wehi.edu.au" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+dependencies = [
+    "fqfa>=1.2.3",
+]
+
+[project.urls]
+repository = "https://github.com/VariantEffect/mavehgvs"
+documentation = "https://www.mavedb.org/docs/mavehgvs"
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "flake8",
+    "pre-commit",
+    "pytest",
+]
+
+[tool.hatch.version]
+path = "src/mavehgvs/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mavehgvs"]
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "docs/",
+    ".github/",
+]
