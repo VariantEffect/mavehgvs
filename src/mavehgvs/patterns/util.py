@@ -8,8 +8,9 @@ from typing import Sequence, Optional
 def combine_patterns(patterns: Sequence[str], groupname: Optional[str] = None) -> str:
     """Combine multiple pattern strings into a single pattern string.
 
-    Because multiple identical group names are not allowed in a pattern, the resulting object renames all named match
-    groups such they are prefixed with the first match group name in the pattern. For example,
+    Because multiple identical group names are not allowed in a pattern, the resulting
+    object renames all named match groups such they are prefixed with the first match
+    group name in the pattern. For example,
     ``(?P<substitution>(?P<position>[1-9][0-9]*)...`` becomes
     ``(?P<substitution>(?P<substitution_position>[1-9][0-9]*)...``.
 
@@ -21,14 +22,14 @@ def combine_patterns(patterns: Sequence[str], groupname: Optional[str] = None) -
         Sequence of pattern strings to combine.
 
     groupname : Optional[str]
-        Name for the capture group surrounding the resulting pattern. If this is None, a non-capturing group will be
-        used instead.
+        Name for the capture group surrounding the resulting pattern. If this is None, a
+        non-capturing group will be used instead.
 
     Returns
     -------
     str
-        Pattern string that matches any of the input patterns. Match groups are renamed as described above to attempt
-        to ensure uniqueness across the combined pattern.
+        Pattern string that matches any of the input patterns. Match groups are renamed
+        as described above to attempt to ensure uniqueness across the combined pattern.
 
     """
     tag_re = re.compile(r"\(\?P<(\w+)>")
@@ -52,7 +53,8 @@ def combine_patterns(patterns: Sequence[str], groupname: Optional[str] = None) -
 def remove_named_groups(pattern: str, noncapturing: bool = True) -> str:
     """Function that replaces named match groups in a regular expression pattern.
 
-    Named groups are replaced with either regular parentheses or non-capturing parentheses.
+    Named groups are replaced with either regular parentheses or non-capturing
+    parentheses.
 
     Parameters
     ----------
@@ -60,7 +62,8 @@ def remove_named_groups(pattern: str, noncapturing: bool = True) -> str:
         The pattern string to strip match groups from.
 
     noncapturing : bool
-        If True, the named grouping parentheses are replaced by non-capturing parentheses.
+        If True, the named grouping parentheses are replaced by non-capturing
+        parentheses.
         If False, regular parentheses are used.
 
     Returns
