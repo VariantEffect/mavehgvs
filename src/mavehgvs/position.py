@@ -7,8 +7,12 @@ from mavehgvs.patterns.protein import amino_acid
 
 __all__ = ["VariantPosition"]
 
-pos_with_groups: str = rf"(?P<position_aa>{amino_acid})?(?P<position>[*-]?{pos})(?P<position_intron>[+-]{pos})?"
-"""str: Pattern matching a position with match groups for parsing into a :py:class:`VariantPosition`.
+pos_with_groups: str = (
+    rf"(?P<position_aa>{amino_acid})?(?P<position>[*-]?{pos})"
+    + rf"(?P<position_intron>[+-]{pos})?"
+)
+"""str: Pattern matching a position with match groups for parsing into a
+:py:class:`VariantPosition`.
 """
 
 
@@ -28,19 +32,21 @@ class VariantPosition:
         The number of bases into the intron for intronic positions.
         None for non-intronic positions.
 
-        Nucleotides in the 5' half of the intron have positive ``intronic_position`` and their position is that of
-        the last base of the 5' exon.
-        Nucleotides in the 3' half of the intron have negative ``intronic_position`` and their position is that of
-        the first base of the 3' exon.
+        Nucleotides in the 5' half of the intron have positive ``intronic_position`` and
+        their position is that of the last base of the 5' exon.
+        Nucleotides in the 3' half of the intron have negative ``intronic_position`` and
+        their position is that of the first base of the 3' exon.
     utr : Optional[bool]
         True if the position is in the UTR. None for all other positions.
 
     """
 
     fullmatch = re.compile(pos_with_groups, flags=re.ASCII).fullmatch
-    """Callable[[str, int, int], Optional[Match[str]]]: fullmatch callable for parsing positions
+    """Callable[[str, int, int], Optional[Match[str]]]: fullmatch callable for parsing
+    positions
 
-    Returns an :py:obj:`re.Match` object if the full string matches one of the position groups in :py:data:`pos_extended`.
+    Returns an :py:obj:`re.Match` object if the full string matches one of the position
+    groups in :py:data:`pos_extended`.
     """
 
     def __init__(self, pos_str: str) -> None:
@@ -108,7 +114,8 @@ class VariantPosition:
     def __lt__(self, other: "VariantPosition") -> bool:
         """Less than comparison operator.
 
-        Other comparison operators will be filled in using :py:func:`functools.total_ordering`.
+        Other comparison operators will be filled in using
+        :py:func:`functools.total_ordering`.
 
         Parameters
         ----------
@@ -118,7 +125,8 @@ class VariantPosition:
         Returns
         -------
         bool
-            True if this position evaluates as strictly less than the other position; else False.
+            True if this position evaluates as strictly less than the other position;
+            else False.
 
         """
         if self.utr == other.utr:
@@ -151,9 +159,11 @@ class VariantPosition:
     def __eq__(self, other: "VariantPosition") -> bool:
         """Equality comparison operator.
 
-        Note that the amino acid portion of a protein position is not used in this comparison.
+        Note that the amino acid portion of a protein position is not used in this
+        comparison.
 
-        Other comparison operators will be filled in using :py:func:`functools.total_ordering`.
+        Other comparison operators will be filled in using
+        :py:func:`functools.total_ordering`.
 
         Parameters
         ----------
@@ -175,9 +185,11 @@ class VariantPosition:
     def __ne__(self, other: "VariantPosition") -> bool:
         """Not equal comparison operator.
 
-        Note that the amino acid portion of a protein position is not used in this comparison.
+        Note that the amino acid portion of a protein position is not used in this
+        comparison.
 
-        Other comparison operators will be filled in using :py:func:`functools.total_ordering`.
+        Other comparison operators will be filled in using
+        :py:func:`functools.total_ordering`.
 
         Parameters
         ----------
@@ -224,7 +236,8 @@ class VariantPosition:
         Returns
         -------
         bool
-            True if the object describes a position with an amino acid component; else False.
+            True if the object describes a position with an amino acid component; else
+            False.
         """
         return self.amino_acid is not None
 
@@ -239,19 +252,23 @@ class VariantPosition:
         """
         return self.utr is not None or self.intronic_position is not None
 
-    # the string annotation used in the type hint below is required for Python 3.6 compatibility
+    # string annotation in the type hint below is required for Python 3.6 compatibility
     def is_adjacent(self, other: "VariantPosition") -> bool:
-        """Return whether this variant and another are immediately adjacent in sequence space.
+        """Return whether this variant and another are immediately adjacent in sequence
+        space.
 
         The following special cases are not handled correctly:
 
-        * The special case involving the last variant in a transcript sequence and the first base in the 3'
-          UTR will be evaluated as not adjacent, as the object does not have sequence length information.
-        * The special case involving the two middle bases in an intron where the numbering switches from
-          positive with respect to the 5' end of the intron to negative with respect to the 3' end of the intron
-          will be evaluated as not adjacent, as the object does not have intron length information.
-        * This ignores the special case where there is an intron between the last base of the 5' UTR and the first
-          base of the coding sequence because it is not biologically relevant to the best of my knowledge.
+        * The special case involving the last variant in a transcript sequence and the
+          first base in the 3' UTR will be evaluated as not adjacent, as the object does
+          not have sequence length information.
+        * The special case involving the two middle bases in an intron where the
+          numbering switches from positive with respect to the 5' end of the intron to
+          negative with respect to the 3' end of the intron will be evaluated as not
+          adjacent, as the object does not have intron length information.
+        * This ignores the special case where there is an intron between the last base
+          of the 5' UTR and the first base of the coding sequence because it is not
+          biologically relevant to the best of my knowledge.
 
         Parameters
         ----------
@@ -269,13 +286,15 @@ class VariantPosition:
                 return abs(self.position - other.position) == 1
             elif (
                 self.position == other.position
-            ):  # intronic positions can only be adjacent if they are relative to the same base
+            ):  # intronic positions can only be adjacent if relative to the same base
                 if (
                     self.intronic_position is not None
                     and other.intronic_position is not None
                 ):
                     return abs(self.intronic_position - other.intronic_position) == 1
-                else:  # handle special case for first/last base of intron and corresponding first/last base of exon
+                else:
+                    # special case for first/last base of intron and
+                    # corresponding first/last base of exon
                     return (
                         self.intronic_position == -1
                         or self.intronic_position == 1
@@ -284,7 +303,7 @@ class VariantPosition:
                     )
             else:
                 return False
-        else:  # handle special case for last base of 5' utr and first base of non-UTR sequence
+        else:  # special case for last base of 5' utr and first base of non-UTR sequence
             return (self.position == -1 and other.position == 1) or (
                 other.position == -1 and self.position == 1
             )

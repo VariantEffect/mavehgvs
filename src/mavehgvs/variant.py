@@ -17,9 +17,11 @@ AA_3_TO_1 = {value: key for key, value in AA_CODES.items()}
 
 class Variant:
     fullmatch = re.compile(any_variant, flags=re.ASCII).fullmatch
-    """Callable[[str, int, int], Optional[Match[str]]]: fullmatch callable for parsing a single MAVE-HGVS variant
+    """Callable[[str, int, int], Optional[Match[str]]]: fullmatch callable for parsing a
+    single MAVE-HGVS variant
 
-    Returns an :py:obj:`re.Match` object if the full string defines a valid MAVE-HGVS variant.
+    Returns an :py:obj:`re.Match` object if the full string defines a valid MAVE-HGVS
+    variant.
     Match groups in the result can be used to extract components of the variant.
     """
 
@@ -35,33 +37,36 @@ class Variant:
     """Tuple[str]: variant type tags used in MAVE-HGVS patterns and variant type names.
     """
 
-    def __init__(
+    def __init__(  # noqa: max-complexity: 37
         self,
         s: Union[str, Mapping[str, Any], Sequence[Mapping[str, Any]]],
         targetseq: Optional[str] = None,
         relaxed_ordering: bool = False,
     ):
-        """Convert a MAVE-HGVS variant string into a corresponding object with named fields.
+        """Convert a MAVE-HGVS variant string into a corresponding object with named
+        fields.
 
         Parameters
         ----------
         s : Union[str, Mapping[str, Any], Sequence[Mapping[str, Any]]]
-            MAVE-HGVS variant string to convert into an object, dictionary type object containing key-value pairs
-            corresponding to a MAVE-HGVS object, or list/tuple of dictionary type objects for a variant with
-            multiple events.
+            MAVE-HGVS variant string to convert into an object, dictionary type object
+            containing key-value pairs corresponding to a MAVE-HGVS object, or
+            list/tuple of dictionary type objects for a variant with multiple events.
 
         targetseq : Optional[str]
             If provided, the variant will be validated for agreement with this sequence.
-            Target sequence validation is not supported for variants using the extended position syntax.
+            Target sequence validation is not supported for variants using the extended
+            position syntax.
 
-            This must be an amino acid sequence for protein variants or a nucleotide sequence for
-            coding/noncoding/genomic variants.
+            This must be an amino acid sequence for protein variants or a nucleotide
+            sequence for coding/noncoding/genomic variants.
             DNA and amino acid sequences should be in uppercase, RNA in lowercase.
 
         relaxed_ordering : bool
-            If True, variants that do not observe the 3-prime rule for variant position ordering are allowed.
-            The object representation will observe the 3-prime rule, so it may differ from the input string in this
-            case.
+            If True, variants that do not observe the 3-prime rule for variant position
+            ordering are allowed.
+            The object representation will observe the 3-prime rule, so it may differ
+            from the input string in this case.
 
         """
         if isinstance(s, str):  # variant string to parse
@@ -79,7 +84,10 @@ class Variant:
                 raise MaveHgvsParseError(
                     "cannot combine variants with different prefixes"
                 )
-            variant_string = f"{s[0]['prefix']}.[{';'.join(self._variant_dictionary_to_string(v, include_prefix=False) for v in s)}]"
+            multivariants = ";".join(
+                self._variant_dictionary_to_string(v, include_prefix=False) for v in s
+            )
+            variant_string = f"{s[0]['prefix']}.[{multivariants}]"
         else:
             raise ValueError("can only create Variants from string or Mapping objects")
 
@@ -142,7 +150,7 @@ class Variant:
                     ):  # both single position
                         if vp1 == vp2:
                             raise MaveHgvsParseError(
-                                "multi-variant has multiple changes for the same position"
+                                "multi-variant has multiple changes at same position"
                             )
                     elif isinstance(vp1, VariantPosition) and isinstance(vp2, Tuple):
                         if vp2[0] <= vp1 <= vp2[1]:
@@ -227,7 +235,8 @@ class Variant:
         Yields
         ------
         Tuple
-            Tuple of the variant type, position(s), and sequence(s) for each element in the variant.
+            Tuple of the variant type, position(s), and sequence(s) for each element in
+            the variant.
 
         """
         if self.is_multi_variant():
@@ -238,7 +247,7 @@ class Variant:
         else:
             yield self._variant_types, self._positions, self._sequences
 
-    def _process_string_variant(
+    def _process_string_variant(  # noqa: max-complexity: 23
         self, match_dict: Dict[str, str], relaxed_ordering: bool
     ) -> Tuple[
         str,
@@ -252,13 +261,16 @@ class Variant:
         match_dict : Dict[str, str]
             Match dictionary from the MAVE-HGVS regular expression.
         relaxed_ordering : bool
-            If True, variants that do not observe the 3-prime rule for variant position ordering are allowed.
+            If True, variants that do not observe the 3-prime rule for variant position
+            ordering are allowed.
 
         Returns
         -------
-        Tuple[str, Optional[Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]], Optional[Union[str, Tuple[str, str]]]]
-            Returns a 3-tuple containing the variant type, optional position (or start/end positions),
-            and optional before/after substitution sequences or inserted sequence.
+        Tuple[str, Optional[Union[VariantPosition, Tuple[VariantPosition, \
+        VariantPosition]]], Optional[Union[str, Tuple[str, str]]]]
+            Returns a 3-tuple containing the variant type, optional position (or
+            start/end positions), and optional before/after substitution sequences or
+            inserted sequence.
 
         """
         variant_type = None
@@ -341,28 +353,30 @@ class Variant:
                     match_dict[f"{pattern_group}_equal"] is not None
                 ):  # special case for target identity
                     sequences = match_dict[f"{pattern_group}_equal"]
-                elif match_dict[f"pro_equal_equal_sy"] is not None:
-                    sequences = match_dict[f"pro_equal_equal_sy"]
+                elif match_dict["pro_equal_equal_sy"] is not None:
+                    sequences = match_dict["pro_equal_equal_sy"]
 
         return variant_type, positions, sequences
 
     # TODO: API documentation for the dictionary objects
     @staticmethod
-    def _variant_dictionary_to_string(
+    def _variant_dictionary_to_string(  # noqa: max-complexity: 25
         vdict: Mapping[str, Any], include_prefix: bool
     ) -> str:
-        """Convert a match dictionary from a single variant into a string for further validation.
+        """Convert a match dictionary from a single variant into a string for further
+        validation.
 
-        This method performs minimal validation of the values provided in the input, and instead converts it into a
-        variant string that is validated using the regular expression based validators.
+        This method performs minimal validation of the values provided in the input, and
+        instead converts it into a variant string that is validated using the regular
+        expression based validators.
 
         Parameters
         ----------
         vdict : Mapping[str, Any]
             Key-value pairs describing a single variant.
         include_prefix: bool
-            If True, the variant prefix and '.' will be included in the string; else it is omitted (for use with
-            multi-variants).
+            If True, the variant prefix and '.' will be included in the string; else it
+            is omitted (for use with multi-variants).
 
         Returns
         -------
@@ -453,7 +467,10 @@ class Variant:
             else:
                 start = vdict["start_position"]
                 end = vdict["end_position"]
-            variant_string = f"{start}_{end}{variant_type}{vdict['variant']}"
+            if start == end and variant_type == "delins":
+                variant_string = f"{start}{variant_type}{vdict['variant']}"
+            else:
+                variant_string = f"{start}_{end}{variant_type}{vdict['variant']}"
         else:
             raise MaveHgvsParseError("invalid variant type")
 
@@ -492,7 +509,7 @@ class Variant:
             other._sequences,
         )
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # noqa: max-complexity: 14
         """The object representation is equivalent to the input string.
 
         Returns
@@ -569,10 +586,12 @@ class Variant:
         ref: Optional[str],
         target: str,
     ) -> None:
-        """Determine whether the target portion of a variant matches the target sequence.
+        """Determine whether the target portion of a variant matches the target
+        sequence.
 
         Note that variants using extended syntax cannot be validated with this method.
-        If an extended syntax variant is encountered, it will be interpreted as valid/matching.
+        If an extended syntax variant is encountered, it will be interpreted as
+        valid/matching.
 
         Parameters
         ----------
@@ -580,10 +599,11 @@ class Variant:
             Single variant position or start/end tuple for an indel.
         ref : Optional[str]
             Reference base to validate for nucleotide substitutions.
-            This should be None for amino acid substitutions, since the reference is included in the VariantPosition.
+            This should be None for amino acid substitutions, since the reference is
+            included in the VariantPosition.
         target : str
-            Target sequence. This must be an amino acid sequence for protein variants or a nucleotide sequence
-            for coding/noncoding/genomic variants.
+            Target sequence. This must be an amino acid sequence for protein variants or
+            a nucleotide sequence for coding/noncoding/genomic variants.
             RNA sequences should be in lowercase, DNA sequences should be in uppercase.
 
         Returns
@@ -593,7 +613,8 @@ class Variant:
         Raises
         ------
         MaveHgvsParseError
-            If the reference base or amino acid does not match the target at the given position
+            If the reference base or amino acid does not match the target at the given
+            position
         MaveHgvsParseError
             If the position is outside the bounds of the target.
 
@@ -619,15 +640,17 @@ class Variant:
                 return
 
     def is_target_identical(self) -> bool:
-        """Return whether the variant describes the "wild-type" sequence or is the special synonymous variant.
+        """Return whether the variant describes the "wild-type" sequence or is the
+        special synonymous variant.
 
         This is the variant described with only the equals sign (e.g. ``c.=``)
         or the uncertain equals protein variant (e.g. ``p.(=)``).
 
-        Coding or genomic variants that specify an identical region (e.g. ``c.1_3=`` are also considered target
-        identical.
+        Coding or genomic variants that specify an identical region (e.g. ``c.1_3=`` are
+        also considered target identical.
 
-        Synonymous protein variants (e.g. ``p.Leu12=``) are not considered target identical.
+        Synonymous protein variants (e.g. ``p.Leu12=``) are not considered target
+        identical.
 
         Returns
         -------
@@ -644,7 +667,8 @@ class Variant:
             return False
 
     def is_synonymous(self) -> bool:
-        """Return whether the variant describes a synonymous protein variant or is the special synonymous variant.
+        """Return whether the variant describes a synonymous protein variant or is the
+        special synonymous variant.
 
         Returns
         -------
@@ -702,13 +726,15 @@ class Variant:
         Returns
         -------
         Union[str, List[str]]
-            String containing the variant type. Returns a list of strings for a multi-variant.
+            String containing the variant type. Returns a list of strings for a
+            multi-variant.
 
         """
         return self._variant_types
 
     def uses_extended_positions(self) -> bool:
-        """Return whether the variant uses the extended position notation to describe intronic or UTR positions.
+        """Return whether the variant uses the extended position notation to describe
+        intronic or UTR positions.
 
         Examples of variants using the extended position notation include:
 
@@ -716,14 +742,15 @@ class Variant:
         * r.*33a>c
         * c.43-6_595+12delinsCTT
 
-        This should always be false for variants with a genomic or protein prefix, as variants with these prefixes
-        cannot use positions relative to a transcript under the MAVE-HGVS specification.
+        This should always be false for variants with a genomic or protein prefix, as
+        variants with these prefixes cannot use positions relative to a transcript under
+        the MAVE-HGVS specification.
 
         Returns
         -------
         bool
-            True if the variant (or any of the individual variants for a multi-variant) uses the extended position
-            notation.
+            True if the variant (or any of the individual variants for a multi-variant)
+            uses the extended position notation.
 
         """
         if self.is_multi_variant():
@@ -752,13 +779,15 @@ class Variant:
             List[Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]],
         ]
     ]:
-        """The variant position as a single position or tuple containing start and end positions.
+        """The variant position as a single position or tuple containing start and end
+        positions.
 
         Each position is an instance of :py:class:`mavehgvs.position.VariantPosition`.
 
         Returns
         -------
-        Union[VariantPosition, Tuple[VariantPosition, VariantPosition], List[Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]]]
+        Union[VariantPosition, Tuple[VariantPosition, VariantPosition], \
+        List[Union[VariantPosition, Tuple[VariantPosition, VariantPosition]]]]
             Variant position or tuple of start/end positions.
             Returns a list of positions or start/end tuples for a multi-variant.
 
@@ -773,15 +802,19 @@ class Variant:
     ]:
         """The sequence portion of the variant.
 
-        This can be a tuple of target and new bases for a substitution, a single sequence for insertions or
-        deletion-insertions, or the "=" character for variants that are identical to the target sequence.
+        This can be a tuple of target and new bases for a substitution, a single
+        sequence for insertions or deletion-insertions, or the "=" character for
+        variants that are identical to the target sequence.
 
         Returns
         -------
         Union[str, Tuple[str, str], List[Optional[Union[str, Tuple[str, str]]]]]]
-            Tuple of ref/new bases for substitutions, string containing inserted sequence, or the "=" character.
-            Returns None if the variant does not have a sequence component (deletion or duplication).
-            Returns a list for a multi-variant, which may contain None values for deletions or duplications.
+            Tuple of ref/new bases for substitutions, string containing inserted
+            sequence, or the "=" character.
+            Returns None if the variant does not have a sequence component (deletion or
+            duplication).
+            Returns a list for a multi-variant, which may contain None values for
+            deletions or duplications.
 
         """
         return self._sequences
@@ -791,7 +824,8 @@ class Variant:
         """The target identifier for the variant (if applicable).
 
         The target identifier precedes the prefix and is followed by a ``:``.
-        For example in ``NM_001130145.3:c.832C>T`` the target identifier is "NM_001130145.3".
+        For example in ``NM_001130145.3:c.832C>T`` the target identifier is
+        "NM_001130145.3".
 
         Returns
         -------

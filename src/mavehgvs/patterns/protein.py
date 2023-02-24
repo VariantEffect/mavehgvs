@@ -26,11 +26,17 @@ pro_fs: str = rf"(?P<pro_fs>(?P<position>{aa_pos})fs)"
 """str: Pattern matching a protein substitution.
 """
 
-pro_del: str = rf"(?P<pro_del>(?:(?P<start>{aa_pos})_(?P<end>{aa_pos})del)|(?:(?P<position>{aa_pos})del))"
+pro_del: str = (
+    rf"(?P<pro_del>(?:(?P<start>{aa_pos})_(?P<end>{aa_pos})del)|"
+    + rf"(?:(?P<position>{aa_pos})del))"
+)
 """str: Pattern matching a protein deletion.
 """
 
-pro_dup: str = rf"(?P<pro_dup>(?:(?P<start>{aa_pos})_(?P<end>{aa_pos})dup)|(?:(?P<position>{aa_pos})dup))"
+pro_dup: str = (
+    rf"(?P<pro_dup>(?:(?P<start>{aa_pos})_(?P<end>{aa_pos})dup)|"
+    + rf"(?:(?P<position>{aa_pos})dup))"
+)
 """str: Pattern matching a protein duplication.
 """
 
@@ -40,7 +46,10 @@ pro_ins: str = (
 """str: Pattern matching a protein insertion.
 """
 
-pro_delins: str = rf"(?P<pro_delins>(?:(?:(?P<start>{aa_pos})_(?P<end>{aa_pos}))|(?P<position>{aa_pos}))delins(?P<seq>{amino_acid}+))"
+pro_delins: str = (
+    rf"(?P<pro_delins>(?:(?:(?P<start>{aa_pos})_(?P<end>{aa_pos}))|"
+    + rf"(?P<position>{aa_pos}))delins(?P<seq>{amino_acid}+))"
+)
 """str: Pattern matching a protein deletion-insertion.
 """
 
@@ -54,10 +63,16 @@ pro_single_variant: str = rf"(?P<pro>p\.{pro_variant})"
 """str: Pattern matching any complete protein variant, including the prefix character.
 """
 
-pro_multi_variant: str = rf"(?P<pro_multi>p\.\[{remove_named_groups(pro_variant)}(?:;{remove_named_groups(pro_variant)}){{1,}}\])"
-"""str: Pattern matching any complete protein multi-variant, including the prefix character.
+pro_multi_variant: str = (
+    rf"(?P<pro_multi>p\.\[{remove_named_groups(pro_variant)}"
+    + rf"(?:;{remove_named_groups(pro_variant)}){{1,}}\])"
+)
 
-Named capture groups have been removed from the variant patterns because of non-uniqueness.
-Another applications of single-variant regular expressions is needed to recover the named groups from each individual
-variant in the multi-variant.
+"""str: Pattern matching any complete protein multi-variant, including the prefix
+character.
+
+Named capture groups have been removed from the variant patterns because of
+non-uniqueness.
+Another applications of single-variant regular expressions is needed to recover the
+named groups from each individual variant in the multi-variant.
 """

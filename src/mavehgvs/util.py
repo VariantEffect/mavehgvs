@@ -23,7 +23,8 @@ def parse_variant_strings(
         See the documentation for :py:class:`Variant` for further details.
 
     expected_prefix : Optional[str]
-        If provided, all variants will be expected to have the same single-letter prefix.
+        If provided, all variants will be expected to have the same single-letter
+        prefix.
         Variants that do not have this prefix will be treated as invalid.
 
     Returns
@@ -32,8 +33,10 @@ def parse_variant_strings(
         Returns a pair of lists containing variants or error messages.
 
         Both lists have the same length as the input list.
-        The first list contains Variant objects if the string was successfully parsed; else None.
-        The second list contains None if the string was successfully parsed; else the error message.
+        The first list contains Variant objects if the string was successfully parsed;
+        else None.
+        The second list contains None if the string was successfully parsed; else the
+        error message.
 
     """
     if expected_prefix is not None and expected_prefix not in list("cgmnopr"):
