@@ -53,6 +53,12 @@ Install mavehgvs from pip using:
 pip3 install mavehgvs
 ```
 
+To set up the package for development purposes, include the optional dependencies and
+install pre-commit:
+
+    pip3 install mavehgvs[dev]
+    pre-commit install
+
 # Feedback
 To report a problem or request a new feature with either the mavehgvs package or the MAVE-HGVS standard,
 please use the GitHub issue tracker.
