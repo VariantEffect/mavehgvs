@@ -5,4 +5,4 @@ from mavehgvs.util import parse_variant_strings
 
 __version__ = "0.6.0"
 
-__all__ = ["Variant", "VariantPosition", "MaveHgvsParseError", "parse_variant_strings"]
+__all__ = ["__version__", "Variant", "VariantPosition", "MaveHgvsParseError", "parse_variant_strings"]

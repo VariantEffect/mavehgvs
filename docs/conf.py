@@ -13,14 +13,18 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath(".."))
+sys.path.insert(0, os.path.abspath("../src"))
 
+from mavehgvs import __version__  # noqa: E402
 
 # -- Project information -----------------------------------------------------
 
 project = "MAVE-HGVS"
-copyright = "2018-2021, Alan F Rubin and Daniel Esposito"
+copyright = "2018-2023, Alan F Rubin and Daniel Esposito"
 author = "Alan F Rubin and Daniel Esposito"
+
+# The full version, including alpha/beta/rc tags
+release = __version__
 
 
 # -- General configuration ---------------------------------------------------
