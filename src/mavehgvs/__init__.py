@@ -3,7 +3,7 @@ from mavehgvs.position import VariantPosition
 from mavehgvs.variant import Variant
 from mavehgvs.util import parse_variant_strings
 
-__version__ = "0.6.0"
+__version__ = "0.6.1"
 
 __all__ = [
     "__version__",
