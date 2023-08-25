@@ -166,10 +166,10 @@ dna_multi_variant: str = (
     + rf"(?:;{remove_named_groups(dna_variant_c)}){{1,}}\])|"
     + r"(?P<dna_n_multi>n\."
     + rf"\[{remove_named_groups(dna_variant_n)}"
-    + rf"(?:;{remove_named_groups(dna_variant_n)}){{1,}}\])| "
+    + rf"(?:;{remove_named_groups(dna_variant_n)}){{1,}}\])|"
     + r"(?P<dna_gmo_multi>[gmo]\."
     + rf"\[{remove_named_groups(dna_variant_gmo)}"
-    + rf"(?:;{remove_named_groups(dna_variant_gmo)}){{1,}})\]"
+    + rf"(?:;{remove_named_groups(dna_variant_gmo)}){{1,}}\])"
 )
 """str: Pattern matching any complete DNA multi-variant, including the prefix character.
 
