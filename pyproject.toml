@@ -47,3 +47,6 @@ exclude = [
     "docs/",
     ".github/",
 ]
+
+[tool.setuptools.package-data]
+"mavehgvs" = ["py.typed"]
