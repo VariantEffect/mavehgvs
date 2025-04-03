@@ -7,6 +7,8 @@ from mavehgvs.patterns.protein import (
 
 any_variant = (
     r"(?:(?P<target_id>[a-zA-Z0-9_.-]+):)?"
+    + r"(?P<variant>"
     + rf"(?P<single_variant>{r'|'.join([dsv, rsv, psv])})|"
     + rf"(?P<multi_variant>{r'|'.join([dmv, rmv, pmv])})"
+    + r")"
 )
