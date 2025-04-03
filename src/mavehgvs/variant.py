@@ -309,7 +309,7 @@ class Variant:
             positions = VariantPosition(match_dict[f"{pattern_group}_position"])
             if self._prefix == "p":
                 sequences = (positions.amino_acid, match_dict[f"{pattern_group}_new"])
-            elif self._prefix in tuple("gmo" "cn" "r"):
+            elif self._prefix in tuple("gmocnr"):
                 sequences = (
                     match_dict[f"{pattern_group}_ref"],
                     match_dict[f"{pattern_group}_new"],
@@ -479,43 +479,18 @@ class Variant:
         else:
             return variant_string
 
-    def __eq__(self, other: "Variant") -> bool:
-        """Equality comparison operator.
+    def _format_component_variants(self) -> List[str]:  # noqa: max-complexity: 14
+        """Format each of the component variants of this variant into a variant string.
 
-        Parameters
-        ----------
-        other : Variant
-            The other Variant to compare to.
-
-        Returns
-        -------
-        bool
-            True if this variant is the same as the other position; else False.
-
-        """
-        return (
-            self._target_id,
-            self.variant_count,
-            self._prefix,
-            self._variant_types,
-            self._positions,
-            self._sequences,
-        ) == (
-            other._target_id,
-            other.variant_count,
-            other._prefix,
-            other._variant_types,
-            other._positions,
-            other._sequences,
-        )
-
-    def __repr__(self) -> str:  # noqa: max-complexity: 14
-        """The object representation is equivalent to the input string.
+        The result is a list of strings, each representing a single variant. If this
+        variant is a single variant, the list will contain a single element equivalent
+        to the input string. For multi-variants, the list will contain each component
+        variant of the variant.
 
         Returns
         -------
-        str
-            The object representation.
+        List[str]
+            List of formatted component variants.
 
         """
 
@@ -569,12 +544,55 @@ class Variant:
             else:  # pragma: no cover
                 raise ValueError("invalid variant type")
 
+        return [format_variant(*t) for t in self.variant_tuples()]
+
+    def __eq__(self, other: "Variant") -> bool:
+        """Equality comparison operator.
+
+        Parameters
+        ----------
+        other : Variant
+            The other Variant to compare to.
+
+        Returns
+        -------
+        bool
+            True if this variant is the same as the other position; else False.
+
+        """
+        return (
+            self._target_id,
+            self.variant_count,
+            self._prefix,
+            self._variant_types,
+            self._positions,
+            self._sequences,
+        ) == (
+            other._target_id,
+            other.variant_count,
+            other._prefix,
+            other._variant_types,
+            other._positions,
+            other._sequences,
+        )
+
+    def __repr__(self) -> str:
+        """The object representation is equivalent to the input string.
+
+        Returns
+        -------
+        str
+            The object representation.
+
+        """
+
+        elements = self._format_component_variants()
+
         if self._target_id is not None:
             prefix = f"{self._target_id}:{self._prefix}"
         else:
             prefix = f"{self._prefix}"
 
-        elements = [format_variant(*t) for t in self.variant_tuples()]
         if self.is_multi_variant():
             return f"{prefix}.[{';'.join(elements)}]"
         else:
@@ -834,3 +852,21 @@ class Variant:
 
         """
         return self._target_id
+
+    def components(self) -> Tuple[str, ...]:
+        """The component substrings of a variant.
+
+        Returns
+        -------
+        Tuple[str, ...]
+            List of component substrings for this variant.
+
+        """
+        if self.target_id is not None:
+            prefix = f"{self.target_id}:{self.prefix}"
+        else:
+            prefix = f"{self.prefix}"
+
+        return tuple(
+            [f"{prefix}.{component}" for component in self._format_component_variants()]
+        )
