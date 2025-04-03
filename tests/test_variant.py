@@ -987,6 +987,30 @@ class TestMiscMethods(unittest.TestCase):
                 v = Variant(s)
                 self.assertTrue(v.uses_extended_positions())
 
+    def test_components(self):
+        variant_strings = [
+            ("p.[Glu27Trp;Ter345Lys]", ("p.Glu27Trp", "p.Ter345Lys")),
+            ("p.[Glu27Trp;Lys212fs]", ("p.Glu27Trp", "p.Lys212fs")),
+            (
+                "p.[Gly18del;Glu27Trp;Ter345Lys]",
+                ("p.Gly18del", "p.Glu27Trp", "p.Ter345Lys"),
+            ),
+            (
+                "p.[Gln7_Asn19del;Glu27Trp;Ter345Lys]",
+                ("p.Gln7_Asn19del", "p.Glu27Trp", "p.Ter345Lys"),
+            ),
+            (
+                "c.[1_35del;78+5_78+10del;122T>A]",
+                ("c.1_35del", "c.78+5_78+10del", "c.122T>A"),
+            ),
+            ("p.Glu27Trp", ("p.Glu27Trp",)),
+        ]
+
+        for s, expected_components in variant_strings:
+            with self.subTest(s=s):
+                v = Variant(s)
+                self.assertTrue(all([c in expected_components for c in v.components()]))
+
 
 # TODO: multi-variant test cases
 class TestMiscProperties(unittest.TestCase):
