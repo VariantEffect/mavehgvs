@@ -26,6 +26,7 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
             "g.88_99=",
             "c.43-6_595+12=",
             "p.Glu27fs",
+            "NM_001301.4:c.122-6T>A",
         ]
 
         invalid_variant_strings = [
@@ -50,6 +51,7 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
             "p.Gly24(=)",
             "p.Arg12LysfsTer18",
             "p.Glu27fs*?",
+            "NM_001301.4::c.122-6T>A",
         ]
 
         for s in valid_variant_strings:
@@ -155,7 +157,7 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
 
     def test_target_identical(self) -> None:
         identical_variant_strings = [
-            *[f"{prefix}.=" for prefix in tuple("gmo" "cn" "r")],
+            *[f"{prefix}.=" for prefix in tuple("gmocnr")],
             "p.(=)",
             "c.1_3=",
         ]
@@ -221,6 +223,7 @@ class TestCreateMultiVariantFromString(unittest.TestCase):
             "p.[Gly18del;Glu27Trp;Ter345Lys]",
             "p.[Gln7_Asn19del;Glu27Trp;Ter345Lys]",
             "c.[1_35del;78+5_78+10del;122T>A]",
+            "NM_002002.3:c.[1_35del;78+5_78+10del;122T>A]",
         ]
 
         invalid_variant_strings = [
@@ -230,6 +233,8 @@ class TestCreateMultiVariantFromString(unittest.TestCase):
             "c.[1_3=;12T>A;78+5_78+10del]",
             "p.[Glu27fs;Arg48Lys]",
             "p.[Glu27fs;Arg48fs]",
+            "NM_002002.3::c.[1_35del;78+5_78+10del;122T>A]",
+            "NM_002002.3:c.1_35del;78+5_78+10del;122T>A",
         ]
 
         for s in variant_strings:
@@ -1004,6 +1009,11 @@ class TestMiscMethods(unittest.TestCase):
                 ("c.1_35del", "c.78+5_78+10del", "c.122T>A"),
             ),
             ("p.Glu27Trp", ("p.Glu27Trp",)),
+            ("NP_002002.3:p.Glu27Trp", ("NP_002002.3:p.Glu27Trp",)),
+            (
+                "NP_002002.3:p.[Glu27Trp;Lys212fs]",
+                ("NP_002002.3:p.Glu27Trp", "NP_002002.3:p.Lys212fs"),
+            ),
         ]
 
         for s, expected_components in variant_strings:
@@ -1015,7 +1025,7 @@ class TestMiscMethods(unittest.TestCase):
 # TODO: multi-variant test cases
 class TestMiscProperties(unittest.TestCase):
     def test_prefix(self):
-        variant_tuples = [(prefix, f"{prefix}.=") for prefix in tuple("gmo" "cn" "r")]
+        variant_tuples = [(prefix, f"{prefix}.=") for prefix in tuple("gmocnr")]
 
         for p, s in variant_tuples:
             with self.subTest(p=p, s=s):
@@ -1109,6 +1119,7 @@ class TestMiscProperties(unittest.TestCase):
             ("YFG1", "YFG1:c.122-6T>A"),
             ("ENST00000471181.7", "ENST00000471181.7:c.122-6T>A"),
             ("NM_007294.4", "NM_007294.4:c.122-6T>A"),
+            ("NM_007294.4", "NM_007294.4:c.[122-6T>A;153C>T]"),
         ]
 
         for t, s in variant_tuples:
