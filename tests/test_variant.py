@@ -298,6 +298,28 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
                 {
                     "variant_type": "equal",
                     "prefix": "p",
+                },
+                "p.=",
+            ),
+            (
+                {
+                    "variant_type": "equal",
+                    "prefix": "p",
+                    "synonymous": True,
+                },
+                "p.(=)",
+            ),
+            (
+                {
+                    "variant_type": "equal",
+                    "prefix": "c",
+                },
+                "c.=",
+            ),
+            (
+                {
+                    "variant_type": "equal",
+                    "prefix": "p",
                     "start_position": "27",
                     "start_target": "Glu",
                     "end_position": "27",
