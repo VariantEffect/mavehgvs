@@ -80,6 +80,7 @@ class TestCreateSingleVariantFromString(unittest.TestCase):
             "c.12=",
             "g.88_99=",
             "c.43-6_595+12=",
+            "p.Glu12_Gly14=",
         ]
 
         for s in variant_strings:
@@ -229,6 +230,7 @@ class TestCreateMultiVariantFromString(unittest.TestCase):
         invalid_variant_strings = [
             "p.[Glu27Trp;=;Ter345Lys]",
             "p.[(=);Gly18del;Glu27Trp;Ter345Lys]",
+            "p.[Gln7_Asn19=;Glu27Trp;Ter345Lys]",
             "c.[12T>A;=;78+5_78+10del]",
             "c.[1_3=;12T>A;78+5_78+10del]",
             "p.[Glu27fs;Arg48Lys]",
@@ -296,10 +298,23 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
                 {
                     "variant_type": "equal",
                     "prefix": "p",
-                    "position": "27",
-                    "target": "Glu",
+                    "start_position": "27",
+                    "start_target": "Glu",
+                    "end_position": "27",
+                    "end_target": "Glu",
                 },
                 "p.Glu27=",
+            ),
+            (
+                {
+                    "variant_type": "equal",
+                    "prefix": "p",
+                    "start_position": "12",
+                    "start_target": "Glu",
+                    "end_position": "14",
+                    "end_target": "Gly",
+                },
+                "p.Glu12_Gly14=",
             ),
             (
                 {
@@ -522,6 +537,14 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
                 "end_position": 50,
                 "end_target": "Cys",
                 "variant": "AlaGly",
+            },
+            {
+                "variant_type": "equal",
+                "prefix": "p",
+                "start_position": "27",
+                "start_target": "Glu",
+                "end_position": "27",
+                "end_target": "Asp",
             },
         ]
 
