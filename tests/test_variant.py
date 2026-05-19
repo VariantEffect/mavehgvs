@@ -606,6 +606,13 @@ class TestCreateSingleVariantFromValues(unittest.TestCase):
                 "variant": "Ser",
                 "position": "Ala",
             },
+            {
+                "variant_type": "fs",
+                "prefix": "p",
+                "position": 80,
+                "target": "Cys",
+                "start_position": 23,
+            },
         ]
 
         for d in invalid_dicts:
