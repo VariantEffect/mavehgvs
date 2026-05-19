@@ -1,5 +1,4 @@
-"""Utility functions for working with mavehgvs regex pattern strings.
-"""
+"""Utility functions for working with mavehgvs regex pattern strings."""
 
 import re
 from typing import Sequence, Optional
