@@ -13,7 +13,9 @@ aa_pos: str = rf"(?:{amino_acid}{pos})"
 """
 
 pro_equal: str = (
-    rf"(?P<pro_equal>(?:(?P<position>{aa_pos})?(?P<equal>=))|(?P<equal_sy>\(=\)))"
+    rf"(?P<pro_equal>(?:(?:(?P<position>{aa_pos})|"
+    + rf"(?:(?P<start>{aa_pos})_(?P<end>{aa_pos})))?(?P<equal>=))|"
+    + rf"(?P<equal_sy>\(=\)))"
 )
 """str: Pattern matching protein equality or synonymous variant.
 """

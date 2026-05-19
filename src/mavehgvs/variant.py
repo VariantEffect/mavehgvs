@@ -396,19 +396,30 @@ class Variant:
             raise MaveHgvsParseError("variant dictionary missing required keys")
 
         if variant_type == "equal":
-            expected_keys = ["variant_type", "prefix"]
-            if prefix == "p":
-                expected_keys.extend(["position", "target"])
+            # special case for fully-identical variants
+            if sorted(vdict.keys()) == ["prefix", "variant_type"]:
+                variant_string = "="
+            elif sorted(vdict.keys()) == ["prefix", "synonymous", "variant_type"] and prefix == "p":
+                variant_string = "(=)"
             else:
-                expected_keys.extend(["start_position", "end_position"])
-            if sorted(vdict.keys()) != sorted(expected_keys):
-                raise MaveHgvsParseError("variant dictionary contains invalid keys")
-            if prefix == "p":
-                variant_string = f"{vdict['target']}{vdict['position']}="
-            elif vdict["start_position"] == vdict["end_position"]:
-                variant_string = f"{vdict['start_position']}="
-            else:
-                variant_string = f"{vdict['start_position']}_{vdict['end_position']}="
+                expected_keys = ["variant_type", "prefix", "start_position", "end_position"]
+                if prefix == "p":
+                    expected_keys.extend(["start_target", "end_target"])
+                if sorted(vdict.keys()) != sorted(expected_keys):
+                    raise MaveHgvsParseError("variant dictionary contains invalid keys")
+                if vdict["start_position"] == vdict["end_position"]:
+                    if prefix == "p":
+                        if vdict["start_target"] == vdict["end_target"]:
+                            variant_string = f"{vdict['start_target']}{vdict['start_position']}="
+                        else:
+                            raise MaveHgvsParseError("amino acid mismatch at same position")
+                    else:
+                        variant_string = f"{vdict['start_position']}="
+                else:
+                    if prefix == "p":
+                        variant_string = f"{vdict['start_target']}{vdict['start_position']}_{vdict['end_target']}{vdict['end_position']}="
+                    else:
+                        variant_string = f"{vdict['start_position']}_{vdict['end_position']}="
         elif variant_type == "sub":
             if sorted(vdict.keys()) != sorted(
                 ["variant_type", "prefix", "position", "target", "variant"]

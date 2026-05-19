@@ -24,6 +24,7 @@ class TestProteinEqual(unittest.TestCase):
             "=",
             "(=)",
             "Cys22=",
+            "Gly12_Glu14=",
         ]
 
         cls.invalid_strings = ["=22", "Arg18(=)", "Cys-22", "=="]
