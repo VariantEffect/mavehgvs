@@ -50,3 +50,7 @@ exclude = [
 
 [tool.setuptools.package-data]
 "mavehgvs" = ["py.typed"]
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
