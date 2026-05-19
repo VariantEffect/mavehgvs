@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.com/VariantEffect/mavehgvs.svg?branch=main)](https://travis-ci.com/VariantEffect/mavehgvs)
-[![Coverage Status](https://coveralls.io/repos/github/VariantEffect/mavehgvs/badge.svg?branch=main)](https://coveralls.io/github/VariantEffect/mavehgvs?branch=main)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 # mavehgvs
