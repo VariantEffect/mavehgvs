@@ -47,6 +47,12 @@ jobs:
     - name: Test with pytest and output coverage report
       run: |
         pytest --cov=src --cov-report=lcov:coverage-${{ matrix.python-version }}.lcov
+        wc -l coverage-${{ matrix.python-version }}.lcov
+        head -20 coverage-${{ matrix.python-version }}.lcov
+
+    - name: Test with pytest and output coverage report (terminal version)
+      run: |
+        pytest --cov=src --cov-report=term
 
     - name: Upload coverage artefact
       # save the file for the Python version we care about (3.11)
