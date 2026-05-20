@@ -46,11 +46,11 @@ jobs:
 
     - name: Test with pytest and output coverage report
       run: |
-        pytest --cov=mavehgvs --cov-report=json:coverage-${{ matrix.python-version }}.json
+        pytest --cov=mavehgvs --cov-report=xml:coverage-${{ matrix.python-version }}.xml --cov-report=term
 
     - name: Send coverage to coveralls.io
       # only calculate coverage for the Python version being used by MaveDB
       if: matrix.python-version == '3.11'
       uses: coverallsapp/github-action@v2
       with:
-        file: coverage-${{ matrix.python-version }}.json
+        file: coverage-${{ matrix.python-version }}.xml
