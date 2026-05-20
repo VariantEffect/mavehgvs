@@ -23,7 +23,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -52,7 +52,7 @@ jobs:
 
     - name: Test with pytest and output coverage report (terminal version)
       run: |
-        pytest --cov=src --cov-report=term
+        pytest --cov=mavehgvs --cov-report=term
 
     - name: Upload coverage artefact
       # save the file for the Python version we care about (3.11)
