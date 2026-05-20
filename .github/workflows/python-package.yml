@@ -50,30 +50,9 @@ jobs:
         wc -l coverage-${{ matrix.python-version }}.lcov
         head -20 coverage-${{ matrix.python-version }}.lcov
 
-    - name: Test with pytest and output coverage report (terminal version)
-      run: |
-        pytest --cov=mavehgvs --cov-report=term
-
-    - name: Upload coverage artefact
-      # save the file for the Python version we care about (3.11)
+    - name: Send coverage to coveralls.io
+      # only calculate coverage for the Python version being used by MaveDB
       if: matrix.python-version == '3.11'
-      uses: actions/upload-artifact@v4
+      uses: coverallsapp/github-action@v2
       with:
-        name: coverage-report
-        path: coverage-3.11.lcov
-
-  # report coverage under Python 3.11 since that's what MaveDB is using
-  coverage:
-    needs: build
-    if: ${{ always() }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download coverage artefact
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage-report
-
-      - name: Coveralls GitHub Action
-        uses: coverallsapp/github-action@v2
-        with:
-          file: coverage-3.11.lcov
+        file: coverage-${{ matrix.python-version }}.lcov
