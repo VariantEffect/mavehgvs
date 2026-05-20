@@ -46,7 +46,7 @@ jobs:
 
     - name: Test with pytest and output coverage report
       run: |
-        pytest --cov=src --cov-report=lcov:coverage-${{ matrix.python-version }}.lcov
+        pytest --cov=mavehgvs --cov-report=lcov:coverage-${{ matrix.python-version }}.lcov
         wc -l coverage-${{ matrix.python-version }}.lcov
         head -20 coverage-${{ matrix.python-version }}.lcov
 
