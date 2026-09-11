@@ -8,9 +8,9 @@ dynamic = ["version"]
 description = "Regular expression-based validation of HGVS-style variant strings for Multiplexed Assays of Variant Effect."
 readme = "README.md"
 license = "BSD-3-Clause"
-requires-python = ">=3.6"
+requires-python = ">=3.11"
 authors = [
-    { name = "Alan F Rubin", email = "alan.rubin@wehi.edu.au" },
+    { name = "Alan F Rubin", email = "alan.rubin@unimelb.edu.au" },
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -34,6 +34,7 @@ dev = [
     "flake8",
     "pre-commit",
     "pytest",
+    "hypothesis",
 ]
 
 [tool.hatch.version]
@@ -53,4 +54,4 @@ exclude = [
 
 [tool.black]
 line-length = 88
-target-version = ['py311']
+target-version = ['py314']

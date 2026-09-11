@@ -1,8 +1,85 @@
 import unittest
 import itertools
 import random
+import string
+
+from hypothesis import given, strategies as st
+
 from mavehgvs.position import VariantPosition
 from mavehgvs.exceptions import MaveHgvsParseError
+from .strategies import (
+    plain_positions,
+    utr_position_strings,
+    utr_intron_positions,
+    amino_acid_position_strings,
+)
+
+# strategies for building position strings that are valid according to the
+# grammar in mavehgvs.patterns.position / mavehgvs.patterns.protein; the
+# building blocks live in tests/strategies.py, shared with tests/test_patterns/
+
+
+@st.composite
+def valid_position_strings(draw) -> str:
+    """Any valid position: nucleotide or amino acid."""
+    return draw(st.one_of(utr_intron_positions(), amino_acid_position_strings()))
+
+
+# strategies for building pairs of position strings that are adjacent by
+# construction, mirroring the categories of adjacent_pairs in
+# TestAdjacency.test_adjacent_pairs
+
+
+@st.composite
+def sequential_same_kind_pairs(draw) -> tuple[str, str]:
+    """Two non-intronic positions of the same kind whose numeric positions
+    differ by exactly one, e.g. ('8', '9') or ('*1', '*2')."""
+    kind = draw(st.sampled_from(["plain", "five_prime_utr", "three_prime_utr"]))
+    n = draw(st.integers(min_value=1, max_value=10**9))
+    if kind == "plain":
+        return str(n), str(n + 1)
+    elif kind == "five_prime_utr":
+        return f"-{n + 1}", f"-{n}"
+    else:
+        return f"*{n}", f"*{n + 1}"
+
+
+@st.composite
+def adjacent_intronic_offset_pairs(draw) -> tuple[str, str]:
+    """Two positions with the same base and intronic offsets of the same sign
+    that differ by exactly one, e.g. ('99+88', '99+89') or ('100-12', '100-11')."""
+    base = draw(st.one_of(plain_positions(), utr_position_strings()))
+    sign = draw(st.sampled_from(["+", "-"]))
+    n = draw(st.integers(min_value=1, max_value=10**9))
+    return f"{base}{sign}{n}", f"{base}{sign}{n + 1}"
+
+
+@st.composite
+def intron_exon_boundary_pairs(draw) -> tuple[str, str]:
+    """A base position paired with the first base of its adjacent intron, e.g.
+    ('202-1', '202') or ('99', '99+1')."""
+    base = draw(st.one_of(plain_positions(), utr_position_strings()))
+    sign = draw(st.sampled_from(["+", "-"]))
+    return base, f"{base}{sign}1"
+
+
+@st.composite
+def adjacent_position_pairs(draw) -> tuple[str, str]:
+    """A pair of position strings that are adjacent by construction.
+
+    Covers the same categories as the fixed examples in
+    TestAdjacency.test_adjacent_pairs: sequential positions of the same kind,
+    sequential intronic offsets, the exon/intron boundary, and the 5' UTR /
+    coding sequence boundary at -1/1.
+    """
+    return draw(
+        st.one_of(
+            sequential_same_kind_pairs(),
+            adjacent_intronic_offset_pairs(),
+            intron_exon_boundary_pairs(),
+            st.just(("-1", "1")),
+        )
+    )
 
 
 class TestObjectCreation(unittest.TestCase):
@@ -297,6 +374,91 @@ class TestAdjacency(unittest.TestCase):
         for v1, v2 in itertools.permutations(variants, 2):
             with self.subTest(v1=v1, v2=v2):
                 self.assertFalse(v1.is_adjacent(v2))
+
+
+class TestHypothesisRoundTrip(unittest.TestCase):
+    """Any string generated from the position grammar should parse successfully
+    and format back to exactly the input string."""
+
+    @given(s=valid_position_strings())
+    def test_round_trip(self, s: str) -> None:
+        v = VariantPosition(s)
+        self.assertEqual(s, repr(v))
+
+    @given(s=utr_intron_positions())
+    def test_nucleotide_positions_are_never_protein(self, s: str) -> None:
+        v = VariantPosition(s)
+        self.assertFalse(v.is_protein())
+
+    @given(s=amino_acid_position_strings())
+    def test_amino_acid_positions_are_never_extended(self, s: str) -> None:
+        v = VariantPosition(s)
+        self.assertTrue(v.is_protein())
+        self.assertFalse(v.is_extended())
+
+
+class TestHypothesisFuzz(unittest.TestCase):
+    """Any arbitrary string should either be rejected with MaveHgvsParseError or
+    parse into an object whose repr reproduces the input; no other exception
+    should ever escape the constructor."""
+
+    @given(
+        s=st.text(
+            alphabet=string.ascii_letters + string.digits + "*+-",
+            max_size=12,
+        )
+    )
+    def test_fuzz_never_raises_unexpected_errors(self, s: str) -> None:
+        try:
+            v = VariantPosition(s)
+        except MaveHgvsParseError:
+            return
+        self.assertEqual(s, repr(v))
+
+
+class TestHypothesisComparisons(unittest.TestCase):
+    @given(s=valid_position_strings())
+    def test_equal_to_self(self, s: str) -> None:
+        v = VariantPosition(s)
+        self.assertEqual(v, v)
+        self.assertFalse(v < v)
+
+    @given(s1=valid_position_strings(), s2=valid_position_strings())
+    def test_equality_is_symmetric(self, s1: str, s2: str) -> None:
+        v1 = VariantPosition(s1)
+        v2 = VariantPosition(s2)
+        self.assertEqual(v1 == v2, v2 == v1)
+
+    @given(s1=valid_position_strings(), s2=valid_position_strings())
+    def test_ordering_is_consistent(self, s1: str, s2: str) -> None:
+        v1 = VariantPosition(s1)
+        v2 = VariantPosition(s2)
+        # total_ordering trichotomy: exactly one of <, ==, > holds
+        outcomes = (v1 < v2, v1 == v2, v1 > v2)
+        self.assertEqual(1, sum(outcomes))
+        # antisymmetry between the two directions
+        self.assertEqual(v1 < v2, v2 > v1)
+
+
+class TestHypothesisAdjacency(unittest.TestCase):
+    @given(s=valid_position_strings())
+    def test_never_adjacent_to_self(self, s: str) -> None:
+        v = VariantPosition(s)
+        self.assertFalse(v.is_adjacent(v))
+
+    @given(s1=valid_position_strings(), s2=valid_position_strings())
+    def test_adjacency_is_symmetric(self, s1: str, s2: str) -> None:
+        v1 = VariantPosition(s1)
+        v2 = VariantPosition(s2)
+        self.assertEqual(v1.is_adjacent(v2), v2.is_adjacent(v1))
+
+    @given(pair=adjacent_position_pairs())
+    def test_generated_adjacent_pairs_are_adjacent(self, pair: tuple[str, str]) -> None:
+        s1, s2 = pair
+        v1 = VariantPosition(s1)
+        v2 = VariantPosition(s2)
+        self.assertTrue(v1.is_adjacent(v2))
+        self.assertTrue(v2.is_adjacent(v1))
 
 
 if __name__ == "__main__":

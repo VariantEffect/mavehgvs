@@ -1,5 +1,6 @@
 import unittest
 import re
+from hypothesis import given, strategies as st
 from mavehgvs.patterns.protein import (
     pro_equal,
     pro_sub,
@@ -13,6 +14,55 @@ from mavehgvs.patterns.protein import (
     pro_multi_variant,
 )
 from . import build_multi_variants
+from ..strategies import (
+    AMINO_ACIDS,
+    amino_acid_position_strings as amino_acid_positions,
+    amino_acid_sequences,
+)
+
+
+@st.composite
+def protein_variant_strings(draw) -> str:  # noqa: max-complexity: 11
+    """A single protein variant string (without the 'p.' prefix): equal
+    (including the synonymous '(=)' form), sub, fs, del, dup, ins, or delins,
+    mirroring the events combined into pro_variant."""
+    kind = draw(st.sampled_from(["equal", "sub", "fs", "del", "dup", "ins", "delins"]))
+    if kind == "equal":
+        equal_kind = draw(st.sampled_from(["bare", "synonymous", "position", "range"]))
+        if equal_kind == "bare":
+            return "="
+        elif equal_kind == "synonymous":
+            return "(=)"
+        elif equal_kind == "position":
+            return f"{draw(amino_acid_positions())}="
+        else:
+            return f"{draw(amino_acid_positions())}_{draw(amino_acid_positions())}="
+    elif kind == "sub":
+        pos = draw(amino_acid_positions())
+        new = draw(st.sampled_from(AMINO_ACIDS))
+        return f"{pos}{new}"
+    elif kind == "fs":
+        return f"{draw(amino_acid_positions())}fs"
+    elif kind in ("del", "dup"):
+        if draw(st.booleans()):
+            return f"{draw(amino_acid_positions())}{kind}"
+        else:
+            start = draw(amino_acid_positions())
+            end = draw(amino_acid_positions())
+            return f"{start}_{end}{kind}"
+    elif kind == "ins":
+        start = draw(amino_acid_positions())
+        end = draw(amino_acid_positions())
+        seq = draw(amino_acid_sequences())
+        return f"{start}_{end}ins{seq}"
+    else:  # delins
+        seq = draw(amino_acid_sequences())
+        if draw(st.booleans()):
+            return f"{draw(amino_acid_positions())}delins{seq}"
+        else:
+            start = draw(amino_acid_positions())
+            end = draw(amino_acid_positions())
+            return f"{start}_{end}delins{seq}"
 
 
 class TestProteinEqual(unittest.TestCase):
@@ -435,6 +485,32 @@ class TestProteinMultiVariant(unittest.TestCase):
                 self.assertIsNone(
                     self.pattern.fullmatch(v), msg=f'incorrectly matched "{v}"'
                 )
+
+
+class TestProteinHypothesis(unittest.TestCase):
+    """Property-based tests that generalize the fixed examples above using
+    generated positions, amino acids, and sequences."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.variant = re.compile(pro_variant, flags=re.ASCII)
+        cls.single = re.compile(pro_single_variant, flags=re.ASCII)
+        cls.multi = re.compile(pro_multi_variant, flags=re.ASCII)
+
+    @given(s=protein_variant_strings())
+    def test_generated_variants(self, s: str) -> None:
+        self.assertIsNotNone(self.variant.fullmatch(s), msg=f'failed to match "{s}"')
+        self.assertIsNotNone(
+            self.single.fullmatch(f"p.{s}"), msg=f'failed to match "p.{s}"'
+        )
+
+    @given(
+        s1=protein_variant_strings(),
+        s2=protein_variant_strings(),
+    )
+    def test_generated_multi_variant(self, s1: str, s2: str) -> None:
+        v = f"p.[{s1};{s2}]"
+        self.assertIsNotNone(self.multi.fullmatch(v), msg=f'failed to match "{v}"')
 
 
 if __name__ == "__main__":

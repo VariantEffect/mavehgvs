@@ -51,8 +51,11 @@ dna_delins_c: str = (
 positions.
 """
 
-dna_equal_n: str = r"(?P<dna_equal_n>(?P<equal>=))"
-"""str: Pattern matching DNA equality with no position support.
+dna_equal_n: str = dna_equal_c.replace(pos_intron_utr, pos_intron).replace(
+    "(?P<dna_equal_c>", "(?P<dna_equal_n>"
+)
+"""str: Pattern matching DNA equality with numeric or intron positions for
+non-coding variants.
 """
 
 dna_sub_n: str = dna_sub_c.replace(pos_intron_utr, pos_intron).replace(

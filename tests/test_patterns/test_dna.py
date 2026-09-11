@@ -1,5 +1,6 @@
 import unittest
 import re
+from hypothesis import given
 from mavehgvs.patterns.dna import (
     dna_equal_c,
     dna_equal_n,
@@ -25,7 +26,15 @@ from mavehgvs.patterns.dna import (
     dna_single_variant,
     dna_multi_variant,
 )
-from . import build_multi_variants
+from . import (
+    build_multi_variants,
+    plain_positions,
+    intron_offset_positions,
+    intron_only_positions,
+    utr_intron_positions,
+    utr_only_positions,
+    nucleotide_variant_strings,
+)
 
 
 class TestDnaEqualC(unittest.TestCase):
@@ -66,7 +75,14 @@ class TestDnaEqualN(unittest.TestCase):
     def setUpClass(cls):
         cls.pattern = re.compile(dna_equal_n, flags=re.ASCII)
 
-        cls.valid_strings = ["="]
+        cls.valid_strings = [
+            "=",
+            "18=",
+            "10_14=",
+            "122-6=",
+            "19+22=",
+            "19+22_88=",
+        ]
 
         cls.invalid_strings = [
             "=22",
@@ -74,11 +90,6 @@ class TestDnaEqualN(unittest.TestCase):
             "18(=)",
             "-27+3=",
             "*24=",
-            "18=",
-            "10_14=",
-            "122-6=",
-            "19+22=",
-            "19+22_88=",
         ]
 
     def test_valid_strings(self):
@@ -641,6 +652,8 @@ class TestDnaVariantN(unittest.TestCase):
         cls.valid_strings = [
             "48C>A",
             "=",
+            "22=",
+            "1_3=",
             "122-6T>A",
             "19+22A>G",
             "44del",
@@ -658,8 +671,6 @@ class TestDnaVariantN(unittest.TestCase):
         ]
 
         cls.invalid_strings = [
-            "22=",
-            "1_3=",
             "22g>u",
             "48C>W",
             "122=/T>A",
@@ -771,6 +782,8 @@ class TestDnaSingleVariant(unittest.TestCase):
         cls.valid_strings = [
             "48C>A",
             "=",
+            "22=",
+            "4_6=",
             "44del",
             "1_95del",
             "22_24dup",
@@ -800,8 +813,6 @@ class TestDnaSingleVariant(unittest.TestCase):
             "122-6T>A",
         ]
 
-        cls.valid_strings_cgmo_only = ["22=", "4_6="]
-
         cls.invalid_strings = [
             "22g>u",
             "48C>W",
@@ -822,13 +833,6 @@ class TestDnaSingleVariant(unittest.TestCase):
     def test_valid_strings(self):
         for p in "cngmo":
             for s in self.valid_strings:
-                with self.subTest(s=s, p=p):
-                    v = f"{p}.{s}"
-                    self.assertIsNotNone(
-                        self.pattern.fullmatch(v), msg=f'failed to match "{v}"'
-                    )
-        for p in "cgmo":
-            for s in self.valid_strings_cgmo_only:
                 with self.subTest(s=s, p=p):
                     v = f"{p}.{s}"
                     self.assertIsNotNone(
@@ -871,13 +875,6 @@ class TestDnaSingleVariant(unittest.TestCase):
                     self.assertIsNone(
                         self.pattern.fullmatch(v), msg=f'incorrectly matched "{v}"'
                     )
-        for p in "n":
-            for s in self.valid_strings_cgmo_only:
-                with self.subTest(s=s, p=p):
-                    v = f"{p}.{s}"
-                    self.assertIsNone(
-                        self.pattern.fullmatch(v), msg=f'incorrectly matched "{v}"'
-                    )
 
 
 class TestDnaMultiVariant(unittest.TestCase):
@@ -888,6 +885,8 @@ class TestDnaMultiVariant(unittest.TestCase):
         single_valid_strings = [
             "48C>A",
             "=",
+            "22=",
+            "4_6=",
             "44del",
             "1_95del",
             "22_24dup",
@@ -917,8 +916,6 @@ class TestDnaMultiVariant(unittest.TestCase):
             "122-6T>A",
         ]
 
-        single_valid_strings_cgmo_only = ["22=", "4_6="]
-
         single_invalid_strings = [
             "22g>u",
             "48C>W",
@@ -945,20 +942,10 @@ class TestDnaMultiVariant(unittest.TestCase):
         cls.valid_strings_cn_only, cls.invalid_strings_gmo = build_multi_variants(
             single_valid_strings_cn_only, single_valid_strings_cn_only
         )
-        cls.valid_strings_cgmo_only, cls.invalid_strings_n = build_multi_variants(
-            single_valid_strings_cgmo_only, single_valid_strings_cgmo_only
-        )
 
     def test_valid_strings(self):
         for p in "cngmo":
             for s in self.valid_strings:
-                with self.subTest(s=s, p=p):
-                    v = f"{p}.[{s}]"
-                    self.assertIsNotNone(
-                        self.pattern.fullmatch(v), msg=f'failed to match "{v}"'
-                    )
-        for p in "cgmo":
-            for s in self.valid_strings_cgmo_only:
                 with self.subTest(s=s, p=p):
                     v = f"{p}.[{s}]"
                     self.assertIsNotNone(
@@ -1001,13 +988,76 @@ class TestDnaMultiVariant(unittest.TestCase):
                     self.assertIsNone(
                         self.pattern.fullmatch(v), msg=f'incorrectly matched "{v}"'
                     )
-        for p in "n":
-            for s in self.invalid_strings_n:
-                with self.subTest(s=s, p=p):
-                    v = f"{p}.[{s}]"
-                    self.assertIsNone(
-                        self.pattern.fullmatch(v), msg=f'incorrectly matched "{v}"'
-                    )
+
+
+class TestDnaHypothesis(unittest.TestCase):
+    """Property-based tests that generalize the fixed examples above: any
+    generated variant string for a given position flavor should match the
+    corresponding combined variant pattern and be accepted by dna_single_variant
+    under the correct prefix(es); positions using features outside a flavor's
+    grammar (UTR / intron) should be rejected by the narrower flavors.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.variant_c = re.compile(dna_variant_c, flags=re.ASCII)
+        cls.variant_n = re.compile(dna_variant_n, flags=re.ASCII)
+        cls.variant_gmo = re.compile(dna_variant_gmo, flags=re.ASCII)
+        cls.single = re.compile(dna_single_variant, flags=re.ASCII)
+        cls.multi = re.compile(dna_multi_variant, flags=re.ASCII)
+
+    @given(s=nucleotide_variant_strings(utr_intron_positions(), "ACGT"))
+    def test_generated_c_variants(self, s: str) -> None:
+        self.assertIsNotNone(self.variant_c.fullmatch(s), msg=f'failed to match "{s}"')
+        self.assertIsNotNone(
+            self.single.fullmatch(f"c.{s}"), msg=f'failed to match "c.{s}"'
+        )
+
+    @given(s=nucleotide_variant_strings(intron_offset_positions(), "ACGT"))
+    def test_generated_n_variants(self, s: str) -> None:
+        self.assertIsNotNone(self.variant_n.fullmatch(s), msg=f'failed to match "{s}"')
+        self.assertIsNotNone(
+            self.single.fullmatch(f"n.{s}"), msg=f'failed to match "n.{s}"'
+        )
+
+    @given(s=nucleotide_variant_strings(plain_positions(), "ACGT"))
+    def test_generated_gmo_variants(self, s: str) -> None:
+        self.assertIsNotNone(
+            self.variant_gmo.fullmatch(s), msg=f'failed to match "{s}"'
+        )
+        for p in "gmo":
+            self.assertIsNotNone(
+                self.single.fullmatch(f"{p}.{s}"), msg=f'failed to match "{p}.{s}"'
+            )
+
+    @given(
+        s=nucleotide_variant_strings(
+            utr_only_positions(), "ACGT", allow_bare_equal=False
+        )
+    )
+    def test_utr_positions_rejected_outside_c(self, s: str) -> None:
+        self.assertIsNone(self.variant_n.fullmatch(s), msg=f'incorrectly matched "{s}"')
+        self.assertIsNone(
+            self.variant_gmo.fullmatch(s), msg=f'incorrectly matched "{s}"'
+        )
+
+    @given(
+        s=nucleotide_variant_strings(
+            intron_only_positions(), "ACGT", allow_bare_equal=False
+        )
+    )
+    def test_intron_positions_rejected_by_gmo(self, s: str) -> None:
+        self.assertIsNone(
+            self.variant_gmo.fullmatch(s), msg=f'incorrectly matched "{s}"'
+        )
+
+    @given(
+        s1=nucleotide_variant_strings(utr_intron_positions(), "ACGT"),
+        s2=nucleotide_variant_strings(utr_intron_positions(), "ACGT"),
+    )
+    def test_generated_multi_variant(self, s1: str, s2: str) -> None:
+        v = f"c.[{s1};{s2}]"
+        self.assertIsNotNone(self.multi.fullmatch(v), msg=f'failed to match "{v}"')
 
 
 if __name__ == "__main__":

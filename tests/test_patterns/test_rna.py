@@ -1,5 +1,6 @@
 import unittest
 import re
+from hypothesis import given
 from mavehgvs.patterns.rna import (
     rna_equal,
     rna_sub,
@@ -11,7 +12,7 @@ from mavehgvs.patterns.rna import (
     rna_single_variant,
     rna_multi_variant,
 )
-from . import build_multi_variants
+from . import build_multi_variants, intron_offset_positions, nucleotide_variant_strings
 
 
 class TestRnaEqual(unittest.TestCase):
@@ -334,6 +335,32 @@ class TestRnaMultiVariant(unittest.TestCase):
                 self.assertIsNone(
                     self.pattern.fullmatch(v), msg=f'incorrectly matched "{v}"'
                 )
+
+
+class TestRnaHypothesis(unittest.TestCase):
+    """Property-based tests that generalize the fixed examples above using
+    generated positions and sequences."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.variant = re.compile(rna_variant, flags=re.ASCII)
+        cls.single = re.compile(rna_single_variant, flags=re.ASCII)
+        cls.multi = re.compile(rna_multi_variant, flags=re.ASCII)
+
+    @given(s=nucleotide_variant_strings(intron_offset_positions(), "acgu"))
+    def test_generated_variants(self, s: str) -> None:
+        self.assertIsNotNone(self.variant.fullmatch(s), msg=f'failed to match "{s}"')
+        self.assertIsNotNone(
+            self.single.fullmatch(f"r.{s}"), msg=f'failed to match "r.{s}"'
+        )
+
+    @given(
+        s1=nucleotide_variant_strings(intron_offset_positions(), "acgu"),
+        s2=nucleotide_variant_strings(intron_offset_positions(), "acgu"),
+    )
+    def test_generated_multi_variant(self, s1: str, s2: str) -> None:
+        v = f"r.[{s1};{s2}]"
+        self.assertIsNotNone(self.multi.fullmatch(v), msg=f'failed to match "{v}"')
 
 
 if __name__ == "__main__":

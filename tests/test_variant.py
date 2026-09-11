@@ -1,8 +1,286 @@
 import unittest
 
+from hypothesis import given, strategies as st
+from fqfa.constants import AA_CODES
+
 from mavehgvs.exceptions import MaveHgvsParseError
 from mavehgvs.variant import Variant
 from mavehgvs.position import VariantPosition
+from .strategies import (
+    AMINO_ACIDS,
+    plain_positions,
+    utr_intron_positions,
+    intron_offset_positions,
+    amino_acid_position_strings,
+    amino_acid_sequences,
+    sequences,
+)
+
+# --- strategies for building strings that Variant can fully parse: unlike the
+# patterns-level strategies in tests/test_patterns/__init__.py, these respect
+# Variant's extra semantic rules (start/end ordering, adjacency for insertions,
+# distinct/non-overlapping multi-variant positions).
+
+NUCLEOTIDE_PREFIXES = "cngmor"
+ALL_PREFIXES = NUCLEOTIDE_PREFIXES + "p"
+
+
+def _nucleotide_position_strategy(prefix: str) -> st.SearchStrategy:
+    """The position strategy matching the grammar for the given nucleotide
+    prefix (c, n, g, m, o, or r)."""
+    if prefix == "c":
+        return utr_intron_positions()
+    elif prefix in "nr":
+        return intron_offset_positions()
+    else:
+        return plain_positions()
+
+
+def _nucleotide_alphabet(prefix: str) -> str:
+    return "acgu" if prefix == "r" else "ACGT"
+
+
+@st.composite
+def sub_variant_strings(draw) -> tuple:
+    """A (prefix, string-without-prefix) pair for a substitution variant, valid
+    for any of the seven MAVE-HGVS prefixes."""
+    prefix = draw(st.sampled_from(ALL_PREFIXES))
+    if prefix == "p":
+        pos = draw(amino_acid_position_strings())
+        new = draw(st.sampled_from(AMINO_ACIDS))
+        return prefix, f"{pos}{new}"
+    else:
+        pos = draw(_nucleotide_position_strategy(prefix))
+        alphabet = _nucleotide_alphabet(prefix)
+        ref = draw(st.sampled_from(alphabet))
+        new = draw(st.sampled_from(alphabet))
+        return prefix, f"{pos}{ref}>{new}"
+
+
+@st.composite
+def fs_strings(draw) -> tuple:
+    """A (prefix, string-without-prefix) pair for a protein frameshift variant."""
+    return "p", f"{draw(amino_acid_position_strings())}fs"
+
+
+@st.composite
+def single_position_variant_strings(draw, kinds=("del", "dup")) -> tuple:
+    """A (prefix, string-without-prefix, kind) triple for a del/dup event using a
+    single position, so no start/end ordering is required."""
+    prefix = draw(st.sampled_from(ALL_PREFIXES))
+    if prefix == "p":
+        pos = draw(amino_acid_position_strings())
+    else:
+        pos = draw(_nucleotide_position_strategy(prefix))
+    kind = draw(st.sampled_from(kinds))
+    return prefix, f"{pos}{kind}", kind
+
+
+@st.composite
+def ordered_plain_position_pair(draw) -> tuple:
+    """Two distinct plain (non-extended) integer positions, in ascending order."""
+    a = draw(st.integers(min_value=1, max_value=10**6))
+    b = a + draw(st.integers(min_value=1, max_value=1000))
+    return a, b
+
+
+def _format_ranged_body(start: str, end: str, kind: str, seq) -> str:
+    if kind == "delins":
+        return f"{start}_{end}{kind}{seq}"
+    return f"{start}_{end}{kind}"
+
+
+@st.composite
+def ranged_variant_parts(draw, kinds=("del", "dup", "delins")) -> tuple:
+    """A (prefix, start, end, kind, seq) tuple with start/end in ascending
+    order (using plain, non-extended positions so ordering is unambiguous).
+    ``seq`` is None unless ``kind`` is "delins"."""
+    prefix = draw(st.sampled_from(ALL_PREFIXES))
+    a, b = draw(ordered_plain_position_pair())
+    if prefix == "p":
+        start = f"{draw(st.sampled_from(AMINO_ACIDS))}{a}"
+        end = f"{draw(st.sampled_from(AMINO_ACIDS))}{b}"
+    else:
+        start, end = str(a), str(b)
+    kind = draw(st.sampled_from(kinds))
+    seq = None
+    if kind == "delins":
+        if prefix == "p":
+            seq = draw(amino_acid_sequences())
+        else:
+            seq = draw(sequences(_nucleotide_alphabet(prefix)))
+    return prefix, start, end, kind, seq
+
+
+@st.composite
+def ranged_variant_strings(draw, kinds=("del", "dup", "delins")) -> tuple:
+    """A (prefix, string-without-prefix, kind) triple for a del/dup/delins event
+    using an ordered start/end position range."""
+    prefix, start, end, kind, seq = draw(ranged_variant_parts(kinds=kinds))
+    return prefix, _format_ranged_body(start, end, kind, seq), kind
+
+
+@st.composite
+def adjacent_plain_position_pair(draw) -> tuple:
+    """Two adjacent plain integer positions, e.g. (8, 9)."""
+    a = draw(st.integers(min_value=1, max_value=10**6))
+    return a, a + 1
+
+
+@st.composite
+def non_adjacent_plain_position_pair(draw) -> tuple:
+    """Two ordered plain integer positions that are not adjacent (gap >= 2)."""
+    a = draw(st.integers(min_value=1, max_value=10**6))
+    b = a + draw(st.integers(min_value=2, max_value=1000))
+    return a, b
+
+
+def _ins_string(draw, prefix: str, a: int, b: int) -> str:
+    """Build an insertion event string (without the prefix) for the given
+    position pair, drawing an appropriate inserted sequence for the prefix."""
+    if prefix == "p":
+        start = f"{draw(st.sampled_from(AMINO_ACIDS))}{a}"
+        end = f"{draw(st.sampled_from(AMINO_ACIDS))}{b}"
+        seq = draw(amino_acid_sequences())
+    else:
+        start, end = str(a), str(b)
+        seq = draw(sequences(_nucleotide_alphabet(prefix)))
+    return f"{start}_{end}ins{seq}"
+
+
+@st.composite
+def ins_variant_strings(draw) -> tuple:
+    """A (prefix, string-without-prefix) pair for an insertion event using an
+    adjacent start/end position pair."""
+    prefix = draw(st.sampled_from(ALL_PREFIXES))
+    a, b = draw(adjacent_plain_position_pair())
+    return prefix, _ins_string(draw, prefix, a, b)
+
+
+@st.composite
+def non_adjacent_ins_strings(draw) -> tuple:
+    """A (prefix, string-without-prefix) pair for an insertion event using a
+    non-adjacent start/end position pair, which Variant should reject."""
+    prefix = draw(st.sampled_from(ALL_PREFIXES))
+    a, b = draw(non_adjacent_plain_position_pair())
+    return prefix, _ins_string(draw, prefix, a, b)
+
+
+@st.composite
+def distinct_ascending_positions(draw, min_count: int = 2, max_count: int = 4):
+    """A list of distinct plain integer positions in ascending order."""
+    n = draw(st.integers(min_value=min_count, max_value=max_count))
+    start = draw(st.integers(min_value=1, max_value=10**5))
+    gaps = draw(
+        st.lists(
+            st.integers(min_value=1, max_value=100), min_size=n - 1, max_size=n - 1
+        )
+    )
+    positions = [start]
+    for gap in gaps:
+        positions.append(positions[-1] + gap)
+    return positions
+
+
+@st.composite
+def multi_sub_variant_strings(draw) -> tuple:
+    """A (prefix, full_string_with_prefix, count) triple for a multi-variant
+    made of substitutions at distinct, ascending plain positions."""
+    prefix = draw(st.sampled_from(ALL_PREFIXES))
+    positions = draw(distinct_ascending_positions())
+    parts = []
+    for pos in positions:
+        if prefix == "p":
+            aa = draw(st.sampled_from(AMINO_ACIDS))
+            new = draw(st.sampled_from(AMINO_ACIDS))
+            parts.append(f"{aa}{pos}{new}")
+        else:
+            alphabet = _nucleotide_alphabet(prefix)
+            ref = draw(st.sampled_from(alphabet))
+            new = draw(st.sampled_from(alphabet))
+            parts.append(f"{pos}{ref}>{new}")
+    s = f"{prefix}.[{';'.join(parts)}]"
+    return prefix, s, len(positions)
+
+
+@st.composite
+def overlapping_multi_sub_strings(draw) -> str:
+    """A multi-variant string with two substitutions at the identical
+    position (which Variant should reject as an overlap)."""
+    prefix = draw(st.sampled_from(ALL_PREFIXES))
+    pos = draw(st.integers(min_value=1, max_value=10**6))
+    if prefix == "p":
+        aa = draw(st.sampled_from(AMINO_ACIDS))
+        new1 = draw(st.sampled_from(AMINO_ACIDS))
+        new2 = draw(st.sampled_from(AMINO_ACIDS))
+        parts = [f"{aa}{pos}{new1}", f"{aa}{pos}{new2}"]
+    else:
+        alphabet = _nucleotide_alphabet(prefix)
+        ref = draw(st.sampled_from(alphabet))
+        new1 = draw(st.sampled_from(alphabet))
+        new2 = draw(st.sampled_from(alphabet))
+        parts = [f"{pos}{ref}>{new1}", f"{pos}{ref}>{new2}"]
+    return f"{prefix}.[{parts[0]};{parts[1]}]"
+
+
+@st.composite
+def dna_target_and_matching_sub(draw) -> tuple:
+    """A (target, position, ref, new) tuple where ``ref`` is the actual base at
+    ``position`` (1-based) in ``target``."""
+    target = draw(st.text(alphabet="ACGT", min_size=1, max_size=30))
+    idx = draw(st.integers(min_value=1, max_value=len(target)))
+    ref = target[idx - 1]
+    new = draw(st.sampled_from([b for b in "ACGT" if b != ref]))
+    return target, idx, ref, new
+
+
+@st.composite
+def dna_target_and_mismatching_sub(draw) -> tuple:
+    """A (target, position, wrong_ref, new) tuple where ``wrong_ref`` is
+    guaranteed to differ from the actual base at ``position`` in ``target``."""
+    target = draw(st.text(alphabet="ACGT", min_size=1, max_size=30))
+    idx = draw(st.integers(min_value=1, max_value=len(target)))
+    actual_ref = target[idx - 1]
+    wrong_ref = draw(st.sampled_from([b for b in "ACGT" if b != actual_ref]))
+    new = draw(st.sampled_from("ACGT"))
+    return target, idx, wrong_ref, new
+
+
+_PROTEIN_TARGET_LETTERS = [c for c in AA_CODES if c != "*"]
+
+
+@st.composite
+def protein_target_and_matching_sub(draw) -> tuple:
+    """A (target, position, aa3, new) tuple where ``aa3`` is the three-letter
+    code for the actual residue at ``position`` (1-based) in ``target``."""
+    target = "".join(
+        draw(
+            st.lists(st.sampled_from(_PROTEIN_TARGET_LETTERS), min_size=1, max_size=20)
+        )
+    )
+    idx = draw(st.integers(min_value=1, max_value=len(target)))
+    aa3 = AA_CODES[target[idx - 1]]
+    new = draw(st.sampled_from(AMINO_ACIDS))
+    return target, idx, aa3, new
+
+
+@st.composite
+def protein_target_and_mismatching_sub(draw) -> tuple:
+    """A (target, position, wrong_aa3, new) tuple where ``wrong_aa3`` is
+    guaranteed to differ from the actual residue at ``position`` in ``target``."""
+    target = "".join(
+        draw(
+            st.lists(st.sampled_from(_PROTEIN_TARGET_LETTERS), min_size=1, max_size=20)
+        )
+    )
+    idx = draw(st.integers(min_value=1, max_value=len(target)))
+    actual_letter = target[idx - 1]
+    wrong_letter = draw(
+        st.sampled_from([c for c in _PROTEIN_TARGET_LETTERS if c != actual_letter])
+    )
+    wrong_aa3 = AA_CODES[wrong_letter]
+    new = draw(st.sampled_from(AMINO_ACIDS))
+    return target, idx, wrong_aa3, new
 
 
 class TestCreateSingleVariantFromString(unittest.TestCase):
@@ -1183,6 +1461,131 @@ class TestMiscProperties(unittest.TestCase):
             with self.subTest(s=s):
                 v = Variant(s)
                 self.assertEqual(s, str(v))
+
+
+class TestVariantHypothesisRoundTrip(unittest.TestCase):
+    """Property-based tests generalizing the fixed round-trip examples above
+    across all seven MAVE-HGVS prefixes."""
+
+    @given(pv=sub_variant_strings())
+    def test_sub_round_trip(self, pv: tuple) -> None:
+        prefix, body = pv
+        s = f"{prefix}.{body}"
+        v = Variant(s)
+        self.assertEqual(s, str(v))
+        self.assertEqual("sub", v.variant_type)
+        self.assertEqual(prefix, v.prefix)
+
+    @given(pv=fs_strings())
+    def test_fs_round_trip(self, pv: tuple) -> None:
+        prefix, body = pv
+        s = f"{prefix}.{body}"
+        v = Variant(s)
+        self.assertEqual(s, str(v))
+        self.assertEqual("fs", v.variant_type)
+
+    @given(pvk=single_position_variant_strings())
+    def test_single_position_del_dup_round_trip(self, pvk: tuple) -> None:
+        prefix, body, kind = pvk
+        s = f"{prefix}.{body}"
+        v = Variant(s)
+        self.assertEqual(s, str(v))
+        self.assertEqual(kind, v.variant_type)
+
+    @given(pvk=ranged_variant_strings())
+    def test_ranged_del_dup_delins_round_trip(self, pvk: tuple) -> None:
+        prefix, body, kind = pvk
+        s = f"{prefix}.{body}"
+        v = Variant(s)
+        self.assertEqual(s, str(v))
+        self.assertEqual(kind, v.variant_type)
+
+    @given(pv=ins_variant_strings())
+    def test_ins_round_trip(self, pv: tuple) -> None:
+        prefix, body = pv
+        s = f"{prefix}.{body}"
+        v = Variant(s)
+        self.assertEqual(s, str(v))
+        self.assertEqual("ins", v.variant_type)
+
+    @given(pv=non_adjacent_ins_strings())
+    def test_non_adjacent_ins_rejected(self, pv: tuple) -> None:
+        prefix, body = pv
+        with self.assertRaises(MaveHgvsParseError):
+            Variant(f"{prefix}.{body}")
+
+
+class TestVariantHypothesisOrdering(unittest.TestCase):
+    @given(parts=ranged_variant_parts(kinds=("del", "dup")))
+    def test_relaxed_ordering_swaps_positions(self, parts: tuple) -> None:
+        prefix, start, end, kind, seq = parts
+        canonical_s = f"{prefix}.{_format_ranged_body(start, end, kind, seq)}"
+        reversed_s = f"{prefix}.{_format_ranged_body(end, start, kind, seq)}"
+
+        with self.assertRaises(MaveHgvsParseError):
+            Variant(reversed_s)
+
+        v = Variant(reversed_s, relaxed_ordering=True)
+        self.assertEqual(canonical_s, str(v))
+
+
+class TestVariantHypothesisMultiVariant(unittest.TestCase):
+    @given(pv=multi_sub_variant_strings())
+    def test_multi_variant_round_trip(self, pv: tuple) -> None:
+        prefix, s, count = pv
+        v = Variant(s)
+        self.assertEqual(s, str(v))
+        self.assertTrue(v.is_multi_variant())
+        self.assertEqual(count, v.variant_count)
+
+    @given(s=overlapping_multi_sub_strings())
+    def test_multi_variant_same_position_rejected(self, s: str) -> None:
+        with self.assertRaises(MaveHgvsParseError):
+            Variant(s)
+
+
+class TestVariantHypothesisTargetSequence(unittest.TestCase):
+    @given(t=dna_target_and_matching_sub())
+    def test_dna_sub_matches_target(self, t: tuple) -> None:
+        target, idx, ref, new = t
+        s = f"c.{idx}{ref}>{new}"
+        v = Variant(s, targetseq=target)
+        self.assertEqual(s, str(v))
+
+    @given(t=dna_target_and_mismatching_sub())
+    def test_dna_sub_mismatched_ref_rejected(self, t: tuple) -> None:
+        target, idx, wrong_ref, new = t
+        s = f"c.{idx}{wrong_ref}>{new}"
+        with self.assertRaises(MaveHgvsParseError):
+            Variant(s, targetseq=target)
+
+    @given(
+        target=st.text(alphabet="ACGT", min_size=1, max_size=30),
+        extra=st.integers(min_value=1, max_value=1000),
+        ref=st.sampled_from("ACGT"),
+        new=st.sampled_from("ACGT"),
+    )
+    def test_dna_sub_out_of_bounds_rejected(
+        self, target: str, extra: int, ref: str, new: str
+    ) -> None:
+        idx = len(target) + extra
+        s = f"c.{idx}{ref}>{new}"
+        with self.assertRaises(MaveHgvsParseError):
+            Variant(s, targetseq=target)
+
+    @given(t=protein_target_and_matching_sub())
+    def test_protein_sub_matches_target(self, t: tuple) -> None:
+        target, idx, aa3, new = t
+        s = f"p.{aa3}{idx}{new}"
+        v = Variant(s, targetseq=target)
+        self.assertEqual(s, str(v))
+
+    @given(t=protein_target_and_mismatching_sub())
+    def test_protein_sub_mismatched_target_rejected(self, t: tuple) -> None:
+        target, idx, wrong_aa3, new = t
+        s = f"p.{wrong_aa3}{idx}{new}"
+        with self.assertRaises(MaveHgvsParseError):
+            Variant(s, targetseq=target)
 
 
 if __name__ == "__main__":

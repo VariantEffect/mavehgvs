@@ -1,6 +1,92 @@
 import itertools
 from typing import Iterable, Iterator, Tuple
 
+from hypothesis import strategies as st
+
+from ..strategies import (  # noqa: F401
+    plain_positions,
+    intron_offset_positions,
+    intron_only_positions,
+    utr_intron_positions,
+    utr_only_positions,
+    sequences,
+)
+
+# plain_positions / intron_offset_positions / intron_only_positions /
+# utr_intron_positions / utr_only_positions / sequences are re-exported here
+# (from tests/strategies.py, shared with tests/test_position.py and
+# tests/test_variant.py) so that test_dna.py and test_rna.py can keep
+# importing them from this package.
+
+
+def nucleotide_variant_strings(  # noqa: max-complexity: 12
+    position_strategy: st.SearchStrategy,
+    alphabet: str,
+    allow_bare_equal: bool = True,
+) -> st.SearchStrategy:
+    """Build a strategy generating single-variant strings (without a prefix) for
+    a DNA- or RNA-style grammar: equal, sub, del, dup, ins, and delins events built
+    from the given position strategy and nucleotide alphabet.
+
+    This mirrors the six variant-event patterns combined into ``dna_variant_*``
+    and ``rna_variant``.
+
+    Set ``allow_bare_equal=False`` to exclude the bare ``=`` form of the equality
+    event, guaranteeing the position strategy is actually used (useful for
+    negative tests checking that a position is rejected).
+    """
+
+    @st.composite
+    def equal(draw):
+        kinds = ["position", "range"]
+        if allow_bare_equal:
+            kinds.append("bare")
+        kind = draw(st.sampled_from(kinds))
+        if kind == "bare":
+            return "="
+        elif kind == "position":
+            return f"{draw(position_strategy)}="
+        else:
+            return f"{draw(position_strategy)}_{draw(position_strategy)}="
+
+    @st.composite
+    def sub(draw):
+        pos = draw(position_strategy)
+        ref = draw(st.sampled_from(alphabet))
+        new = draw(st.sampled_from(alphabet))
+        return f"{pos}{ref}>{new}"
+
+    def _del_or_dup(suffix: str):
+        @st.composite
+        def strategy(draw):
+            if draw(st.booleans()):
+                return f"{draw(position_strategy)}{suffix}"
+            else:
+                return f"{draw(position_strategy)}_{draw(position_strategy)}{suffix}"
+
+        return strategy()
+
+    @st.composite
+    def ins(draw):
+        start = draw(position_strategy)
+        end = draw(position_strategy)
+        seq = draw(sequences(alphabet))
+        return f"{start}_{end}ins{seq}"
+
+    @st.composite
+    def delins(draw):
+        seq = draw(sequences(alphabet))
+        if draw(st.booleans()):
+            return f"{draw(position_strategy)}delins{seq}"
+        else:
+            start = draw(position_strategy)
+            end = draw(position_strategy)
+            return f"{start}_{end}delins{seq}"
+
+    return st.one_of(
+        equal(), sub(), _del_or_dup("del"), _del_or_dup("dup"), ins(), delins()
+    )
+
 
 def build_multi_variants(
     valid_strings: Iterable[str],
