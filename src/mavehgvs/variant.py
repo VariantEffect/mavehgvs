@@ -135,9 +135,11 @@ class Variant:
                         groupdict, relaxed_ordering=relaxed_ordering
                     )
                     if vt == "equal":
-                        raise MaveHgvsParseError(
-                            "multi-variants cannot contain target-identical variants"
-                        )
+                        if self._prefix != "p" or not isinstance(p, VariantPosition):
+                            raise MaveHgvsParseError(
+                                "multi-variants cannot contain target-identical variants "
+                                "unless they are single amino acids"
+                            )
 
                     self._variant_types.append(vt)
                     self._positions.append(p)
