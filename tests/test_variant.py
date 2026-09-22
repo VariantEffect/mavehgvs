@@ -225,6 +225,8 @@ class TestCreateMultiVariantFromString(unittest.TestCase):
             "p.[Gln7_Asn19del;Glu27Trp;Ter345Lys]",
             "c.[1_35del;78+5_78+10del;122T>A]",
             "NM_002002.3:c.[1_35del;78+5_78+10del;122T>A]",
+            "p.[Glu27Trp;Lys212=]",
+            "p.[Gly18=;Glu27Trp;Ter345Lys]",
         ]
 
         invalid_variant_strings = [
